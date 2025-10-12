@@ -788,7 +788,6 @@
 
     <div class="quiz-content" id="quizContent">
         <div class="word-status" id="wordStatus"></div>
-        <div class="round-progress" id="roundProgress" style="display: none;">Round: 0/20</div>
 
         <div class="timer-container">
             <span class="timer-label">Time:</span>
@@ -807,6 +806,10 @@
         <p class="subtitle">Given a definition, pick the correct word</p>
 
         <div class="stats">
+            <div class="stat-item" id="roundStatItem" style="display: none;">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="roundStat">0/20</div>
+            </div>
             <div class="stat-item">
                 <div class="stat-label">Score</div>
                 <div class="stat-value" id="score">0</div>
@@ -832,7 +835,6 @@
         <div class="question-card">
             <div class="word-display-container">
                 <div class="word-display" id="word">Loading...</div>
-                <div class="word-progress" id="wordProgress">1/20</div>
             </div>
             <div class="choices" id="choices"></div>
             <div class="feedback" id="feedback"></div>
@@ -1085,8 +1087,7 @@
                 document.getElementById('roundStartModal').classList.remove('show');
                 document.getElementById('roundCompleteModal').classList.remove('show');
 
-                // Show round progress
-                document.getElementById('roundProgress').style.display = 'block';
+                // Show round progress in stats
                 updateRoundProgress();
 
                 // Load first question
@@ -1114,8 +1115,7 @@
                     // Close modal
                     document.getElementById('roundStartModal').classList.remove('show');
 
-                    // Show round progress
-                    document.getElementById('roundProgress').style.display = 'block';
+                    // Show round progress in stats
                     updateRoundProgress();
 
                     // Load next question
@@ -1128,13 +1128,11 @@
 
         function updateRoundProgress() {
             if (currentRound) {
-                const progressEl = document.getElementById('roundProgress');
-                progressEl.textContent = `Round: ${currentRound.total}/${currentRound.size}`;
-
-                // Also update word-adjacent progress indicator
-                const wordProgressEl = document.getElementById('wordProgress');
-                wordProgressEl.textContent = `${currentRound.total}/${currentRound.size}`;
-                wordProgressEl.classList.add('show');
+                // Show round stat in the stats box
+                const roundStatItem = document.getElementById('roundStatItem');
+                const roundStat = document.getElementById('roundStat');
+                roundStatItem.style.display = 'block';
+                roundStat.textContent = `${currentRound.total}/${currentRound.size}`;
             }
         }
 
@@ -1188,8 +1186,7 @@
             // Clear current round
             currentRound = null;
             roundStartTime = null;
-            document.getElementById('roundProgress').style.display = 'none';
-            document.getElementById('wordProgress').classList.remove('show');
+            document.getElementById('roundStatItem').style.display = 'none';
 
             // Show modal
             document.getElementById('roundCompleteModal').classList.add('show');
@@ -1345,8 +1342,7 @@
 
             // Hide next button and round progress
             document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('roundProgress').style.display = 'none';
-            document.getElementById('wordProgress').classList.remove('show');
+            document.getElementById('roundStatItem').style.display = 'none';
         }
 
         function reviewPrevious() {
@@ -1408,9 +1404,8 @@
                 roundStartTime = null;
                 roundWords.clear();
 
-                // Hide progress indicators
-                document.getElementById('roundProgress').style.display = 'none';
-                document.getElementById('wordProgress').classList.remove('show');
+                // Hide progress indicator
+                document.getElementById('roundStatItem').style.display = 'none';
 
                 // Show round start modal
                 document.getElementById('roundStartModal').classList.add('show');
