@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRE Vocabulary Quiz</title>
+    <title>Inverse GRE Quiz</title>
     <style>
         * {
             margin: 0;
@@ -82,7 +82,7 @@
 
         .word-display {
             text-align: center;
-            font-size: 3em;
+            font-size: 1.8em;
             font-weight: bold;
             color: #764ba2;
             padding: 20px;
@@ -90,6 +90,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            line-height: 1.5;
         }
 
         .word-progress {
@@ -120,16 +121,17 @@
 
         .choice-btn {
             padding: 20px;
-            font-size: 1em;
+            font-size: 1.2em;
             background: white;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-align: left;
+            text-align: center;
             line-height: 1.5;
             position: relative;
             padding-left: 50px;
+            font-weight: bold;
         }
 
         .choice-btn .choice-number {
@@ -732,7 +734,7 @@
             }
 
             .word-display {
-                font-size: 2em;
+                font-size: 1.3em;
             }
 
             .choice-btn {
@@ -799,8 +801,8 @@
         <button class="settings-btn" onclick="openSettings()">⚙️ Settings</button>
 
         <div class="container">
-        <h1>GRE Vocabulary Quiz</h1>
-        <p class="subtitle">Test your knowledge of 994 essential GRE words</p>
+        <h1>Inverse GRE Quiz</h1>
+        <p class="subtitle">Given a definition, pick the correct word</p>
 
         <div class="stats">
             <div class="stat-item">
@@ -1005,7 +1007,7 @@
         // Round history management
         async function loadRoundHistory() {
             try {
-                const response = await fetch('/round/history');
+                const response = await fetch('/inverse/round/history');
                 const data = await response.json();
                 roundHistory = data.history || [];
             } catch (error) {
@@ -1016,7 +1018,7 @@
 
         async function saveRound(round) {
             // Save to server instead of localStorage
-            // Note: The round is saved via the /round/complete endpoint
+            // Note: The round is saved via the /inverse/round/complete endpoint
             roundHistory.push(round);
         }
 
@@ -1061,7 +1063,7 @@
         async function startNewRound() {
             // Start a new round
             try {
-                const response = await fetch('/round/start', {
+                const response = await fetch('/inverse/round/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ round_size: 20 })
@@ -1098,7 +1100,7 @@
         async function resumeRound() {
             // Resume existing round
             try {
-                const response = await fetch('/round/status');
+                const response = await fetch('/inverse/round/status');
                 const status = await response.json();
 
                 if (status.active) {
@@ -1175,7 +1177,7 @@
             }
 
             // Complete round on backend
-            await fetch('/round/complete', {
+            await fetch('/inverse/round/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1242,7 +1244,7 @@
 
             // Restore UI
             document.getElementById('nextBtn').style.display = '';
-            document.querySelector('.subtitle').textContent = 'Test your knowledge of 994 essential GRE words';
+            document.querySelector('.subtitle').textContent = 'Given a definition, pick the correct word';
 
             // Hide review navigation buttons
             document.getElementById('reviewNavButtons').style.display = 'none';
@@ -1256,10 +1258,10 @@
 
             const question = roundQuestions[reviewIndex];
 
-            // Show the word
-            document.getElementById('word').textContent = question.word;
+            // Show the definition (inverse: definition is shown)
+            document.getElementById('word').textContent = question.definition;
 
-            // Update word display styling (favorite/removed)
+            // Update word display styling (favorite/removed) - based on the word, not definition
             const wordEl = document.getElementById('word');
             wordEl.className = 'word-display';
             if (removedWords.has(question.word)) {
@@ -1272,7 +1274,7 @@
             document.getElementById('timer').textContent = '--';
             document.getElementById('timer').className = 'timer';
 
-            // Display choices with answer shown
+            // Display choices (word choices) with answer shown
             const choicesContainer = document.getElementById('choices');
             choicesContainer.innerHTML = '';
 
@@ -1400,7 +1402,7 @@
 
             if (confirm('Are you sure you want to abandon this round? Your progress will not be saved.')) {
                 // Complete round on backend (without saving to history)
-                await fetch('/round/complete', { method: 'POST' });
+                await fetch('/inverse/round/complete', { method: 'POST' });
 
                 // Clear current round
                 currentRound = null;
@@ -1416,10 +1418,10 @@
             }
         }
 
-        // Load word lists from localStorage
+        // Load word lists from localStorage (separate from regular quiz)
         function loadWordLists() {
-            const removed = localStorage.getItem('removedWords');
-            const favorited = localStorage.getItem('favoritedWords');
+            const removed = localStorage.getItem('inverseRemovedWords');
+            const favorited = localStorage.getItem('inverseFavoritedWords');
 
             if (removed) {
                 removedWords = new Set(JSON.parse(removed));
@@ -1430,8 +1432,8 @@
         }
 
         function saveWordLists() {
-            localStorage.setItem('removedWords', JSON.stringify([...removedWords]));
-            localStorage.setItem('favoritedWords', JSON.stringify([...favoritedWords]));
+            localStorage.setItem('inverseRemovedWords', JSON.stringify([...removedWords]));
+            localStorage.setItem('inverseFavoritedWords', JSON.stringify([...favoritedWords]));
         }
 
         function markWordAsRemoved() {
@@ -1525,41 +1527,41 @@
             }
         }
 
-        // Settings management
+        // Settings management (separate from regular quiz)
         function getAutoAdvanceDelay() {
-            const stored = localStorage.getItem('autoAdvanceDelay');
+            const stored = localStorage.getItem('inverseAutoAdvanceDelay');
             return stored !== null ? parseInt(stored) : 500; // Default 0.5 seconds
         }
 
         function setAutoAdvanceDelay(value) {
-            localStorage.setItem('autoAdvanceDelay', value);
+            localStorage.setItem('inverseAutoAdvanceDelay', value);
         }
 
         function getAnswerTimeout() {
-            const stored = localStorage.getItem('answerTimeout');
+            const stored = localStorage.getItem('inverseAnswerTimeout');
             return stored !== null ? parseInt(stored) : 30; // Default 30 seconds
         }
 
         function setAnswerTimeout(value) {
-            localStorage.setItem('answerTimeout', value);
+            localStorage.setItem('inverseAnswerTimeout', value);
         }
 
         function getShowAnswerOnTimeout() {
-            const stored = localStorage.getItem('showAnswerOnTimeout');
+            const stored = localStorage.getItem('inverseShowAnswerOnTimeout');
             return stored !== null ? stored === 'true' : false; // Default false (disabled)
         }
 
         function setShowAnswerOnTimeout(value) {
-            localStorage.setItem('showAnswerOnTimeout', value);
+            localStorage.setItem('inverseShowAnswerOnTimeout', value);
         }
 
         function getTerminateOnWrong() {
-            const stored = localStorage.getItem('terminateOnWrong');
+            const stored = localStorage.getItem('inverseTerminateOnWrong');
             return stored !== null ? stored === 'true' : true; // Default true (enabled)
         }
 
         function setTerminateOnWrong(value) {
-            localStorage.setItem('terminateOnWrong', value);
+            localStorage.setItem('inverseTerminateOnWrong', value);
         }
 
         function updateTerminateOnWrongSetting(checked) {
@@ -1568,12 +1570,12 @@
         }
 
         function getOnlyPerfectScores() {
-            const stored = localStorage.getItem('onlyPerfectScores');
+            const stored = localStorage.getItem('inverseOnlyPerfectScores');
             return stored !== null ? stored === 'true' : true; // Default true (enabled)
         }
 
         function setOnlyPerfectScores(value) {
-            localStorage.setItem('onlyPerfectScores', value);
+            localStorage.setItem('inverseOnlyPerfectScores', value);
         }
 
         function updateOnlyPerfectScoresSetting(checked) {
@@ -1830,14 +1832,14 @@
             // Disable answers
             answersEnabled = false;
 
-            // Show the word
-            document.getElementById('word').textContent = historical.word;
+            // Show the definition (inverse)
+            document.getElementById('word').textContent = historical.definition;
 
             // Hide timer
             document.getElementById('timer').textContent = '--';
             document.getElementById('timer').className = 'timer';
 
-            // Display choices with answer shown
+            // Display choices (words) with answer shown
             const choicesContainer = document.getElementById('choices');
             choicesContainer.innerHTML = '';
 
@@ -1901,7 +1903,7 @@
         function displayCurrentQuestion() {
             answersEnabled = true;
             document.querySelector('.subtitle').textContent =
-                'Test your knowledge of 994 essential GRE words';
+                'Given a definition, pick the correct word';
 
             // Clear feedback
             const feedback = document.getElementById('feedback');
@@ -2119,13 +2121,13 @@
 
             // Update stats (count as incorrect)
             try {
-                const response = await fetch('/check_answer', {
+                const response = await fetch('/inverse/check_answer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        word: currentQuestion.word,
+                        definition: currentQuestion.definition,
                         choice: '' // Empty choice = timeout
                     })
                 });
@@ -2135,9 +2137,10 @@
                 // Save to history (timeout = empty user answer)
                 const questionData = {
                     word: currentQuestion.word,
+                    definition: currentQuestion.definition,
                     choices: currentQuestion.choices,
                     userAnswer: '', // Empty indicates timeout
-                    correctAnswer: result.correct_definition,
+                    correctAnswer: result.correct_word,
                     correct: false
                 };
                 questionHistory.push(questionData);
@@ -2161,11 +2164,11 @@
                 const showAnswer = getShowAnswerOnTimeout();
                 if (showAnswer) {
                     feedback.innerHTML = '⏱️ Time\'s Up!<div class="correct-answer">Correct answer: ' +
-                        result.correct_definition + '</div>';
+                        result.correct_word + '</div>';
 
                     // Highlight the correct answer
                     allButtons.forEach(btn => {
-                        if (getChoiceText(btn) === result.correct_definition) {
+                        if (getChoiceText(btn) === result.correct_word) {
                             btn.classList.add('correct');
                         }
                     });
@@ -2206,7 +2209,7 @@
             // Exit review mode
             historyIndex = -1;
             document.querySelector('.subtitle').textContent =
-                'Test your knowledge of 994 essential GRE words';
+                'Given a definition, pick the correct word';
 
             // Unpause if paused
             if (isPaused) {
@@ -2237,7 +2240,7 @@
 
             try {
                 // Send removed words and round words to filter them out
-                const response = await fetch('/get_question', {
+                const response = await fetch('/inverse/get_question', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2254,10 +2257,10 @@
                     roundWords.add(currentQuestion.word);
                 }
 
-                // Display word
-                document.getElementById('word').textContent = currentQuestion.word;
+                // Display definition (inverse: show definition instead of word)
+                document.getElementById('word').textContent = currentQuestion.definition;
 
-                // Display choices
+                // Display choices (word choices)
                 const choicesContainer = document.getElementById('choices');
                 choicesContainer.innerHTML = '';
 
@@ -2295,7 +2298,7 @@
                 answersEnabled = true;
                 currentFocusIndex = 0;
 
-                // Update word display styling (favorite/removed)
+                // Update word display styling (favorite/removed) - based on the word
                 updateWordDisplay();
 
                 // Start quiz timer if this is the first question
@@ -2328,13 +2331,13 @@
             });
 
             try {
-                const response = await fetch('/check_answer', {
+                const response = await fetch('/inverse/check_answer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        word: currentQuestion.word,
+                        definition: currentQuestion.definition,
                         choice: selectedChoice
                     })
                 });
@@ -2344,9 +2347,10 @@
                 // Save to history
                 const questionData = {
                     word: currentQuestion.word,
+                    definition: currentQuestion.definition,
                     choices: currentQuestion.choices,
                     userAnswer: selectedChoice,
-                    correctAnswer: result.correct_definition,
+                    correctAnswer: result.correct_word,
                     correct: result.correct
                 };
                 questionHistory.push(questionData);
@@ -2375,12 +2379,12 @@
                 } else {
                     feedback.className = 'feedback incorrect';
                     feedback.innerHTML = '✗ Incorrect<div class="correct-answer">Correct: ' +
-                        result.correct_definition + '</div>';
+                        result.correct_word + '</div>';
                     selectedBtn.classList.add('incorrect');
 
                     // Highlight the correct answer
                     allButtons.forEach(btn => {
-                        if (getChoiceText(btn) === result.correct_definition) {
+                        if (getChoiceText(btn) === result.correct_word) {
                             btn.classList.add('correct');
                         }
                     });
@@ -2442,7 +2446,7 @@
 
         async function resetStats() {
             if (confirm('Are you sure you want to reset your statistics?')) {
-                await fetch('/reset_stats');
+                await fetch('/inverse/reset_stats');
                 document.getElementById('score').textContent = '0';
                 document.getElementById('total').textContent = '0';
                 document.getElementById('accuracy').textContent = '0%';
@@ -2470,7 +2474,7 @@
 
             // Check if there's an incomplete round
             try {
-                const response = await fetch('/round/status');
+                const response = await fetch('/inverse/round/status');
                 const status = await response.json();
 
                 if (status.active && status.total < status.size) {

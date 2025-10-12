@@ -131,7 +131,7 @@ def get_user_id():
 STATS = load_stats()
 
 def generate_question(removed_words=None, round_words=None):
-    """Generate a multiple choice question.
+    """Generate a multiple choice question (word → definition).
 
     Args:
         removed_words: List of words to exclude from questions (permanently removed)
@@ -176,6 +176,53 @@ def generate_question(removed_words=None, round_words=None):
         'choices': all_choices,
         'correct_index': correct_index,
         'correct_definition': correct_definition
+    }
+
+def generate_inverse_question(removed_words=None, round_words=None):
+    """Generate an inverse multiple choice question (definition → word).
+
+    Args:
+        removed_words: List of words to exclude from questions (permanently removed)
+        round_words: List of words already used in current round (temporary exclusion)
+    """
+    if removed_words is None:
+        removed_words = []
+    if round_words is None:
+        round_words = []
+
+    # Combine excluded words (removed + already used in round)
+    excluded_words = set(removed_words) | set(round_words)
+
+    # Filter out excluded words
+    available_words = [w for w in WORD_LIST if w not in excluded_words]
+
+    # If too few words remaining, use full list (minus permanently removed)
+    if len(available_words) < 4:
+        available_words = [w for w in WORD_LIST if w not in removed_words]
+
+    # Pick a random word
+    correct_word = random.choice(available_words)
+    correct_definition = WORDS[correct_word]
+
+    # Pick 3 other random words (also excluding removed words when possible)
+    other_candidates = [w for w in available_words if w != correct_word]
+    if len(other_candidates) < 3:
+        other_candidates = [w for w in WORD_LIST if w not in removed_words and w != correct_word]
+
+    other_words = random.sample(other_candidates, 3)
+
+    # Combine and shuffle (words instead of definitions)
+    all_choices = [correct_word] + other_words
+    random.shuffle(all_choices)
+
+    # Find the correct answer index
+    correct_index = all_choices.index(correct_word)
+
+    return {
+        'definition': correct_definition,
+        'choices': all_choices,
+        'correct_index': correct_index,
+        'correct_word': correct_word
     }
 
 @app.route('/')
@@ -344,6 +391,89 @@ def get_round_history():
     """Get round history."""
     return jsonify({
         'history': STATS['round_history']
+    })
+
+# Inverse GRE quiz routes (definition → word)
+@app.route('/inverse-gre-quiz')
+def inverse_gre_quiz():
+    """Inverse GRE vocabulary quiz page (definition → word)."""
+    # Initialize session if needed
+    if 'score' not in session:
+        session['score'] = STATS['overall']['score']
+        session['total'] = STATS['overall']['total']
+    if 'round_score' not in session:
+        session['round_score'] = 0
+        session['round_total'] = 0
+        session['round_active'] = False
+        session['round_start_time'] = None
+
+    return render_template('inverse_quiz.html')
+
+@app.route('/inverse/get_question', methods=['GET', 'POST'])
+def get_inverse_question():
+    """API endpoint to get a new inverse question."""
+    # Get removed words and round words from request if provided
+    removed_words = []
+    round_words = []
+    if request.method == 'POST':
+        data = request.json or {}
+        removed_words = data.get('removed_words', [])
+        round_words = data.get('round_words', [])
+
+    question = generate_inverse_question(removed_words, round_words)
+    # Don't send the correct answer to the client
+    return jsonify({
+        'definition': question['definition'],
+        'choices': question['choices']
+    })
+
+@app.route('/inverse/check_answer', methods=['POST'])
+def check_inverse_answer():
+    """Check if the inverse answer is correct."""
+    data = request.json
+    definition = data.get('definition')
+    selected_choice = data.get('choice')
+
+    # Find the word with this definition
+    correct_word = None
+    for word, defn in WORDS.items():
+        if defn == definition:
+            correct_word = word
+            break
+
+    is_correct = selected_choice == correct_word
+
+    # Initialize session if needed
+    if 'score' not in session:
+        session['score'] = STATS['overall']['score']
+    if 'total' not in session:
+        session['total'] = STATS['overall']['total']
+
+    # Update session stats
+    session['total'] = session.get('total', 0) + 1
+    if is_correct:
+        session['score'] = session.get('score', 0) + 1
+
+    # Update persistent stats
+    STATS['overall']['total'] = session['total']
+    STATS['overall']['score'] = session['score']
+    save_stats(STATS)
+
+    # Update round stats if round is active
+    if session.get('round_active', False):
+        session['round_total'] = session.get('round_total', 0) + 1
+        if is_correct:
+            session['round_score'] = session.get('round_score', 0) + 1
+
+    return jsonify({
+        'correct': is_correct,
+        'correct_word': correct_word,
+        'score': session['score'],
+        'total': session['total'],
+        'round_score': session.get('round_score', 0),
+        'round_total': session.get('round_total', 0),
+        'round_complete': session.get('round_active', False) and
+                         session.get('round_total', 0) >= session.get('round_size', 20)
     })
 
 # Trivia quiz routes
