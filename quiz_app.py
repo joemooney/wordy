@@ -419,6 +419,20 @@ def definition_review():
     """GRE Definition Review page - shows definition, word blurred until revealed."""
     return render_template('definition_review.html')
 
+@app.route('/spelling-quiz')
+def spelling_quiz():
+    """GRE Spelling Quiz page - type the word letter by letter from definition."""
+    # Initialize session if needed
+    if 'score' not in session:
+        session['score'] = STATS['overall']['score']
+        session['total'] = STATS['overall']['total']
+    if 'round_score' not in session:
+        session['round_score'] = 0
+        session['round_total'] = 0
+        session['round_active'] = False
+        session['round_start_time'] = None
+    return render_template('spelling_quiz.html')
+
 @app.route('/review/get_word', methods=['GET'])
 def get_review_word():
     """API endpoint to get a random word with its definition for review modes."""
