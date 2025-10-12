@@ -574,6 +574,12 @@
                 <small style="color: #666;">Time penalty for revealing a letter (0-60 seconds)</small>
             </div>
 
+            <div class="setting-item">
+                <label class="setting-label">Wrong Letter Penalty (seconds)</label>
+                <input type="number" id="wrongLetterPenalty" class="setting-input" min="0" max="60" value="5">
+                <small style="color: #666;">Time penalty for typing wrong letter (0-60 seconds)</small>
+            </div>
+
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
@@ -635,7 +641,8 @@
             initialLettersRevealed: 0,
             revealMode: 'initial', // 'initial' or 'random'
             spaceRevealMode: 'sequential', // 'sequential' or 'random'
-            revealPenaltySeconds: 20
+            revealPenaltySeconds: 20,
+            wrongLetterPenaltySeconds: 5
         };
 
         // Load settings from localStorage
@@ -650,6 +657,7 @@
         function updateSettingsUI() {
             document.getElementById('initialLetters').value = settings.initialLettersRevealed;
             document.getElementById('revealPenalty').value = settings.revealPenaltySeconds;
+            document.getElementById('wrongLetterPenalty').value = settings.wrongLetterPenaltySeconds;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
         }
@@ -665,6 +673,7 @@
         function saveSettings() {
             settings.initialLettersRevealed = parseInt(document.getElementById('initialLetters').value);
             settings.revealPenaltySeconds = parseInt(document.getElementById('revealPenalty').value);
+            settings.wrongLetterPenaltySeconds = parseInt(document.getElementById('wrongLetterPenalty').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
@@ -744,7 +753,7 @@
             html += `
                 </div>
                 <div class="hint-text">
-                    Type the word letter by letter • Press SPACE to reveal a letter (+${settings.revealPenaltySeconds}s penalty)
+                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
                 </div>
                 <div class="penalty-indicator" id="penaltyIndicator">
                     +${settings.revealPenaltySeconds}s penalty!
@@ -812,7 +821,13 @@
                     handleWordComplete();
                 }
             } else {
-                // Wrong letter - shake animation or visual feedback
+                // Wrong letter - add penalty and visual feedback
+                if (settings.wrongLetterPenaltySeconds > 0) {
+                    totalPenalty += settings.wrongLetterPenaltySeconds;
+                    updatePenaltyDisplay();
+                    showWrongLetterPenalty();
+                }
+
                 const box = document.querySelector(`.letter-box[data-index="${currentPosition}"]`);
                 if (box) {
                     box.style.animation = 'shake 0.5s';
@@ -878,6 +893,17 @@
         function showPenaltyIndicator() {
             const indicator = document.getElementById('penaltyIndicator');
             if (indicator) {
+                indicator.textContent = `+${settings.revealPenaltySeconds}s penalty! (Letter revealed)`;
+                indicator.classList.remove('show');
+                void indicator.offsetWidth; // Trigger reflow
+                indicator.classList.add('show');
+            }
+        }
+
+        function showWrongLetterPenalty() {
+            const indicator = document.getElementById('penaltyIndicator');
+            if (indicator) {
+                indicator.textContent = `+${settings.wrongLetterPenaltySeconds}s penalty! (Wrong letter)`;
                 indicator.classList.remove('show');
                 void indicator.offsetWidth; // Trigger reflow
                 indicator.classList.add('show');
