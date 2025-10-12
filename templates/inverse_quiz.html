@@ -1008,7 +1008,7 @@
         // Round history management
         async function loadRoundHistory() {
             try {
-                const response = await fetch('/inverse/round/history');
+                const response = await fetch('/round/history');
                 const data = await response.json();
                 roundHistory = data.history || [];
             } catch (error) {
@@ -1019,7 +1019,7 @@
 
         async function saveRound(round) {
             // Save to server instead of localStorage
-            // Note: The round is saved via the /inverse/round/complete endpoint
+            // Note: The round is saved via the /round/complete endpoint
             roundHistory.push(round);
         }
 
@@ -1064,7 +1064,7 @@
         async function startNewRound() {
             // Start a new round
             try {
-                const response = await fetch('/inverse/round/start', {
+                const response = await fetch('/round/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ round_size: 20 })
@@ -1101,7 +1101,7 @@
         async function resumeRound() {
             // Resume existing round
             try {
-                const response = await fetch('/inverse/round/status');
+                const response = await fetch('/round/status');
                 const status = await response.json();
 
                 if (status.active) {
@@ -1178,7 +1178,7 @@
             }
 
             // Complete round on backend
-            await fetch('/inverse/round/complete', {
+            await fetch('/round/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1403,7 +1403,7 @@
 
             if (confirm('Are you sure you want to abandon this round? Your progress will not be saved.')) {
                 // Complete round on backend (without saving to history)
-                await fetch('/inverse/round/complete', { method: 'POST' });
+                await fetch('/round/complete', { method: 'POST' });
 
                 // Clear current round
                 currentRound = null;
@@ -2475,7 +2475,7 @@
 
             // Check if there's an incomplete round
             try {
-                const response = await fetch('/inverse/round/status');
+                const response = await fetch('/round/status');
                 const status = await response.json();
 
                 if (status.active && status.total < status.size) {
