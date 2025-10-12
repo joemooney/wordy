@@ -572,6 +572,12 @@
             margin: 10px;
         }
 
+        .modal-btn.keyboard-focus {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+            transform: translateY(-2px);
+        }
+
         .modal-btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -589,6 +595,77 @@
 
         .modal-btn-secondary:hover {
             background: #5a6268;
+        }
+
+        .word-action-buttons {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 50;
+        }
+
+        .word-action-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-action-btn:hover {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+
+        .word-action-btn.favorited {
+            background: #ffc107;
+            border-color: #ffc107;
+            color: white;
+        }
+
+        .word-action-btn.removed {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        .review-nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .review-nav-btn {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: bold;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .review-nav-btn:hover:not(:disabled) {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .review-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .round-stats {
@@ -738,11 +815,19 @@
 
         <div class="question-card">
             <div class="word-display-container">
+                <div class="word-action-buttons">
+                    <button class="word-action-btn" id="favoriteBtn" onclick="markWordAsFavorite()" title="Favorite word (+ key)">⭐</button>
+                    <button class="word-action-btn" id="removeBtn" onclick="markWordAsRemoved()" title="Mark to ignore (- key)">🗑️</button>
+                </div>
                 <div class="word-display" id="word">Loading...</div>
                 <div class="word-progress" id="wordProgress">1/20</div>
             </div>
             <div class="choices" id="choices"></div>
             <div class="feedback" id="feedback"></div>
+            <div class="review-nav-buttons" id="reviewNavButtons" style="display: none;">
+                <button class="review-nav-btn" id="reviewPrevBtn" onclick="reviewPrevious()">← Previous</button>
+                <button class="review-nav-btn" id="reviewNextBtn" onclick="reviewNext()">Next →</button>
+            </div>
         </div>
 
         <div class="buttons">
@@ -903,6 +988,7 @@
         let roundQuestions = []; // Store questions from the current round for review
         let reviewMode = false; // Whether we're in review mode
         let reviewIndex = 0; // Current question index in review mode
+        let modalFocusIndex = 0; // Track focused button in Round Complete modal
 
         // Round history management
         async function loadRoundHistory() {
@@ -1095,13 +1181,28 @@
             // Show modal
             document.getElementById('roundCompleteModal').classList.add('show');
 
-            // Focus the "Start New Round" button for easy Enter key press
-            setTimeout(() => {
-                const startBtn = document.querySelector('#roundCompleteModal .modal-btn-primary');
-                if (startBtn) {
-                    startBtn.focus();
-                }
-            }, 100);
+            // Initialize modal keyboard focus to first button
+            modalFocusIndex = 0;
+            updateModalFocus();
+        }
+
+        function updateModalFocus() {
+            const modalButtons = document.querySelectorAll('#roundCompleteModal .modal-btn');
+
+            // Remove focus from all buttons
+            modalButtons.forEach(btn => btn.classList.remove('keyboard-focus'));
+
+            // Add focus to current button
+            if (modalButtons.length > 0 && modalFocusIndex >= 0 && modalFocusIndex < modalButtons.length) {
+                modalButtons[modalFocusIndex].classList.add('keyboard-focus');
+            }
+        }
+
+        function selectModalButton() {
+            const modalButtons = document.querySelectorAll('#roundCompleteModal .modal-btn');
+            if (modalButtons.length > 0 && modalFocusIndex >= 0 && modalFocusIndex < modalButtons.length) {
+                modalButtons[modalFocusIndex].click();
+            }
         }
 
         function closeRoundComplete() {
@@ -1130,6 +1231,9 @@
             // Restore UI
             document.getElementById('nextBtn').style.display = '';
             document.querySelector('.subtitle').textContent = 'Test your knowledge of 994 essential GRE words';
+
+            // Hide review navigation buttons
+            document.getElementById('reviewNavButtons').style.display = 'none';
 
             // Show the round complete modal again
             document.getElementById('roundCompleteModal').classList.add('show');
@@ -1213,6 +1317,18 @@
             document.querySelector('.subtitle').textContent =
                 `Reviewing Question ${reviewIndex + 1} of ${roundQuestions.length} | ` +
                 `Use ← → to navigate | +/- to mark words | Esc to exit review`;
+
+            // Show review navigation buttons and update their disabled states
+            const reviewNavButtons = document.getElementById('reviewNavButtons');
+            const reviewPrevBtn = document.getElementById('reviewPrevBtn');
+            const reviewNextBtn = document.getElementById('reviewNextBtn');
+
+            reviewNavButtons.style.display = 'flex';
+            reviewPrevBtn.disabled = (reviewIndex === 0);
+            reviewNextBtn.disabled = (reviewIndex === roundQuestions.length - 1);
+
+            // Update word action button states
+            updateWordActionButtons();
 
             // Hide next button and round progress
             document.getElementById('nextBtn').style.display = 'none';
@@ -1362,6 +1478,38 @@
                 wordEl.classList.add('removed');
             } else if (favoritedWords.has(currentQuestion.word)) {
                 wordEl.classList.add('favorited');
+            }
+
+            // Update word action buttons
+            updateWordActionButtons();
+        }
+
+        function updateWordActionButtons() {
+            // Get current word (either from current question or from review mode)
+            let currentWord = null;
+            if (reviewMode && reviewIndex >= 0 && reviewIndex < roundQuestions.length) {
+                currentWord = roundQuestions[reviewIndex].word;
+            } else if (currentQuestion) {
+                currentWord = currentQuestion.word;
+            }
+
+            if (!currentWord) return;
+
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            const removeBtn = document.getElementById('removeBtn');
+
+            // Update favorite button state
+            if (favoritedWords.has(currentWord)) {
+                favoriteBtn.classList.add('favorited');
+            } else {
+                favoriteBtn.classList.remove('favorited');
+            }
+
+            // Update remove button state
+            if (removedWords.has(currentWord)) {
+                removeBtn.classList.add('removed');
+            } else {
+                removeBtn.classList.remove('removed');
             }
         }
 
@@ -1751,10 +1899,31 @@
 
         // Keyboard event handler
         document.addEventListener('keydown', (event) => {
-            // Don't handle keys if any modal is open
+            // Handle keyboard navigation in Round Complete modal
+            if (document.getElementById('roundCompleteModal').classList.contains('show')) {
+                const modalButtons = document.querySelectorAll('#roundCompleteModal .modal-btn');
+                switch(event.key) {
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        modalFocusIndex = Math.max(0, modalFocusIndex - 1);
+                        updateModalFocus();
+                        break;
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        modalFocusIndex = Math.min(modalButtons.length - 1, modalFocusIndex + 1);
+                        updateModalFocus();
+                        break;
+                    case 'Enter':
+                        event.preventDefault();
+                        selectModalButton();
+                        break;
+                }
+                return;
+            }
+
+            // Don't handle keys if other modals are open
             if (document.getElementById('settingsModal').classList.contains('show') ||
-                document.getElementById('roundStartModal').classList.contains('show') ||
-                document.getElementById('roundCompleteModal').classList.contains('show')) {
+                document.getElementById('roundStartModal').classList.contains('show')) {
                 return;
             }
 
