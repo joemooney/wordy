@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordy - Quiz Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.3em;
+            margin-bottom: 50px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .menu-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 40px 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            text-decoration: none;
+            display: block;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .menu-card.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .menu-card.active .card-icon {
+            color: white;
+        }
+
+        .menu-card.active .card-title {
+            color: white;
+        }
+
+        .menu-card.active .card-description {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .menu-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .menu-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+
+        .card-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .card-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: 1em;
+            line-height: 1.5;
+        }
+
+        .coming-soon {
+            display: inline-block;
+            background: #ffc107;
+            color: #856404;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .stats-summary {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .stats-summary h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .subtitle {
+                font-size: 1.1em;
+            }
+
+            .container {
+                padding: 40px 20px;
+            }
+
+            .menu-card {
+                padding: 30px 20px;
+            }
+
+            .card-icon {
+                font-size: 3em;
+            }
+
+            .card-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Wordy</h1>
+        <p class="subtitle">Choose your quiz adventure</p>
+
+        <div class="menu-grid">
+            <a href="/gre-quiz" class="menu-card active">
+                <div class="card-icon">📚</div>
+                <div class="card-title">GRE Vocabulary</div>
+                <div class="card-description">
+                    Test your knowledge of 994 essential GRE words. Master vocabulary for the Graduate Record Examination.
+                </div>
+            </a>
+
+            <a href="/trivia-quiz" class="menu-card">
+                <div class="card-icon">🎯</div>
+                <div class="card-title">Trivia Quiz</div>
+                <div class="card-description">
+                    Test your general knowledge across multiple categories. Fun facts and challenging questions await!
+                </div>
+            </a>
+        </div>
+
+        <div class="stats-summary">
+            <h3>Your Progress</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">GRE Score</div>
+                    <div class="stat-value" id="greScore">{{ stats.get('score', 0) }}/{{ stats.get('total', 0) }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">GRE Accuracy</div>
+                    <div class="stat-value" id="greAccuracy">{{ accuracy }}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Rounds Played</div>
+                    <div class="stat-value" id="roundsPlayed">{{ rounds_played }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

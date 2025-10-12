@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRE Vocabulary Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .question-card {
+            margin-bottom: 30px;
+        }
+
+        .word-display-container {
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .word-display {
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: #764ba2;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .word-progress {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .word-progress.show {
+            display: block;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .choice-btn {
+            padding: 20px;
+            font-size: 1em;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            line-height: 1.5;
+            position: relative;
+            padding-left: 50px;
+        }
+
+        .choice-btn .choice-number {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .choice-btn.keyboard-focus {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(5px);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .choice-btn.correct {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .choice-btn.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .choice-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .correct-answer {
+            margin-top: 10px;
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .keyboard-hint kbd {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .pause-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .pause-overlay.active {
+            display: flex;
+        }
+
+        .pause-message {
+            color: white;
+            font-size: 3em;
+            font-weight: bold;
+        }
+
+        .pause-hint {
+            color: #ccc;
+            font-size: 1.2em;
+        }
+
+        .quiz-content.paused {
+            filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .word-status {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+        }
+
+        .word-status.show {
+            opacity: 1;
+        }
+
+        .word-status.removed {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+
+        .word-status.favorited {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .word-display.removed {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .word-display.favorited {
+            position: relative;
+        }
+
+        .word-display.favorited::before {
+            content: '⭐';
+            position: absolute;
+            left: -50px;
+            font-size: 0.6em;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .timer-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .timer {
+            display: inline-block;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 60px;
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .timer.warning {
+            color: #ff9800;
+            border-color: #ff9800;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        .timer.danger {
+            color: #dc3545;
+            border-color: #dc3545;
+            animation: pulse 0.3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            right: 150px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .setting-item {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .setting-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .setting-description {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-control input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+
+        .setting-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .setting-control input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .setting-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .close-modal-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .round-progress {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #667eea;
+            border: 2px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .modal-btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal-btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .round-stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .round-stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .round-stat-label {
+            color: #666;
+            font-weight: bold;
+        }
+
+        .round-stat-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .ranking-display {
+            text-align: center;
+            font-size: 2em;
+            color: #764ba2;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .resume-info {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            color: #856404;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin-top: 60px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .word-display {
+                font-size: 2em;
+            }
+
+            .choice-btn {
+                padding: 15px;
+                font-size: 0.9em;
+            }
+
+            .timer-container {
+                top: 10px;
+                left: 10px;
+            }
+
+            .timer-label {
+                font-size: 0.8em;
+            }
+
+            .timer {
+                font-size: 1.1em;
+                padding: 6px 12px;
+                min-width: 50px;
+            }
+
+            .home-btn {
+                top: 10px;
+                right: 95px;
+                padding: 8px 16px;
+                font-size: 1em;
+            }
+
+            .settings-btn {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+
+            .modal-content {
+                padding: 25px;
+            }
+
+            .round-progress {
+                top: 60px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pause-overlay" id="pauseOverlay">
+        <div class="pause-message">⏸️ PAUSED</div>
+        <div class="pause-hint">Press SPACE to resume</div>
+    </div>
+
+    <div class="quiz-content" id="quizContent">
+        <div class="word-status" id="wordStatus"></div>
+        <div class="round-progress" id="roundProgress" style="display: none;">Round: 0/20</div>
+
+        <div class="timer-container">
+            <span class="timer-label">Time:</span>
+            <div class="timer" id="timer">--</div>
+        </div>
+
+        <a href="/" class="home-btn" title="Return to Home">🏠</a>
+        <button class="settings-btn" onclick="openSettings()">⚙️ Settings</button>
+
+        <div class="container">
+        <h1>GRE Vocabulary Quiz</h1>
+        <p class="subtitle">Test your knowledge of 994 essential GRE words</p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Total</div>
+                <div class="stat-value" id="total">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Elapsed</div>
+                <div class="stat-value" id="elapsed">0:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Avg/Word</div>
+                <div class="stat-value" id="avgTime">--</div>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="word-display-container">
+                <div class="word-display" id="word">Loading...</div>
+                <div class="word-progress" id="wordProgress">1/20</div>
+            </div>
+            <div class="choices" id="choices"></div>
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" id="nextBtn" onclick="loadQuestion()">Next Question</button>
+            <button class="btn btn-secondary" onclick="resetStats()">Reset Stats</button>
+        </div>
+
+        <div class="keyboard-hint">
+            💡 <kbd>1</kbd>-<kbd>4</kbd> or <kbd>↑</kbd><kbd>↓</kbd> + <kbd>Enter</kbd> to answer | <kbd>←</kbd><kbd>→</kbd> to review | <kbd>Space</kbd> to pause | <kbd>Esc</kbd> to abandon round
+        </div>
+    </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">⚙️ Settings</div>
+
+            <div class="setting-item">
+                <label class="setting-label">Auto-Advance Delay (Correct Answers)</label>
+                <div class="setting-description">
+                    Automatically move to the next question after getting an answer correct. Set to 0 to disable auto-advance.
+                </div>
+                <div class="setting-control">
+                    <input type="range" id="autoAdvanceDelay" min="0" max="5000" step="100" value="500" oninput="updateDelaySetting(this.value)">
+                    <span class="setting-value" id="delayValue">0.5s</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Answer Timeout</label>
+                <div class="setting-description">
+                    Time limit to answer each question. When time runs out, the question is marked incorrect. Set to 0 to disable timeout.
+                </div>
+                <div class="setting-control">
+                    <input type="range" id="answerTimeout" min="0" max="60" step="1" value="30" oninput="updateTimeoutSetting(this.value)">
+                    <span class="setting-value" id="timeoutValue">30s</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Show Correct Answer on Timeout</label>
+                <div class="setting-description">
+                    When time runs out, automatically show the correct answer. If disabled, you'll need to click "Next Question" to move on.
+                </div>
+                <div class="setting-control">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="showAnswerOnTimeout" onchange="updateShowAnswerSetting(this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span id="showAnswerLabel">Enabled</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Terminate Round on First Wrong Answer</label>
+                <div class="setting-description">
+                    When enabled, a round will immediately end when you answer a question incorrectly or run out of time. Default: Enabled.
+                </div>
+                <div class="setting-control">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="terminateOnWrong" onchange="updateTerminateOnWrongSetting(this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span id="terminateOnWrongLabel">Enabled</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Only Perfect Scores Count for Rankings</label>
+                <div class="setting-description">
+                    When enabled, only rounds with perfect scores (20/20) are saved to history and count towards rankings. Failed rounds are not saved. Default: Enabled.
+                </div>
+                <div class="setting-control">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="onlyPerfectScores" onchange="updateOnlyPerfectScoresSetting(this.checked)" style="width: 20px; height: 20px; cursor: pointer;">
+                        <span id="onlyPerfectScoresLabel">Enabled</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="close-modal-btn" onclick="closeSettings()">Close</button>
+        </div>
+    </div>
+
+    <!-- Round Start/Resume Modal -->
+    <div id="roundStartModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🎯 Round Mode</div>
+            <p style="text-align: center; margin: 20px 0; font-size: 1.1em; color: #666;">
+                A round consists of 20 questions. Your goal is to answer all questions correctly in the shortest time!
+            </p>
+            <div id="resumeSection" style="display: none;">
+                <div class="resume-info">
+                    <strong>Resume Incomplete Round?</strong><br>
+                    Progress: <span id="resumeProgress">0/20</span> questions<br>
+                    Score: <span id="resumeScore">0</span> correct
+                </div>
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn modal-btn-secondary" id="resumeBtn" onclick="resumeRound()" style="display: none;">Resume Round</button>
+                <button class="modal-btn modal-btn-primary" onclick="startNewRound()">Start New Round</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Round Complete Modal -->
+    <div id="roundCompleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🎉 Round Complete!</div>
+            <div class="round-stats">
+                <div class="round-stat-row">
+                    <span class="round-stat-label">Score:</span>
+                    <span class="round-stat-value" id="completeScore">0/20</span>
+                </div>
+                <div class="round-stat-row">
+                    <span class="round-stat-label">Time:</span>
+                    <span class="round-stat-value" id="completeTime">0:00</span>
+                </div>
+                <div class="round-stat-row">
+                    <span class="round-stat-label">Accuracy:</span>
+                    <span class="round-stat-value" id="completeAccuracy">0%</span>
+                </div>
+            </div>
+            <div class="ranking-display" id="rankingDisplay">
+                Ranked #1 of 1
+            </div>
+            <div style="text-align: center;">
+                <button class="modal-btn modal-btn-primary" onclick="startNewRound()">Start New Round</button>
+                <button class="modal-btn modal-btn-secondary" onclick="enterReviewMode()">Review Round</button>
+                <button class="modal-btn modal-btn-secondary" onclick="closeRoundComplete()">Continue Practice</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = null;
+        let autoAdvanceTimeout = null;
+        let questionTimeout = null;
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let currentFocusIndex = 0;
+        let answersEnabled = true;
+        let questionHistory = []; // Store all previous questions and answers
+        let historyIndex = -1; // -1 means we're at current question, 0+ means reviewing history
+        let isPaused = false;
+        let pausedTimeRemaining = 0;
+        let removedWords = new Set(); // Words marked for removal
+        let favoritedWords = new Set(); // Words marked as favorites
+        let quizStartTime = null;
+        let currentQuestionStartTime = null;
+        let totalPausedTime = 0;
+        let lastPauseStartTime = null;
+
+        // Round tracking
+        let currentRound = null;
+        let roundStartTime = null;
+        let roundHistory = [];
+        let roundWords = new Set(); // Track words used in current round to avoid repeats
+        let roundQuestions = []; // Store questions from the current round for review
+        let reviewMode = false; // Whether we're in review mode
+        let reviewIndex = 0; // Current question index in review mode
+
+        // Round history management
+        async function loadRoundHistory() {
+            try {
+                const response = await fetch('/round/history');
+                const data = await response.json();
+                roundHistory = data.history || [];
+            } catch (error) {
+                console.error('Error loading round history:', error);
+                roundHistory = [];
+            }
+        }
+
+        async function saveRound(round) {
+            // Save to server instead of localStorage
+            // Note: The round is saved via the /round/complete endpoint
+            roundHistory.push(round);
+        }
+
+        function rankRound(round) {
+            // Ranking criteria:
+            // 1. Perfect score (all correct) - ranked by time (shorter is better)
+            // 2. Imperfect score - ranked by number of incorrect (fewer is better), then by time
+
+            const isPerfect = round.score === round.total;
+            let rank = 1;
+
+            for (const histRound of roundHistory) {
+                const histPerfect = histRound.score === histRound.total;
+
+                if (isPerfect && histPerfect) {
+                    // Both perfect: compare by time
+                    if (histRound.time < round.time) {
+                        rank++;
+                    }
+                } else if (isPerfect && !histPerfect) {
+                    // Current perfect, historical imperfect: current is better
+                    continue;
+                } else if (!isPerfect && histPerfect) {
+                    // Current imperfect, historical perfect: historical is better
+                    rank++;
+                } else {
+                    // Both imperfect: compare by incorrect count, then time
+                    const currentIncorrect = round.total - round.score;
+                    const histIncorrect = histRound.total - histRound.score;
+
+                    if (histIncorrect < currentIncorrect) {
+                        rank++;
+                    } else if (histIncorrect === currentIncorrect && histRound.time < round.time) {
+                        rank++;
+                    }
+                }
+            }
+
+            return rank;
+        }
+
+        async function startNewRound() {
+            // Start a new round
+            try {
+                const response = await fetch('/round/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ round_size: 20 })
+                });
+                const result = await response.json();
+
+                currentRound = {
+                    size: result.round_size,
+                    score: 0,
+                    total: 0,
+                    startTime: Date.now()
+                };
+                roundStartTime = Date.now();
+
+                // Clear words used in previous round
+                roundWords.clear();
+                roundQuestions = [];
+
+                // Close both modals (in case either is open)
+                document.getElementById('roundStartModal').classList.remove('show');
+                document.getElementById('roundCompleteModal').classList.remove('show');
+
+                // Show round progress
+                document.getElementById('roundProgress').style.display = 'block';
+                updateRoundProgress();
+
+                // Load first question
+                loadQuestion();
+            } catch (error) {
+                console.error('Error starting round:', error);
+            }
+        }
+
+        async function resumeRound() {
+            // Resume existing round
+            try {
+                const response = await fetch('/round/status');
+                const status = await response.json();
+
+                if (status.active) {
+                    currentRound = {
+                        size: status.size,
+                        score: status.score,
+                        total: status.total,
+                        startTime: Date.now() - (status.total * 10000) // Estimate based on questions answered
+                    };
+                    roundStartTime = currentRound.startTime;
+
+                    // Close modal
+                    document.getElementById('roundStartModal').classList.remove('show');
+
+                    // Show round progress
+                    document.getElementById('roundProgress').style.display = 'block';
+                    updateRoundProgress();
+
+                    // Load next question
+                    loadQuestion();
+                }
+            } catch (error) {
+                console.error('Error resuming round:', error);
+            }
+        }
+
+        function updateRoundProgress() {
+            if (currentRound) {
+                const progressEl = document.getElementById('roundProgress');
+                progressEl.textContent = `Round: ${currentRound.total}/${currentRound.size}`;
+
+                // Also update word-adjacent progress indicator
+                const wordProgressEl = document.getElementById('wordProgress');
+                wordProgressEl.textContent = `${currentRound.total}/${currentRound.size}`;
+                wordProgressEl.classList.add('show');
+            }
+        }
+
+        async function showRoundComplete() {
+            if (!currentRound) return;
+
+            const roundTime = (Date.now() - roundStartTime) / 1000;
+            const completedRound = {
+                score: currentRound.score,
+                total: currentRound.total,
+                time: roundTime,
+                date: new Date().toISOString()
+            };
+
+            // Check if round should be saved to history
+            const isPerfect = completedRound.score === completedRound.total;
+            const onlyPerfectScores = getOnlyPerfectScores();
+            const shouldSaveToHistory = !onlyPerfectScores || isPerfect;
+
+            // Update display
+            document.getElementById('completeScore').textContent =
+                `${completedRound.score}/${completedRound.total}`;
+            document.getElementById('completeTime').textContent = formatTime(roundTime);
+            document.getElementById('completeAccuracy').textContent =
+                Math.round((completedRound.score / completedRound.total) * 100) + '%';
+
+            if (shouldSaveToHistory) {
+                // Save round to local array (for ranking calculation)
+                saveRound(completedRound);
+
+                // Calculate ranking
+                const rank = rankRound(completedRound);
+                document.getElementById('rankingDisplay').textContent =
+                    `Ranked #${rank} of ${roundHistory.length}`;
+            } else {
+                // Don't show ranking for failed rounds when setting is enabled
+                document.getElementById('rankingDisplay').textContent =
+                    'Not saved - only perfect scores count';
+            }
+
+            // Complete round on backend
+            await fetch('/round/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    save_to_history: shouldSaveToHistory,
+                    time: roundTime
+                })
+            });
+
+            // Clear current round
+            currentRound = null;
+            roundStartTime = null;
+            document.getElementById('roundProgress').style.display = 'none';
+            document.getElementById('wordProgress').classList.remove('show');
+
+            // Show modal
+            document.getElementById('roundCompleteModal').classList.add('show');
+
+            // Focus the "Start New Round" button for easy Enter key press
+            setTimeout(() => {
+                const startBtn = document.querySelector('#roundCompleteModal .modal-btn-primary');
+                if (startBtn) {
+                    startBtn.focus();
+                }
+            }, 100);
+        }
+
+        function closeRoundComplete() {
+            document.getElementById('roundCompleteModal').classList.remove('show');
+        }
+
+        function enterReviewMode() {
+            if (roundQuestions.length === 0) return;
+
+            // Close the round complete modal
+            document.getElementById('roundCompleteModal').classList.remove('show');
+
+            // Enter review mode
+            reviewMode = true;
+            reviewIndex = 0;
+            answersEnabled = false;
+
+            // Display first question in review
+            displayReviewQuestion();
+        }
+
+        function exitReviewMode() {
+            reviewMode = false;
+            reviewIndex = 0;
+
+            // Restore UI
+            document.getElementById('nextBtn').style.display = '';
+            document.querySelector('.subtitle').textContent = 'Test your knowledge of 994 essential GRE words';
+
+            // Show the round complete modal again
+            document.getElementById('roundCompleteModal').classList.add('show');
+        }
+
+        function displayReviewQuestion() {
+            if (!reviewMode || reviewIndex < 0 || reviewIndex >= roundQuestions.length) return;
+
+            const question = roundQuestions[reviewIndex];
+
+            // Show the word
+            document.getElementById('word').textContent = question.word;
+
+            // Update word display styling (favorite/removed)
+            const wordEl = document.getElementById('word');
+            wordEl.className = 'word-display';
+            if (removedWords.has(question.word)) {
+                wordEl.classList.add('removed');
+            } else if (favoritedWords.has(question.word)) {
+                wordEl.classList.add('favorited');
+            }
+
+            // Hide timer
+            document.getElementById('timer').textContent = '--';
+            document.getElementById('timer').className = 'timer';
+
+            // Display choices with answer shown
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+
+            question.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.disabled = true;
+
+                // Add number badge
+                const numberBadge = document.createElement('span');
+                numberBadge.className = 'choice-number';
+                numberBadge.textContent = (index + 1);
+                btn.appendChild(numberBadge);
+
+                // Add choice text
+                const choiceText = document.createTextNode(choice);
+                btn.appendChild(choiceText);
+
+                // Mark the user's answer
+                if (choice === question.userAnswer) {
+                    if (question.correct) {
+                        btn.classList.add('correct');
+                    } else {
+                        btn.classList.add('incorrect');
+                    }
+                }
+
+                // Highlight correct answer if user was wrong
+                if (!question.correct && choice === question.correctAnswer) {
+                    btn.classList.add('correct');
+                }
+
+                choicesContainer.appendChild(btn);
+            });
+
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            if (question.correct) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✓ Correct!';
+            } else {
+                feedback.className = 'feedback incorrect';
+                if (question.userAnswer) {
+                    feedback.innerHTML = '✗ Incorrect<div class="correct-answer">Correct: ' +
+                        question.correctAnswer + '</div>';
+                } else {
+                    feedback.innerHTML = '⏱️ Time\'s Up!' +
+                        (getShowAnswerOnTimeout() ? '<div class="correct-answer">Correct: ' +
+                        question.correctAnswer + '</div>' : '');
+                }
+            }
+
+            // Update subtitle to show review mode
+            document.querySelector('.subtitle').textContent =
+                `Reviewing Question ${reviewIndex + 1} of ${roundQuestions.length} | ` +
+                `Use ← → to navigate | +/- to mark words | Esc to exit review`;
+
+            // Hide next button and round progress
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('roundProgress').style.display = 'none';
+            document.getElementById('wordProgress').classList.remove('show');
+        }
+
+        function reviewPrevious() {
+            if (reviewMode && reviewIndex > 0) {
+                reviewIndex--;
+                displayReviewQuestion();
+            }
+        }
+
+        function reviewNext() {
+            if (reviewMode && reviewIndex < roundQuestions.length - 1) {
+                reviewIndex++;
+                displayReviewQuestion();
+            }
+        }
+
+        function markCurrentReviewWord(action) {
+            if (!reviewMode || reviewIndex < 0 || reviewIndex >= roundQuestions.length) return;
+
+            const word = roundQuestions[reviewIndex].word;
+
+            if (action === 'favorite') {
+                if (favoritedWords.has(word)) {
+                    favoritedWords.delete(word);
+                    showWordStatus('Unfavorited', 'favorited');
+                } else {
+                    favoritedWords.add(word);
+                    if (removedWords.has(word)) {
+                        removedWords.delete(word);
+                    }
+                    showWordStatus('⭐ Added to favorites', 'favorited');
+                }
+            } else if (action === 'remove') {
+                if (removedWords.has(word)) {
+                    removedWords.delete(word);
+                    showWordStatus('Unmarked for removal', 'removed');
+                } else {
+                    removedWords.add(word);
+                    if (favoritedWords.has(word)) {
+                        favoritedWords.delete(word);
+                    }
+                    showWordStatus('⛔ Marked for removal', 'removed');
+                }
+            }
+
+            saveWordLists();
+            displayReviewQuestion();
+        }
+
+        async function abandonRound() {
+            if (!currentRound) return;
+
+            if (confirm('Are you sure you want to abandon this round? Your progress will not be saved.')) {
+                // Complete round on backend (without saving to history)
+                await fetch('/round/complete', { method: 'POST' });
+
+                // Clear current round
+                currentRound = null;
+                roundStartTime = null;
+                roundWords.clear();
+
+                // Hide progress indicators
+                document.getElementById('roundProgress').style.display = 'none';
+                document.getElementById('wordProgress').classList.remove('show');
+
+                // Show round start modal
+                document.getElementById('roundStartModal').classList.add('show');
+            }
+        }
+
+        // Load word lists from localStorage
+        function loadWordLists() {
+            const removed = localStorage.getItem('removedWords');
+            const favorited = localStorage.getItem('favoritedWords');
+
+            if (removed) {
+                removedWords = new Set(JSON.parse(removed));
+            }
+            if (favorited) {
+                favoritedWords = new Set(JSON.parse(favorited));
+            }
+        }
+
+        function saveWordLists() {
+            localStorage.setItem('removedWords', JSON.stringify([...removedWords]));
+            localStorage.setItem('favoritedWords', JSON.stringify([...favoritedWords]));
+        }
+
+        function markWordAsRemoved() {
+            if (!currentQuestion || historyIndex !== -1) return;
+
+            const word = currentQuestion.word;
+            if (removedWords.has(word)) {
+                removedWords.delete(word);
+                showWordStatus('Unmarked for removal', 'removed');
+            } else {
+                removedWords.add(word);
+                if (favoritedWords.has(word)) {
+                    favoritedWords.delete(word);
+                }
+                showWordStatus('⛔ Marked for removal', 'removed');
+            }
+            saveWordLists();
+            updateWordDisplay();
+        }
+
+        function markWordAsFavorite() {
+            if (!currentQuestion || historyIndex !== -1) return;
+
+            const word = currentQuestion.word;
+            if (favoritedWords.has(word)) {
+                favoritedWords.delete(word);
+                showWordStatus('Unfavorited', 'favorited');
+            } else {
+                favoritedWords.add(word);
+                if (removedWords.has(word)) {
+                    removedWords.delete(word);
+                }
+                showWordStatus('⭐ Added to favorites', 'favorited');
+            }
+            saveWordLists();
+            updateWordDisplay();
+        }
+
+        function showWordStatus(message, type) {
+            const statusEl = document.getElementById('wordStatus');
+            statusEl.textContent = message;
+            statusEl.className = `word-status ${type} show`;
+
+            setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateWordDisplay() {
+            if (!currentQuestion) return;
+
+            const wordEl = document.getElementById('word');
+            wordEl.className = 'word-display';
+
+            if (removedWords.has(currentQuestion.word)) {
+                wordEl.classList.add('removed');
+            } else if (favoritedWords.has(currentQuestion.word)) {
+                wordEl.classList.add('favorited');
+            }
+        }
+
+        // Settings management
+        function getAutoAdvanceDelay() {
+            const stored = localStorage.getItem('autoAdvanceDelay');
+            return stored !== null ? parseInt(stored) : 500; // Default 0.5 seconds
+        }
+
+        function setAutoAdvanceDelay(value) {
+            localStorage.setItem('autoAdvanceDelay', value);
+        }
+
+        function getAnswerTimeout() {
+            const stored = localStorage.getItem('answerTimeout');
+            return stored !== null ? parseInt(stored) : 30; // Default 30 seconds
+        }
+
+        function setAnswerTimeout(value) {
+            localStorage.setItem('answerTimeout', value);
+        }
+
+        function getShowAnswerOnTimeout() {
+            const stored = localStorage.getItem('showAnswerOnTimeout');
+            return stored !== null ? stored === 'true' : false; // Default false (disabled)
+        }
+
+        function setShowAnswerOnTimeout(value) {
+            localStorage.setItem('showAnswerOnTimeout', value);
+        }
+
+        function getTerminateOnWrong() {
+            const stored = localStorage.getItem('terminateOnWrong');
+            return stored !== null ? stored === 'true' : true; // Default true (enabled)
+        }
+
+        function setTerminateOnWrong(value) {
+            localStorage.setItem('terminateOnWrong', value);
+        }
+
+        function updateTerminateOnWrongSetting(checked) {
+            setTerminateOnWrong(checked);
+            document.getElementById('terminateOnWrongLabel').textContent = checked ? 'Enabled' : 'Disabled';
+        }
+
+        function getOnlyPerfectScores() {
+            const stored = localStorage.getItem('onlyPerfectScores');
+            return stored !== null ? stored === 'true' : true; // Default true (enabled)
+        }
+
+        function setOnlyPerfectScores(value) {
+            localStorage.setItem('onlyPerfectScores', value);
+        }
+
+        function updateOnlyPerfectScoresSetting(checked) {
+            setOnlyPerfectScores(checked);
+            document.getElementById('onlyPerfectScoresLabel').textContent = checked ? 'Enabled' : 'Disabled';
+        }
+
+        function updateDelaySetting(value) {
+            const delayMs = parseInt(value);
+            setAutoAdvanceDelay(delayMs);
+
+            // Update display
+            if (delayMs === 0) {
+                document.getElementById('delayValue').textContent = 'Off';
+            } else {
+                document.getElementById('delayValue').textContent = (delayMs / 1000).toFixed(1) + 's';
+            }
+        }
+
+        function updateTimeoutSetting(value) {
+            const timeoutSeconds = parseInt(value);
+            setAnswerTimeout(timeoutSeconds);
+
+            // Update display
+            if (timeoutSeconds === 0) {
+                document.getElementById('timeoutValue').textContent = 'Off';
+            } else {
+                document.getElementById('timeoutValue').textContent = timeoutSeconds + 's';
+            }
+        }
+
+        function updateShowAnswerSetting(checked) {
+            setShowAnswerOnTimeout(checked);
+            document.getElementById('showAnswerLabel').textContent = checked ? 'Enabled' : 'Disabled';
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('show');
+
+            // Load current settings
+            const currentDelay = getAutoAdvanceDelay();
+            document.getElementById('autoAdvanceDelay').value = currentDelay;
+            updateDelaySetting(currentDelay);
+
+            const currentTimeout = getAnswerTimeout();
+            document.getElementById('answerTimeout').value = currentTimeout;
+            updateTimeoutSetting(currentTimeout);
+
+            const showAnswer = getShowAnswerOnTimeout();
+            document.getElementById('showAnswerOnTimeout').checked = showAnswer;
+            document.getElementById('showAnswerLabel').textContent = showAnswer ? 'Enabled' : 'Disabled';
+
+            const terminateOnWrong = getTerminateOnWrong();
+            document.getElementById('terminateOnWrong').checked = terminateOnWrong;
+            document.getElementById('terminateOnWrongLabel').textContent = terminateOnWrong ? 'Enabled' : 'Disabled';
+
+            const onlyPerfectScores = getOnlyPerfectScores();
+            document.getElementById('onlyPerfectScores').checked = onlyPerfectScores;
+            document.getElementById('onlyPerfectScoresLabel').textContent = onlyPerfectScores ? 'Enabled' : 'Disabled';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('settingsModal');
+            if (event.target === modal) {
+                closeSettings();
+            }
+        }
+
+        // Keyboard navigation
+        function updateFocus(newIndex) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            if (buttons.length === 0) return;
+
+            // Remove focus from all buttons
+            buttons.forEach(btn => btn.classList.remove('keyboard-focus'));
+
+            // Clamp index
+            currentFocusIndex = Math.max(0, Math.min(newIndex, buttons.length - 1));
+
+            // Add focus to current button
+            buttons[currentFocusIndex].classList.add('keyboard-focus');
+            buttons[currentFocusIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function getChoiceText(button) {
+            // Get the text content without the number badge
+            return Array.from(button.childNodes)
+                .filter(node => node.nodeType === Node.TEXT_NODE)
+                .map(node => node.textContent)
+                .join('').trim();
+        }
+
+        function selectCurrentChoice() {
+            if (!answersEnabled) return;
+
+            const buttons = document.querySelectorAll('.choice-btn');
+            if (buttons.length > 0 && currentFocusIndex >= 0 && currentFocusIndex < buttons.length) {
+                const selectedBtn = buttons[currentFocusIndex];
+                if (!selectedBtn.disabled) {
+                    const choice = getChoiceText(selectedBtn);
+                    checkAnswer(choice, selectedBtn);
+                }
+            }
+        }
+
+        function selectChoiceByNumber(number) {
+            if (!answersEnabled) return;
+            if (number < 1 || number > 4) return;
+
+            const buttons = document.querySelectorAll('.choice-btn');
+            if (buttons.length >= number) {
+                const selectedBtn = buttons[number - 1];
+                if (!selectedBtn.disabled) {
+                    const choice = getChoiceText(selectedBtn);
+                    currentFocusIndex = number - 1;
+                    updateFocus(currentFocusIndex);
+                    checkAnswer(choice, selectedBtn);
+                }
+            }
+        }
+
+        // Time tracking functions
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function getElapsedTime() {
+            if (!quizStartTime) return 0;
+            const now = Date.now();
+            const rawElapsed = (now - quizStartTime) / 1000;
+            return rawElapsed - totalPausedTime;
+        }
+
+        function updateElapsedTimeDisplay() {
+            const elapsed = getElapsedTime();
+            document.getElementById('elapsed').textContent = formatTime(elapsed);
+        }
+
+        function updateAverageTime() {
+            const total = parseInt(document.getElementById('total').textContent);
+            if (total === 0) {
+                document.getElementById('avgTime').textContent = '--';
+                return;
+            }
+
+            const elapsed = getElapsedTime();
+            const avgSeconds = elapsed / total;
+            document.getElementById('avgTime').textContent = avgSeconds.toFixed(1) + 's';
+        }
+
+        // Pause/Resume functions
+        function togglePause() {
+            if (historyIndex !== -1) return; // Can't pause while reviewing history
+
+            isPaused = !isPaused;
+
+            const pauseOverlay = document.getElementById('pauseOverlay');
+            const quizContent = document.getElementById('quizContent');
+
+            if (isPaused) {
+                // Record pause start time
+                lastPauseStartTime = Date.now();
+
+                // Pause
+                pauseOverlay.classList.add('active');
+                quizContent.classList.add('paused');
+
+                // Pause timer
+                if (timerInterval) {
+                    pausedTimeRemaining = timeRemaining;
+                    stopTimer();
+                }
+            } else {
+                // Add paused duration to total
+                if (lastPauseStartTime) {
+                    const pauseDuration = (Date.now() - lastPauseStartTime) / 1000;
+                    totalPausedTime += pauseDuration;
+                    lastPauseStartTime = null;
+                }
+
+                // Resume
+                pauseOverlay.classList.remove('active');
+                quizContent.classList.remove('paused');
+
+                // Resume timer
+                if (pausedTimeRemaining > 0 && answersEnabled) {
+                    timeRemaining = pausedTimeRemaining;
+                    updateTimerDisplay();
+
+                    // Restart countdown from where we left off
+                    timerInterval = setInterval(() => {
+                        timeRemaining -= 0.1;
+                        if (timeRemaining <= 0) {
+                            timeRemaining = 0;
+                            stopTimer();
+                            handleTimeout();
+                        } else {
+                            updateTimerDisplay();
+                        }
+                    }, 100);
+
+                    // Set timeout for remaining time
+                    questionTimeout = setTimeout(() => {
+                        handleTimeout();
+                    }, pausedTimeRemaining * 1000);
+
+                    pausedTimeRemaining = 0;
+                }
+            }
+        }
+
+        // Navigation functions
+        function goToPreviousQuestion() {
+            if (questionHistory.length === 0) return;
+
+            // Stop timer when entering review mode
+            stopTimer();
+
+            // If we're at current question, start from most recent history
+            if (historyIndex === -1) {
+                historyIndex = questionHistory.length - 1;
+            } else if (historyIndex > 0) {
+                historyIndex--;
+            } else {
+                return; // Already at oldest question
+            }
+
+            displayHistoricalQuestion();
+        }
+
+        function goToNextQuestion() {
+            if (historyIndex === -1) return; // Already at current question
+
+            historyIndex++;
+            if (historyIndex >= questionHistory.length) {
+                // Return to current question
+                historyIndex = -1;
+                displayCurrentQuestion();
+            } else {
+                displayHistoricalQuestion();
+            }
+        }
+
+        function displayHistoricalQuestion() {
+            const historical = questionHistory[historyIndex];
+
+            // Disable answers
+            answersEnabled = false;
+
+            // Show the word
+            document.getElementById('word').textContent = historical.word;
+
+            // Hide timer
+            document.getElementById('timer').textContent = '--';
+            document.getElementById('timer').className = 'timer';
+
+            // Display choices with answer shown
+            const choicesContainer = document.getElementById('choices');
+            choicesContainer.innerHTML = '';
+
+            historical.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.disabled = true;
+
+                // Add number badge
+                const numberBadge = document.createElement('span');
+                numberBadge.className = 'choice-number';
+                numberBadge.textContent = (index + 1);
+                btn.appendChild(numberBadge);
+
+                // Add choice text
+                const choiceText = document.createTextNode(choice);
+                btn.appendChild(choiceText);
+
+                // Mark the user's answer
+                if (choice === historical.userAnswer) {
+                    if (historical.correct) {
+                        btn.classList.add('correct');
+                    } else {
+                        btn.classList.add('incorrect');
+                    }
+                }
+
+                // Highlight correct answer if user was wrong
+                if (!historical.correct && choice === historical.correctAnswer) {
+                    btn.classList.add('correct');
+                }
+
+                choicesContainer.appendChild(btn);
+            });
+
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            if (historical.correct) {
+                feedback.className = 'feedback correct';
+                feedback.innerHTML = '✓ Correct!';
+            } else {
+                feedback.className = 'feedback incorrect';
+                if (historical.userAnswer) {
+                    feedback.innerHTML = '✗ Incorrect<div class="correct-answer">Correct: ' +
+                        historical.correctAnswer + '</div>';
+                } else {
+                    feedback.innerHTML = '⏱️ Time\'s Up!' +
+                        (getShowAnswerOnTimeout() ? '<div class="correct-answer">Correct: ' +
+                        historical.correctAnswer + '</div>' : '');
+                }
+            }
+
+            // Update subtitle to show review mode
+            document.querySelector('.subtitle').textContent =
+                `Reviewing Question ${historyIndex + 1} of ${questionHistory.length} (Use ← → to navigate)`;
+
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function displayCurrentQuestion() {
+            answersEnabled = true;
+            document.querySelector('.subtitle').textContent =
+                'Test your knowledge of 994 essential GRE words';
+
+            // Clear feedback
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback';
+            feedback.style.display = 'none';
+        }
+
+        // Keyboard event handler
+        document.addEventListener('keydown', (event) => {
+            // Don't handle keys if any modal is open
+            if (document.getElementById('settingsModal').classList.contains('show') ||
+                document.getElementById('roundStartModal').classList.contains('show') ||
+                document.getElementById('roundCompleteModal').classList.contains('show')) {
+                return;
+            }
+
+            // Review mode has its own keyboard handling
+            if (reviewMode) {
+                switch(event.key) {
+                    case 'ArrowLeft':
+                        event.preventDefault();
+                        reviewPrevious();
+                        break;
+                    case 'ArrowRight':
+                        event.preventDefault();
+                        reviewNext();
+                        break;
+                    case 'Escape':
+                        event.preventDefault();
+                        exitReviewMode();
+                        break;
+                    case '-':
+                    case '_':
+                        event.preventDefault();
+                        markCurrentReviewWord('remove');
+                        break;
+                    case '+':
+                    case '=':
+                        event.preventDefault();
+                        markCurrentReviewWord('favorite');
+                        break;
+                }
+                return;
+            }
+
+            // Spacebar always works for pause/resume (even when paused)
+            if (event.key === ' ' || event.code === 'Space') {
+                event.preventDefault();
+                togglePause();
+                return;
+            }
+
+            // Escape key to abandon round
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                abandonRound();
+                return;
+            }
+
+            // Other keys don't work when paused
+            if (isPaused) return;
+
+            const buttons = document.querySelectorAll('.choice-btn');
+
+            switch(event.key) {
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    goToPreviousQuestion();
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    if (historyIndex !== -1) {
+                        goToNextQuestion();
+                    }
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    if (buttons.length > 0 && answersEnabled) {
+                        updateFocus(currentFocusIndex - 1);
+                    }
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    if (buttons.length > 0 && answersEnabled) {
+                        updateFocus(currentFocusIndex + 1);
+                    }
+                    break;
+                case 'Enter':
+                    event.preventDefault();
+                    if (answersEnabled) {
+                        selectCurrentChoice();
+                    } else if (!document.getElementById('nextBtn').disabled && historyIndex === -1) {
+                        // If we're at current question and answer has been given, load next question
+                        loadQuestion();
+                    }
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                    event.preventDefault();
+                    if (answersEnabled) {
+                        selectChoiceByNumber(parseInt(event.key));
+                    }
+                    break;
+                case '-':
+                case '_':
+                    event.preventDefault();
+                    markWordAsRemoved();
+                    break;
+                case '+':
+                case '=':
+                    event.preventDefault();
+                    markWordAsFavorite();
+                    break;
+            }
+        });
+
+        // Timer functions
+        function startTimer() {
+            const timeout = getAnswerTimeout();
+            if (timeout === 0) {
+                document.getElementById('timer').textContent = '--';
+                return;
+            }
+
+            timeRemaining = timeout;
+            updateTimerDisplay();
+
+            // Start countdown
+            timerInterval = setInterval(() => {
+                timeRemaining -= 0.1;
+                if (timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    stopTimer();
+                    handleTimeout();
+                } else {
+                    updateTimerDisplay();
+                }
+            }, 100);
+
+            // Set timeout for auto-submit
+            questionTimeout = setTimeout(() => {
+                handleTimeout();
+            }, timeout * 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (questionTimeout) {
+                clearTimeout(questionTimeout);
+                questionTimeout = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const timerElement = document.getElementById('timer');
+            const displayTime = Math.ceil(timeRemaining * 10) / 10;
+            timerElement.textContent = displayTime.toFixed(1) + 's';
+
+            // Update timer appearance based on time remaining
+            timerElement.className = 'timer';
+            const timeout = getAnswerTimeout();
+            if (timeout > 0) {
+                const percentRemaining = (timeRemaining / timeout) * 100;
+                if (percentRemaining <= 20) {
+                    timerElement.classList.add('danger');
+                } else if (percentRemaining <= 50) {
+                    timerElement.classList.add('warning');
+                }
+            }
+        }
+
+        async function handleTimeout() {
+            stopTimer();
+
+            // Disable keyboard navigation
+            answersEnabled = false;
+
+            // Disable all choice buttons
+            const allButtons = document.querySelectorAll('.choice-btn');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('keyboard-focus');
+            });
+
+            // Show feedback (will be updated with correct answer after API call if enabled)
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback incorrect';
+            feedback.innerHTML = '⏱️ Time\'s Up!';
+
+            // Update stats (count as incorrect)
+            try {
+                const response = await fetch('/check_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        word: currentQuestion.word,
+                        choice: '' // Empty choice = timeout
+                    })
+                });
+
+                const result = await response.json();
+
+                // Save to history (timeout = empty user answer)
+                const questionData = {
+                    word: currentQuestion.word,
+                    choices: currentQuestion.choices,
+                    userAnswer: '', // Empty indicates timeout
+                    correctAnswer: result.correct_definition,
+                    correct: false
+                };
+                questionHistory.push(questionData);
+
+                // Also save to round questions if in a round
+                if (currentRound) {
+                    roundQuestions.push(questionData);
+                }
+
+                // Update stats
+                document.getElementById('score').textContent = result.score;
+                document.getElementById('total').textContent = result.total;
+                const accuracy = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
+                document.getElementById('accuracy').textContent = accuracy + '%';
+
+                // Update time stats
+                updateElapsedTimeDisplay();
+                updateAverageTime();
+
+                // Show correct answer only if setting is enabled
+                const showAnswer = getShowAnswerOnTimeout();
+                if (showAnswer) {
+                    feedback.innerHTML = '⏱️ Time\'s Up!<div class="correct-answer">Correct answer: ' +
+                        result.correct_definition + '</div>';
+
+                    // Highlight the correct answer
+                    allButtons.forEach(btn => {
+                        if (getChoiceText(btn) === result.correct_definition) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+
+                // Update round stats if round is active
+                if (currentRound) {
+                    currentRound.total++;
+                    // Timeout is always incorrect, so don't increment score
+                    updateRoundProgress();
+
+                    // Check if setting is enabled - terminate round immediately on timeout
+                    if (getTerminateOnWrong()) {
+                        // Terminate round immediately on timeout
+                        setTimeout(() => {
+                            showRoundComplete();
+                        }, 2000);
+                        return; // Don't enable next button, as we're ending the round
+                    }
+                    // Check if round is complete
+                    else if (currentRound.total >= currentRound.size) {
+                        // Round complete! Show results after delay
+                        setTimeout(() => {
+                            showRoundComplete();
+                        }, 2000);
+                        return; // Don't enable next button
+                    }
+                }
+            } catch (error) {
+                console.error('Error recording timeout:', error);
+            }
+
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        async function loadQuestion() {
+            // Exit review mode
+            historyIndex = -1;
+            document.querySelector('.subtitle').textContent =
+                'Test your knowledge of 994 essential GRE words';
+
+            // Unpause if paused
+            if (isPaused) {
+                isPaused = false;
+                document.getElementById('pauseOverlay').classList.remove('active');
+                document.getElementById('quizContent').classList.remove('paused');
+                pausedTimeRemaining = 0;
+            }
+
+            // Clear any pending auto-advance and timers
+            if (autoAdvanceTimeout) {
+                clearTimeout(autoAdvanceTimeout);
+                autoAdvanceTimeout = null;
+            }
+            stopTimer();
+
+            // Clear previous feedback
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('feedback').style.display = 'none';
+
+            // Reset timer display
+            document.getElementById('timer').textContent = '--';
+            document.getElementById('timer').className = 'timer';
+
+            // Show loading
+            document.getElementById('word').textContent = 'Loading...';
+            document.getElementById('choices').innerHTML = '';
+
+            try {
+                // Send removed words and round words to filter them out
+                const response = await fetch('/get_question', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        removed_words: [...removedWords],
+                        round_words: [...roundWords]
+                    })
+                });
+                currentQuestion = await response.json();
+
+                // Add word to round tracking (if in a round)
+                if (currentRound) {
+                    roundWords.add(currentQuestion.word);
+                }
+
+                // Display word
+                document.getElementById('word').textContent = currentQuestion.word;
+
+                // Display choices
+                const choicesContainer = document.getElementById('choices');
+                choicesContainer.innerHTML = '';
+
+                currentQuestion.choices.forEach((choice, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'choice-btn';
+
+                    // Add number badge
+                    const numberBadge = document.createElement('span');
+                    numberBadge.className = 'choice-number';
+                    numberBadge.textContent = (index + 1);
+                    btn.appendChild(numberBadge);
+
+                    // Add choice text
+                    const choiceText = document.createTextNode(choice);
+                    btn.appendChild(choiceText);
+
+                    btn.onclick = () => checkAnswer(choice, btn);
+
+                    // Update keyboard focus when mouse enters (keep them in sync)
+                    btn.onmouseenter = () => {
+                        if (answersEnabled) {
+                            currentFocusIndex = index;
+                            updateFocus(index);
+                        }
+                    };
+
+                    choicesContainer.appendChild(btn);
+                });
+
+                // Disable next button until answer is selected
+                document.getElementById('nextBtn').disabled = true;
+
+                // Enable keyboard navigation
+                answersEnabled = true;
+                currentFocusIndex = 0;
+
+                // Update word display styling (favorite/removed)
+                updateWordDisplay();
+
+                // Start quiz timer if this is the first question
+                if (!quizStartTime) {
+                    quizStartTime = Date.now();
+                    currentQuestionStartTime = Date.now();
+                }
+
+                // Start timer
+                startTimer();
+
+            } catch (error) {
+                console.error('Error loading question:', error);
+                document.getElementById('word').textContent = 'Error loading question';
+            }
+        }
+
+        async function checkAnswer(selectedChoice, selectedBtn) {
+            // Disable keyboard navigation
+            answersEnabled = false;
+
+            // Stop timer
+            stopTimer();
+
+            // Disable all choice buttons
+            const allButtons = document.querySelectorAll('.choice-btn');
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('keyboard-focus');
+            });
+
+            try {
+                const response = await fetch('/check_answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        word: currentQuestion.word,
+                        choice: selectedChoice
+                    })
+                });
+
+                const result = await response.json();
+
+                // Save to history
+                const questionData = {
+                    word: currentQuestion.word,
+                    choices: currentQuestion.choices,
+                    userAnswer: selectedChoice,
+                    correctAnswer: result.correct_definition,
+                    correct: result.correct
+                };
+                questionHistory.push(questionData);
+
+                // Also save to round questions if in a round
+                if (currentRound) {
+                    roundQuestions.push(questionData);
+                }
+
+                // Update stats
+                document.getElementById('score').textContent = result.score;
+                document.getElementById('total').textContent = result.total;
+                const accuracy = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
+                document.getElementById('accuracy').textContent = accuracy + '%';
+
+                // Update time stats
+                updateElapsedTimeDisplay();
+                updateAverageTime();
+
+                // Show feedback first (before checking round completion)
+                const feedback = document.getElementById('feedback');
+                if (result.correct) {
+                    feedback.className = 'feedback correct';
+                    feedback.innerHTML = '✓ Correct!';
+                    selectedBtn.classList.add('correct');
+                } else {
+                    feedback.className = 'feedback incorrect';
+                    feedback.innerHTML = '✗ Incorrect<div class="correct-answer">Correct: ' +
+                        result.correct_definition + '</div>';
+                    selectedBtn.classList.add('incorrect');
+
+                    // Highlight the correct answer
+                    allButtons.forEach(btn => {
+                        if (getChoiceText(btn) === result.correct_definition) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+
+                // Update round stats if round is active
+                if (currentRound) {
+                    currentRound.total++;
+                    if (result.correct) {
+                        currentRound.score++;
+                    }
+                    updateRoundProgress();
+
+                    // Check if setting is enabled and answer is wrong - terminate round immediately
+                    if (!result.correct && getTerminateOnWrong()) {
+                        // Terminate round immediately on wrong answer
+                        setTimeout(() => {
+                            showRoundComplete();
+                        }, 2000);
+                        // Don't continue with normal flow
+                    }
+                    // Check if round is complete
+                    else if (currentRound.total >= currentRound.size) {
+                        // Round complete! Show results after delay
+                        setTimeout(() => {
+                            showRoundComplete();
+                        }, result.correct ? getAutoAdvanceDelay() : 2000);
+                        // Don't auto-advance to next question
+                    } else {
+                        // Not complete yet, auto-advance if enabled and correct
+                        if (result.correct) {
+                            const delay = getAutoAdvanceDelay();
+                            if (delay > 0) {
+                                autoAdvanceTimeout = setTimeout(() => {
+                                    loadQuestion();
+                                }, delay);
+                            }
+                        }
+                    }
+                } else {
+                    // Not in a round, auto-advance if enabled and correct
+                    if (result.correct) {
+                        const delay = getAutoAdvanceDelay();
+                        if (delay > 0) {
+                            autoAdvanceTimeout = setTimeout(() => {
+                                loadQuestion();
+                            }, delay);
+                        }
+                    }
+                }
+
+                // Enable next button
+                document.getElementById('nextBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Error checking answer:', error);
+            }
+        }
+
+        async function resetStats() {
+            if (confirm('Are you sure you want to reset your statistics?')) {
+                await fetch('/reset_stats');
+                document.getElementById('score').textContent = '0';
+                document.getElementById('total').textContent = '0';
+                document.getElementById('accuracy').textContent = '0%';
+                document.getElementById('elapsed').textContent = '0:00';
+                document.getElementById('avgTime').textContent = '--';
+
+                // Reset time tracking
+                quizStartTime = null;
+                currentQuestionStartTime = null;
+                totalPausedTime = 0;
+                lastPauseStartTime = null;
+                questionHistory = [];
+
+                loadQuestion();
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Load word lists from localStorage
+            loadWordLists();
+
+            // Load round history from server
+            await loadRoundHistory();
+
+            // Check if there's an incomplete round
+            try {
+                const response = await fetch('/round/status');
+                const status = await response.json();
+
+                if (status.active && status.total < status.size) {
+                    // Show resume option
+                    document.getElementById('resumeSection').style.display = 'block';
+                    document.getElementById('resumeBtn').style.display = 'inline-block';
+                    document.getElementById('resumeProgress').textContent = `${status.total}/${status.size}`;
+                    document.getElementById('resumeScore').textContent = status.score;
+                }
+            } catch (error) {
+                console.error('Error checking round status:', error);
+            }
+
+            // Show round start modal
+            document.getElementById('roundStartModal').classList.add('show');
+
+            // Load settings
+            const currentDelay = getAutoAdvanceDelay();
+            document.getElementById('autoAdvanceDelay').value = currentDelay;
+            if (currentDelay === 0) {
+                document.getElementById('delayValue').textContent = 'Off';
+            } else {
+                document.getElementById('delayValue').textContent = (currentDelay / 1000).toFixed(1) + 's';
+            }
+
+            const currentTimeout = getAnswerTimeout();
+            document.getElementById('answerTimeout').value = currentTimeout;
+            if (currentTimeout === 0) {
+                document.getElementById('timeoutValue').textContent = 'Off';
+            } else {
+                document.getElementById('timeoutValue').textContent = currentTimeout + 's';
+            }
+
+            const showAnswer = getShowAnswerOnTimeout();
+            document.getElementById('showAnswerOnTimeout').checked = showAnswer;
+            document.getElementById('showAnswerLabel').textContent = showAnswer ? 'Enabled' : 'Disabled';
+
+            const terminateOnWrong = getTerminateOnWrong();
+            document.getElementById('terminateOnWrong').checked = terminateOnWrong;
+            document.getElementById('terminateOnWrongLabel').textContent = terminateOnWrong ? 'Enabled' : 'Disabled';
+
+            const onlyPerfectScores = getOnlyPerfectScores();
+            document.getElementById('onlyPerfectScores').checked = onlyPerfectScores;
+            document.getElementById('onlyPerfectScoresLabel').textContent = onlyPerfectScores ? 'Enabled' : 'Disabled';
+
+            // Update elapsed time display every second
+            setInterval(() => {
+                if (quizStartTime && !isPaused) {
+                    updateElapsedTimeDisplay();
+                }
+            }, 1000);
+
+            // Don't load question automatically - wait for user to start/resume round
+        });
+    </script>
+</body>
+</html>
