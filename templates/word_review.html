@@ -290,7 +290,7 @@
         // Fetch a random word
         async function fetchWord() {
             try {
-                const response = await fetch('/get_question');
+                const response = await fetch('/review/get_word');
                 if (!response.ok) {
                     throw new Error('Failed to fetch word');
                 }

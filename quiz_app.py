@@ -419,6 +419,18 @@ def definition_review():
     """GRE Definition Review page - shows definition, word blurred until revealed."""
     return render_template('definition_review.html')
 
+@app.route('/review/get_word', methods=['GET'])
+def get_review_word():
+    """API endpoint to get a random word with its definition for review modes."""
+    # Pick a random word
+    word = random.choice(WORD_LIST)
+    definition = WORDS[word]
+
+    return jsonify({
+        'word': word,
+        'definition': definition
+    })
+
 @app.route('/inverse/get_question', methods=['GET', 'POST'])
 def get_inverse_question():
     """API endpoint to get a new inverse question."""
