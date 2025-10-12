@@ -409,6 +409,16 @@ def inverse_gre_quiz():
 
     return render_template('inverse_quiz.html')
 
+@app.route('/word-review')
+def word_review():
+    """GRE Word Review page - shows word, definition blurred until revealed."""
+    return render_template('word_review.html')
+
+@app.route('/definition-review')
+def definition_review():
+    """GRE Definition Review page - shows definition, word blurred until revealed."""
+    return render_template('definition_review.html')
+
 @app.route('/inverse/get_question', methods=['GET', 'POST'])
 def get_inverse_question():
     """API endpoint to get a new inverse question."""
