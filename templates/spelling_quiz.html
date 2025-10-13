@@ -600,13 +600,13 @@
 
             <div class="setting-item">
                 <label class="setting-label">Base Score Per Correct Letter</label>
-                <input type="number" id="baseScore" class="setting-input" min="0" max="100" value="10">
+                <input type="number" id="baseScore" class="setting-input" min="0" max="100" value="20">
                 <small style="color: #666;">Base points awarded for correct letter (0-100)</small>
             </div>
 
             <div class="setting-item">
                 <label class="setting-label">Bonus Points Per Second Remaining</label>
-                <input type="number" id="bonusPerSecond" class="setting-input" min="0" max="10" value="1">
+                <input type="number" id="bonusPerSecond" class="setting-input" min="0" max="10" value="2">
                 <small style="color: #666;">Bonus points for each second under time limit (0-10)</small>
             </div>
 
@@ -674,8 +674,8 @@
             revealPenaltySeconds: 20,
             wrongLetterPenaltySeconds: 5,
             letterTimeLimit: 20,
-            baseScore: 10,
-            bonusPerSecond: 1
+            baseScore: 20,
+            bonusPerSecond: 2
         };
 
         // Scoring state
