@@ -460,6 +460,14 @@
                     <div class="stat-label">Total</div>
                     <div class="stat-value" id="total">0</div>
                 </div>
+                <div class="stat-item">
+                    <div class="stat-label">Points</div>
+                    <div class="stat-value" id="points">0</div>
+                </div>
+                <div class="stat-item" id="letterTimerItem">
+                    <div class="stat-label">Letter Timer</div>
+                    <div class="stat-value" id="letterTimerDisplay">--</div>
+                </div>
                 <div class="stat-item" id="roundStatItem" style="display: none;">
                     <div class="stat-label">Round</div>
                     <div class="stat-value" id="roundStat">0/20</div>
@@ -580,6 +588,28 @@
                 <small style="color: #666;">Time penalty for typing wrong letter (0-60 seconds)</small>
             </div>
 
+            <div class="setting-item">
+                <label class="setting-label" style="color: #667eea; font-size: 18px; margin-top: 15px;">Time-Based Scoring</label>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Letter Time Limit (seconds)</label>
+                <input type="number" id="letterTimeLimit" class="setting-input" min="1" max="60" value="20">
+                <small style="color: #666;">Time limit for each letter (1-60 seconds)</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Base Score Per Correct Letter</label>
+                <input type="number" id="baseScore" class="setting-input" min="0" max="100" value="10">
+                <small style="color: #666;">Base points awarded for correct letter (0-100)</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Bonus Points Per Second Remaining</label>
+                <input type="number" id="bonusPerSecond" class="setting-input" min="0" max="10" value="1">
+                <small style="color: #666;">Bonus points for each second under time limit (0-10)</small>
+            </div>
+
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
@@ -642,8 +672,68 @@
             revealMode: 'initial', // 'initial' or 'random'
             spaceRevealMode: 'sequential', // 'sequential' or 'random'
             revealPenaltySeconds: 20,
-            wrongLetterPenaltySeconds: 5
+            wrongLetterPenaltySeconds: 5,
+            letterTimeLimit: 20,
+            baseScore: 10,
+            bonusPerSecond: 1
         };
+
+        // Scoring state
+        let currentScore = 0;
+        let letterStartTime = null;
+        let letterTimer = null;
+
+        // Letter timer functions
+        function startLetterTimer() {
+            stopLetterTimer();
+            letterStartTime = Date.now();
+            letterTimer = setInterval(updateLetterTimerDisplay, 100);
+        }
+
+        function stopLetterTimer() {
+            if (letterTimer) {
+                clearInterval(letterTimer);
+                letterTimer = null;
+            }
+            letterStartTime = null;
+        }
+
+        function getLetterElapsedTime() {
+            if (!letterStartTime) return 0;
+            return (Date.now() - letterStartTime) / 1000;
+        }
+
+        function updateLetterTimerDisplay() {
+            if (!letterStartTime) {
+                document.getElementById('letterTimerDisplay').textContent = '--';
+                return;
+            }
+
+            const elapsed = getLetterElapsedTime();
+            const remaining = Math.max(0, settings.letterTimeLimit - elapsed);
+
+            if (remaining === 0) {
+                document.getElementById('letterTimerDisplay').textContent = '0.0s';
+                document.getElementById('letterTimerDisplay').style.color = '#ff4444';
+            } else if (remaining < 5) {
+                document.getElementById('letterTimerDisplay').textContent = remaining.toFixed(1) + 's';
+                document.getElementById('letterTimerDisplay').style.color = '#ff9800';
+            } else {
+                document.getElementById('letterTimerDisplay').textContent = remaining.toFixed(1) + 's';
+                document.getElementById('letterTimerDisplay').style.color = '#4caf50';
+            }
+        }
+
+        function calculateLetterScore() {
+            const elapsed = getLetterElapsedTime();
+            const secondsRemaining = Math.max(0, settings.letterTimeLimit - elapsed);
+            const bonusPoints = Math.floor(secondsRemaining * settings.bonusPerSecond);
+            return settings.baseScore + bonusPoints;
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('points').textContent = currentScore;
+        }
 
         // Load settings from localStorage
         function loadSettings() {
@@ -658,6 +748,9 @@
             document.getElementById('initialLetters').value = settings.initialLettersRevealed;
             document.getElementById('revealPenalty').value = settings.revealPenaltySeconds;
             document.getElementById('wrongLetterPenalty').value = settings.wrongLetterPenaltySeconds;
+            document.getElementById('letterTimeLimit').value = settings.letterTimeLimit;
+            document.getElementById('baseScore').value = settings.baseScore;
+            document.getElementById('bonusPerSecond').value = settings.bonusPerSecond;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
         }
@@ -674,6 +767,9 @@
             settings.initialLettersRevealed = parseInt(document.getElementById('initialLetters').value);
             settings.revealPenaltySeconds = parseInt(document.getElementById('revealPenalty').value);
             settings.wrongLetterPenaltySeconds = parseInt(document.getElementById('wrongLetterPenalty').value);
+            settings.letterTimeLimit = parseInt(document.getElementById('letterTimeLimit').value);
+            settings.baseScore = parseInt(document.getElementById('baseScore').value);
+            settings.bonusPerSecond = parseInt(document.getElementById('bonusPerSecond').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
@@ -730,6 +826,9 @@
 
             // Reveal initial letters based on settings
             revealInitialLetters(word);
+
+            // Start the letter timer
+            startLetterTimer();
 
             let html = `
                 <div class="definition-display">${currentDefinition}</div>
@@ -794,14 +893,24 @@
 
         function updateCurrentPosition() {
             const word = currentWord.word.toUpperCase();
+            const oldPosition = currentPosition;
+
             for (let i = 0; i < word.length; i++) {
                 if (word[i] === ' ') continue;
                 if (!revealedIndices.has(i) && !userInput[i]) {
                     currentPosition = i;
+                    // Restart timer if position changed
+                    if (oldPosition !== currentPosition) {
+                        startLetterTimer();
+                    }
                     return;
                 }
             }
             currentPosition = word.length;
+            // Stop timer if word is complete
+            if (currentPosition >= word.length) {
+                stopLetterTimer();
+            }
         }
 
         function handleLetterInput(letter) {
@@ -817,6 +926,14 @@
 
             // Check if letter is correct
             if (letter === word[currentPosition]) {
+                // Calculate score for this letter
+                const letterScore = calculateLetterScore();
+                currentScore += letterScore;
+                updateScoreDisplay();
+
+                // Show score feedback
+                showScoreFeedback(letterScore);
+
                 userInput[currentPosition] = letter;
                 updateDisplay();
 
@@ -911,6 +1028,21 @@
                 indicator.classList.remove('show');
                 void indicator.offsetWidth; // Trigger reflow
                 indicator.classList.add('show');
+            }
+        }
+
+        function showScoreFeedback(score) {
+            const indicator = document.getElementById('penaltyIndicator');
+            if (indicator) {
+                indicator.textContent = `+${score} points!`;
+                indicator.style.background = 'rgba(76, 175, 80, 0.3)'; // Green background
+                indicator.classList.remove('show');
+                void indicator.offsetWidth; // Trigger reflow
+                indicator.classList.add('show');
+                // Reset background after animation
+                setTimeout(() => {
+                    indicator.style.background = 'rgba(255, 152, 0, 0.3)';
+                }, 2000);
             }
         }
 
@@ -1037,8 +1169,10 @@
                     roundScore = 0;
                     roundTotal = 0;
                     totalPenalty = 0;
+                    currentScore = 0;
                     roundStartTime = Date.now();
 
+                    updateScoreDisplay();
                     startRoundTimer();
                     closeRoundModal();
 
@@ -1138,6 +1272,10 @@
         // Initialize
         async function init() {
             loadSettings();
+
+            // Initialize score display
+            updateScoreDisplay();
+            updateLetterTimerDisplay();
 
             // Load stats
             try {
