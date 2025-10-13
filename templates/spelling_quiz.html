@@ -198,6 +198,37 @@
             10%, 90% { opacity: 1; }
         }
 
+        .hint-display {
+            display: none;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+        }
+
+        .hint-letter {
+            width: 50px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .hint-letter:hover {
+            background: rgba(102, 126, 234, 0.5);
+            transform: scale(1.1);
+        }
+
         /* Virtual Keyboard */
         .keyboard-overlay {
             position: fixed;
@@ -603,6 +634,22 @@
                 <small style="color: #666;">Bonus points for each second under time limit (0-10)</small>
             </div>
 
+            <div class="setting-item">
+                <label class="setting-label" style="color: #667eea; font-size: 18px; margin-top: 15px;">Hint System</label>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Number of Hint Letters</label>
+                <input type="number" id="hintLetterCount" class="setting-input" min="2" max="10" value="4">
+                <small style="color: #666;">Number of letters shown when pressing '/' (2-10)</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Hint Point Penalty</label>
+                <input type="number" id="hintPenalty" class="setting-input" min="0" max="100" value="10">
+                <small style="color: #666;">Points deducted for using hint (0-100)</small>
+            </div>
+
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
@@ -668,13 +715,19 @@
             wrongLetterPenaltySeconds: 5,
             letterTimeLimit: 20,
             baseScore: 20,
-            bonusPerSecond: 2
+            bonusPerSecond: 2,
+            hintLetterCount: 4,
+            hintPenalty: 10
         };
 
         // Scoring state
         let currentScore = 0;
         let letterStartTime = null;
         let letterTimer = null;
+
+        // Hint state
+        let hintActive = false;
+        let hintLetters = [];
 
         // Letter timer functions
         function startLetterTimer() {
@@ -728,6 +781,58 @@
             document.getElementById('points').textContent = currentScore;
         }
 
+        // Hint functions
+        function showHint() {
+            if (!currentWord || hintActive) return;
+            if (currentPosition >= currentWord.word.length) return;
+
+            const word = currentWord.word.toUpperCase();
+            const correctLetter = word[currentPosition];
+
+            // Deduct penalty points
+            currentScore = Math.max(0, currentScore - settings.hintPenalty);
+            updateScoreDisplay();
+
+            // Generate random letters
+            const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const randomLetters = [];
+
+            // Add N-1 random letters (different from correct letter)
+            while (randomLetters.length < settings.hintLetterCount - 1) {
+                const randomLetter = allLetters[Math.floor(Math.random() * allLetters.length)];
+                if (randomLetter !== correctLetter && !randomLetters.includes(randomLetter)) {
+                    randomLetters.push(randomLetter);
+                }
+            }
+
+            // Add the correct letter and shuffle
+            randomLetters.push(correctLetter);
+            hintLetters = randomLetters.sort(() => Math.random() - 0.5);
+            hintActive = true;
+
+            // Display hint
+            displayHintLetters();
+        }
+
+        function displayHintLetters() {
+            const hintDisplay = document.getElementById('hintDisplay');
+            if (!hintDisplay) return;
+
+            hintDisplay.innerHTML = hintLetters.map(letter =>
+                `<span class="hint-letter">${letter}</span>`
+            ).join('');
+            hintDisplay.style.display = 'flex';
+        }
+
+        function hideHint() {
+            hintActive = false;
+            hintLetters = [];
+            const hintDisplay = document.getElementById('hintDisplay');
+            if (hintDisplay) {
+                hintDisplay.style.display = 'none';
+            }
+        }
+
         // Load settings from localStorage
         function loadSettings() {
             const saved = localStorage.getItem('spellingQuizSettings_v2');
@@ -744,6 +849,8 @@
             document.getElementById('letterTimeLimit').value = settings.letterTimeLimit;
             document.getElementById('baseScore').value = settings.baseScore;
             document.getElementById('bonusPerSecond').value = settings.bonusPerSecond;
+            document.getElementById('hintLetterCount').value = settings.hintLetterCount;
+            document.getElementById('hintPenalty').value = settings.hintPenalty;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
         }
@@ -763,6 +870,8 @@
             settings.letterTimeLimit = parseInt(document.getElementById('letterTimeLimit').value);
             settings.baseScore = parseInt(document.getElementById('baseScore').value);
             settings.bonusPerSecond = parseInt(document.getElementById('bonusPerSecond').value);
+            settings.hintLetterCount = parseInt(document.getElementById('hintLetterCount').value);
+            settings.hintPenalty = parseInt(document.getElementById('hintPenalty').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
@@ -845,14 +954,18 @@
             html += `
                 </div>
                 <div class="hint-text">
-                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
+                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • / shows hint (-${settings.hintPenalty} pts) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
                 </div>
                 <div class="penalty-indicator" id="penaltyIndicator">
                     +${settings.revealPenaltySeconds}s penalty!
                 </div>
+                <div class="hint-display" id="hintDisplay"></div>
             `;
 
             document.getElementById('quizArea').innerHTML = html;
+
+            // Reset hint state
+            hideHint();
         }
 
         function revealInitialLetters(word) {
@@ -895,6 +1008,7 @@
                     // Restart timer if position changed
                     if (oldPosition !== currentPosition) {
                         startLetterTimer();
+                        hideHint(); // Hide hint when moving to next letter
                     }
                     return;
                 }
@@ -903,6 +1017,7 @@
             // Stop timer if word is complete
             if (currentPosition >= word.length) {
                 stopLetterTimer();
+                hideHint();
             }
         }
 
@@ -926,6 +1041,9 @@
 
                 // Show score feedback
                 showScoreFeedback(letterScore);
+
+                // Hide hint since correct letter was typed
+                hideHint();
 
                 userInput[currentPosition] = letter;
                 updateDisplay();
@@ -1125,6 +1243,12 @@
             if (e.key === ' ' || e.code === 'Space') {
                 e.preventDefault();
                 revealNextLetter();
+                return;
+            }
+
+            if (e.key === '/') {
+                e.preventDefault();
+                showHint();
                 return;
             }
 
