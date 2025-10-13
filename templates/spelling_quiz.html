@@ -623,6 +623,12 @@
                 <small style="color: #666;">Points deducted for using hint (0-100)</small>
             </div>
 
+            <div class="setting-item">
+                <label class="setting-label">Perfect Word Bonus</label>
+                <input type="number" id="perfectWordBonus" class="setting-input" min="0" max="200" value="50">
+                <small style="color: #666;">Bonus points for completing word with no hints/reveals (0-200)</small>
+            </div>
+
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
@@ -689,7 +695,8 @@
             baseScore: 20,
             bonusPerSecond: 2,
             hintLetterCount: 4,
-            hintPenalty: 10
+            hintPenalty: 10,
+            perfectWordBonus: 50
         };
 
         // Scoring state
@@ -700,6 +707,9 @@
         // Hint state
         let hintActive = false;
         let hintLetters = [];
+
+        // Perfect word tracking
+        let usedHelpThisWord = false;
 
         // Letter timer functions
         function startLetterTimer() {
@@ -757,6 +767,8 @@
         function showHint() {
             if (!currentWord || hintActive) return;
             if (currentPosition >= currentWord.word.length) return;
+
+            usedHelpThisWord = true;  // Mark that help was used
 
             const word = currentWord.word.toUpperCase();
             const correctLetter = word[currentPosition];
@@ -823,6 +835,7 @@
             document.getElementById('bonusPerSecond').value = settings.bonusPerSecond;
             document.getElementById('hintLetterCount').value = settings.hintLetterCount;
             document.getElementById('hintPenalty').value = settings.hintPenalty;
+            document.getElementById('perfectWordBonus').value = settings.perfectWordBonus;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
         }
@@ -844,6 +857,7 @@
             settings.bonusPerSecond = parseInt(document.getElementById('bonusPerSecond').value);
             settings.hintLetterCount = parseInt(document.getElementById('hintLetterCount').value);
             settings.hintPenalty = parseInt(document.getElementById('hintPenalty').value);
+            settings.perfectWordBonus = parseInt(document.getElementById('perfectWordBonus').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
@@ -905,6 +919,7 @@
             userInput = new Array(word.length).fill('');
             currentPosition = 0;
             revealedIndices.clear();
+            usedHelpThisWord = false;  // Reset perfect word tracking
 
             // Reveal initial letters based on settings
             revealInitialLetters(word);
@@ -994,6 +1009,8 @@
 
         function revealInitialLetters(word) {
             if (settings.initialLettersRevealed === 0) return;
+
+            usedHelpThisWord = true;  // Mark that help was used
 
             const numToReveal = Math.min(settings.initialLettersRevealed, word.replace(/ /g, '').length);
             const nonSpaceIndices = [];
@@ -1112,6 +1129,8 @@
         function revealNextLetter() {
             if (!currentWord) return;
 
+            usedHelpThisWord = true;  // Mark that help was used
+
             const word = currentWord.word.toUpperCase();
             const unrevealedIndices = [];
 
@@ -1181,6 +1200,20 @@
             }
         }
 
+        function showPerfectWordBonus() {
+            const indicator = document.getElementById('penaltyIndicator');
+            if (indicator) {
+                indicator.textContent = `🎉 Perfect Word! +${settings.perfectWordBonus} bonus points!`;
+                indicator.style.background = 'rgba(76, 175, 80, 0.4)';
+                indicator.classList.remove('show');
+                void indicator.offsetWidth;
+                indicator.classList.add('show');
+                setTimeout(() => {
+                    indicator.style.background = 'rgba(255, 152, 0, 0.3)';
+                }, 2000);
+            }
+        }
+
         function updateDisplay() {
             if (!currentWord) return;
 
@@ -1222,6 +1255,13 @@
         }
 
         async function handleWordComplete() {
+            // Check for perfect word bonus
+            if (!usedHelpThisWord) {
+                currentScore += settings.perfectWordBonus;
+                updateScoreDisplay();
+                showPerfectWordBonus();
+            }
+
             // Word is complete, move to next word after a short delay
             setTimeout(async () => {
                 if (roundActive) {
