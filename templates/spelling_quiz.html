@@ -776,12 +776,16 @@
 
             if (settings.revealMode === 'initial') {
                 for (let i = 0; i < numToReveal; i++) {
-                    revealedIndices.add(nonSpaceIndices[i]);
+                    const idx = nonSpaceIndices[i];
+                    revealedIndices.add(idx);
+                    userInput[idx] = word[idx]; // Also populate userInput
                 }
             } else {
                 const shuffled = [...nonSpaceIndices].sort(() => Math.random() - 0.5);
                 for (let i = 0; i < numToReveal; i++) {
-                    revealedIndices.add(shuffled[i]);
+                    const idx = shuffled[i];
+                    revealedIndices.add(idx);
+                    userInput[idx] = word[idx]; // Also populate userInput
                 }
             }
 
