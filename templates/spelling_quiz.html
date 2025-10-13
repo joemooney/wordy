@@ -453,14 +453,6 @@
             </div>
             <div class="stats-container">
                 <div class="stat-item">
-                    <div class="stat-label">Score</div>
-                    <div class="stat-value" id="score">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Total</div>
-                    <div class="stat-value" id="total">0</div>
-                </div>
-                <div class="stat-item">
                     <div class="stat-label">Points</div>
                     <div class="stat-value" id="points">0</div>
                 </div>
@@ -1276,16 +1268,6 @@
             // Initialize score display
             updateScoreDisplay();
             updateLetterTimerDisplay();
-
-            // Load stats
-            try {
-                const statsResponse = await fetch('/stats');
-                const stats = await statsResponse.json();
-                document.getElementById('score').textContent = stats.score;
-                document.getElementById('total').textContent = stats.total;
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
 
             // Check round status
             try {
