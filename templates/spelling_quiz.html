@@ -737,7 +737,7 @@
 
         // Load settings from localStorage
         function loadSettings() {
-            const saved = localStorage.getItem('spellingQuizSettings');
+            const saved = localStorage.getItem('spellingQuizSettings_v2');
             if (saved) {
                 settings = JSON.parse(saved);
             }
@@ -773,7 +773,7 @@
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
-            localStorage.setItem('spellingQuizSettings', JSON.stringify(settings));
+            localStorage.setItem('spellingQuizSettings_v2', JSON.stringify(settings));
             closeSettings();
         }
 
