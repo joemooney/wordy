@@ -654,8 +654,7 @@
             </div>
             <div class="round-info">
                 <p style="font-size: 24px; font-weight: bold; color: #667eea;" id="roundScore">0/20</p>
-                <p id="roundTime">Time: 0:00</p>
-                <p id="roundRank">Rank: -</p>
+                <p id="roundPoints">Total Points: 0</p>
             </div>
             <div class="round-buttons">
                 <button class="modal-btn" onclick="startNewRound()">Start New Round</button>
@@ -1374,29 +1373,14 @@
                 console.error('Error completing round:', error);
             }
 
-            showRoundComplete(totalTime);
+            showRoundComplete();
         }
 
-        function showRoundComplete(totalTime) {
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = Math.floor(totalTime % 60);
-
+        function showRoundComplete() {
             document.getElementById('roundScore').textContent = `${roundScore}/${roundSize}`;
-            document.getElementById('roundTime').textContent = `Time: ${minutes}:${seconds.toString().padStart(2, '0')} (includes ${totalPenalty}s penalty)`;
-
-            const rank = getRank(totalTime);
-            document.getElementById('roundRank').textContent = `Rank: ${rank}`;
+            document.getElementById('roundPoints').textContent = `Total Points: ${currentScore}`;
 
             document.getElementById('roundCompleteModal').classList.add('show');
-        }
-
-        function getRank(time) {
-            if (time <= 120) return 'S - Master Speller';
-            if (time <= 180) return 'A - Expert';
-            if (time <= 240) return 'B - Proficient';
-            if (time <= 300) return 'C - Competent';
-            if (time <= 360) return 'D - Learning';
-            return 'E - Keep Practicing';
         }
 
         function closeRoundCompleteModal() {
