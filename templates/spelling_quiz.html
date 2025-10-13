@@ -53,18 +53,25 @@
 
         .icon-btn {
             background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 12px;
-            padding: 10px 15px;
-            font-size: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 14px 18px;
+            font-size: 28px;
             cursor: pointer;
             transition: all 0.3s ease;
             color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 56px;
+            min-height: 56px;
         }
 
         .icon-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.35);
             transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .stats-container {
@@ -230,30 +237,19 @@
         }
 
         /* Virtual Keyboard */
-        .keyboard-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: transparent;
+        .keyboard-container {
             display: none;
-            align-items: flex-end;
-            justify-content: center;
-            z-index: 1000;
-            padding-bottom: 20px;
-        }
-
-        .keyboard-overlay.show {
-            display: flex;
-        }
-
-        .virtual-keyboard {
-            background: rgba(255, 255, 255, 0.95);
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 20px;
-            max-width: 800px;
-            width: 90%;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .keyboard-container.show {
+            display: block;
         }
 
         .keyboard-header {
@@ -261,32 +257,44 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            color: #333;
+        }
+
+        .keyboard-header h3 {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
         }
 
         .keyboard-close {
-            background: #dc3545;
-            border: none;
-            border-radius: 8px;
+            background: rgba(220, 53, 69, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .keyboard-close:hover {
+            background: rgba(220, 53, 69, 1);
+            transform: translateY(-2px);
         }
 
         .keyboard-row {
             display: flex;
             justify-content: center;
-            gap: 5px;
-            margin-bottom: 8px;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
         .key {
-            background: #667eea;
-            border: none;
-            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
             color: white;
-            padding: 15px;
+            padding: 18px;
             min-width: 50px;
             font-size: 18px;
             font-weight: bold;
@@ -295,8 +303,9 @@
         }
 
         .key:hover {
-            background: #764ba2;
+            background: rgba(118, 75, 162, 0.8);
             transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .key:active {
@@ -308,7 +317,7 @@
         }
 
         .key.wide {
-            min-width: 80px;
+            min-width: 90px;
         }
 
         /* Modal styles */
@@ -509,52 +518,6 @@
 
         <div class="quiz-area" id="quizArea">
             <div class="loading">Loading...</div>
-        </div>
-    </div>
-
-    <!-- Virtual Keyboard -->
-    <div class="keyboard-overlay" id="keyboardOverlay">
-        <div class="virtual-keyboard">
-            <div class="keyboard-header">
-                <h3>Virtual Keyboard</h3>
-                <button class="keyboard-close" onclick="hideKeyboard()">Close</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key" onclick="handleVirtualKey('Q')">Q</button>
-                <button class="key" onclick="handleVirtualKey('W')">W</button>
-                <button class="key" onclick="handleVirtualKey('E')">E</button>
-                <button class="key" onclick="handleVirtualKey('R')">R</button>
-                <button class="key" onclick="handleVirtualKey('T')">T</button>
-                <button class="key" onclick="handleVirtualKey('Y')">Y</button>
-                <button class="key" onclick="handleVirtualKey('U')">U</button>
-                <button class="key" onclick="handleVirtualKey('I')">I</button>
-                <button class="key" onclick="handleVirtualKey('O')">O</button>
-                <button class="key" onclick="handleVirtualKey('P')">P</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key" onclick="handleVirtualKey('A')">A</button>
-                <button class="key" onclick="handleVirtualKey('S')">S</button>
-                <button class="key" onclick="handleVirtualKey('D')">D</button>
-                <button class="key" onclick="handleVirtualKey('F')">F</button>
-                <button class="key" onclick="handleVirtualKey('G')">G</button>
-                <button class="key" onclick="handleVirtualKey('H')">H</button>
-                <button class="key" onclick="handleVirtualKey('J')">J</button>
-                <button class="key" onclick="handleVirtualKey('K')">K</button>
-                <button class="key" onclick="handleVirtualKey('L')">L</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key" onclick="handleVirtualKey('Z')">Z</button>
-                <button class="key" onclick="handleVirtualKey('X')">X</button>
-                <button class="key" onclick="handleVirtualKey('C')">C</button>
-                <button class="key" onclick="handleVirtualKey('V')">V</button>
-                <button class="key" onclick="handleVirtualKey('B')">B</button>
-                <button class="key" onclick="handleVirtualKey('N')">N</button>
-                <button class="key" onclick="handleVirtualKey('M')">M</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key wide" onclick="handleVirtualKey('Backspace')">⌫ Back</button>
-                <button class="key space" onclick="handleVirtualKey(' ')">SPACE (Reveal)</button>
-            </div>
         </div>
     </div>
 
@@ -881,11 +844,19 @@
 
         // Virtual keyboard
         function showKeyboard() {
-            document.getElementById('keyboardOverlay').classList.add('show');
+            const keyboard = document.getElementById('keyboardContainer');
+            if (keyboard) {
+                keyboard.classList.add('show');
+                // Scroll to keyboard
+                keyboard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         function hideKeyboard() {
-            document.getElementById('keyboardOverlay').classList.remove('show');
+            const keyboard = document.getElementById('keyboardContainer');
+            if (keyboard) {
+                keyboard.classList.remove('show');
+            }
         }
 
         function handleVirtualKey(key) {
@@ -960,6 +931,50 @@
                     +${settings.revealPenaltySeconds}s penalty!
                 </div>
                 <div class="hint-display" id="hintDisplay"></div>
+
+                <!-- Virtual Keyboard -->
+                <div class="keyboard-container" id="keyboardContainer">
+                    <div class="keyboard-header">
+                        <h3>Virtual Keyboard</h3>
+                        <button class="keyboard-close" onclick="hideKeyboard()">Close</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key" onclick="handleVirtualKey('Q')">Q</button>
+                        <button class="key" onclick="handleVirtualKey('W')">W</button>
+                        <button class="key" onclick="handleVirtualKey('E')">E</button>
+                        <button class="key" onclick="handleVirtualKey('R')">R</button>
+                        <button class="key" onclick="handleVirtualKey('T')">T</button>
+                        <button class="key" onclick="handleVirtualKey('Y')">Y</button>
+                        <button class="key" onclick="handleVirtualKey('U')">U</button>
+                        <button class="key" onclick="handleVirtualKey('I')">I</button>
+                        <button class="key" onclick="handleVirtualKey('O')">O</button>
+                        <button class="key" onclick="handleVirtualKey('P')">P</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key" onclick="handleVirtualKey('A')">A</button>
+                        <button class="key" onclick="handleVirtualKey('S')">S</button>
+                        <button class="key" onclick="handleVirtualKey('D')">D</button>
+                        <button class="key" onclick="handleVirtualKey('F')">F</button>
+                        <button class="key" onclick="handleVirtualKey('G')">G</button>
+                        <button class="key" onclick="handleVirtualKey('H')">H</button>
+                        <button class="key" onclick="handleVirtualKey('J')">J</button>
+                        <button class="key" onclick="handleVirtualKey('K')">K</button>
+                        <button class="key" onclick="handleVirtualKey('L')">L</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key" onclick="handleVirtualKey('Z')">Z</button>
+                        <button class="key" onclick="handleVirtualKey('X')">X</button>
+                        <button class="key" onclick="handleVirtualKey('C')">C</button>
+                        <button class="key" onclick="handleVirtualKey('V')">V</button>
+                        <button class="key" onclick="handleVirtualKey('B')">B</button>
+                        <button class="key" onclick="handleVirtualKey('N')">N</button>
+                        <button class="key" onclick="handleVirtualKey('M')">M</button>
+                    </div>
+                    <div class="keyboard-row">
+                        <button class="key wide" onclick="handleVirtualKey('Backspace')">⌫ Back</button>
+                        <button class="key space" onclick="handleVirtualKey(' ')">SPACE (Reveal)</button>
+                    </div>
+                </div>
             `;
 
             document.getElementById('quizArea').innerHTML = html;
