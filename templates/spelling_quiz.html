@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GRE Spelling Quiz - Wordy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -55,8 +56,7 @@
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 15px;
-            padding: 14px 18px;
-            font-size: 28px;
+            padding: 0;
             cursor: pointer;
             transition: all 0.3s ease;
             color: white;
@@ -65,6 +65,10 @@
             justify-content: center;
             min-width: 56px;
             min-height: 56px;
+        }
+
+        .icon-btn i {
+            font-size: 24px;
         }
 
         .icon-btn:hover {
@@ -487,9 +491,15 @@
             <div class="title-row">
                 <h1>GRE Spelling Quiz</h1>
                 <div class="header-buttons">
-                    <button class="icon-btn" onclick="showKeyboard()" title="Virtual Keyboard">⌨️</button>
-                    <button class="icon-btn" onclick="openSettings()" title="Settings">⚙️</button>
-                    <button class="icon-btn" onclick="window.location.href='/'" title="Home (Esc)">🏠</button>
+                    <button class="icon-btn" onclick="showKeyboard()" title="Virtual Keyboard">
+                        <i class="fas fa-keyboard"></i>
+                    </button>
+                    <button class="icon-btn" onclick="openSettings()" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="icon-btn" onclick="window.location.href='/'" title="Home (Esc)">
+                        <i class="fas fa-home"></i>
+                    </button>
                 </div>
             </div>
             <div class="stats-container">
