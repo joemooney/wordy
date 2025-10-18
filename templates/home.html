@@ -87,6 +87,14 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
+        .menu-card.selected {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            border-color: #667eea;
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+
         .menu-card.disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -264,5 +272,93 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Keyboard navigation for menu cards
+        let selectedIndex = 0;
+        const menuCards = Array.from(document.querySelectorAll('.menu-card'));
+
+        function updateSelection() {
+            // Remove selected class from all cards
+            menuCards.forEach(card => card.classList.remove('selected'));
+
+            // Add selected class to current card
+            if (selectedIndex >= 0 && selectedIndex < menuCards.length) {
+                menuCards[selectedIndex].classList.add('selected');
+
+                // Scroll card into view if needed
+                menuCards[selectedIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }
+
+        function navigateToSelected() {
+            if (selectedIndex >= 0 && selectedIndex < menuCards.length) {
+                window.location.href = menuCards[selectedIndex].href;
+            }
+        }
+
+        // Keyboard event handler
+        document.addEventListener('keydown', (e) => {
+            const cardsPerRow = window.innerWidth > 600 ? 2 : 1;
+
+            switch(e.key) {
+                case 'ArrowRight':
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, menuCards.length - 1);
+                    updateSelection();
+                    break;
+
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, 0);
+                    updateSelection();
+                    break;
+
+                case 'ArrowDown':
+                    e.preventDefault();
+                    const newDownIndex = selectedIndex + cardsPerRow;
+                    if (newDownIndex < menuCards.length) {
+                        selectedIndex = newDownIndex;
+                        updateSelection();
+                    }
+                    break;
+
+                case 'ArrowUp':
+                    e.preventDefault();
+                    const newUpIndex = selectedIndex - cardsPerRow;
+                    if (newUpIndex >= 0) {
+                        selectedIndex = newUpIndex;
+                        updateSelection();
+                    }
+                    break;
+
+                case 'Enter':
+                    e.preventDefault();
+                    navigateToSelected();
+                    break;
+
+                case 'Escape':
+                    e.preventDefault();
+                    // Clear selection
+                    selectedIndex = -1;
+                    menuCards.forEach(card => card.classList.remove('selected'));
+                    break;
+            }
+        });
+
+        // Mouse hover updates selection index
+        menuCards.forEach((card, index) => {
+            card.addEventListener('mouseenter', () => {
+                selectedIndex = index;
+                updateSelection();
+            });
+        });
+
+        // Initialize first card as selected
+        updateSelection();
+    </script>
 </body>
 </html>
