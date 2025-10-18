@@ -1130,14 +1130,44 @@
             displayLeaderboard();
         }
 
-        function displayLeaderboard() {
+        function displayLeaderboard(useRecalculated = false) {
             const leaderboard = getLeaderboard();
             const content = document.getElementById('leaderboardContent');
 
             if (leaderboard.length === 0) {
                 content.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet! Play a game to get on the leaderboard.</p>';
             } else {
-                let html = '<table style="width: 100%; border-collapse: collapse;">';
+                // Recalculate scores if requested and data available
+                let displayData = leaderboard.map(entry => {
+                    if (useRecalculated && entry.gameHistory && entry.gameHistory.settings) {
+                        const recalcScore = recalculateScore(entry.gameHistory, settings);
+                        return {
+                            ...entry,
+                            displayScore: recalcScore,
+                            originalScore: entry.score,
+                            isRecalculated: true
+                        };
+                    }
+                    return {
+                        ...entry,
+                        displayScore: entry.score,
+                        isRecalculated: false
+                    };
+                });
+
+                // Re-sort by display score
+                displayData.sort((a, b) => b.displayScore - a.displayScore);
+
+                let html = '<div style="margin-bottom: 15px; text-align: center;">';
+                html += '<button onclick="displayLeaderboard(false)" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (useRecalculated ? 'white' : '#667eea') + '; color: ' + (useRecalculated ? '#667eea' : 'white') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Original Scores</button>';
+                html += '<button onclick="displayLeaderboard(true)" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (useRecalculated ? '#667eea' : 'white') + '; color: ' + (useRecalculated ? 'white' : '#667eea') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Recalculated</button>';
+                html += '</div>';
+
+                if (useRecalculated) {
+                    html += '<p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 15px;">Scores recalculated with current settings</p>';
+                }
+
+                html += '<table style="width: 100%; border-collapse: collapse;">';
                 html += '<thead><tr style="border-bottom: 2px solid #667eea;">';
                 html += '<th style="padding: 10px; text-align: left;">Rank</th>';
                 html += '<th style="padding: 10px; text-align: right;">Score</th>';
@@ -1145,12 +1175,16 @@
                 html += '<th style="padding: 10px; text-align: left;">Date</th>';
                 html += '</tr></thead><tbody>';
 
-                leaderboard.forEach((entry, index) => {
+                displayData.forEach((entry, index) => {
                     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
                     const dateDisplay = entry.dateStr || (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : entry.date);
+                    const scoreDisplay = entry.isRecalculated ?
+                        `${entry.displayScore} <span style="font-size: 0.8em; color: #999;">(was ${entry.originalScore})</span>` :
+                        entry.displayScore;
+
                     html += '<tr style="border-bottom: 1px solid #eee;">';
                     html += `<td style="padding: 10px;">${medal} #${index + 1}</td>`;
-                    html += `<td style="padding: 10px; text-align: right; font-weight: bold; color: #667eea;">${entry.score}</td>`;
+                    html += `<td style="padding: 10px; text-align: right; font-weight: bold; color: #667eea;">${scoreDisplay}</td>`;
                     html += `<td style="padding: 10px; text-align: right;">${entry.words}</td>`;
                     html += `<td style="padding: 10px; font-size: 0.9em; color: #666;">${dateDisplay}</td>`;
                     html += '</tr>';
