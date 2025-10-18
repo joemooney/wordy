@@ -633,7 +633,7 @@
 
             <div class="setting-item">
                 <label class="setting-label">Hint Point Penalty</label>
-                <input type="number" id="hintPenalty" class="setting-input" min="0" max="100" value="5">
+                <input type="number" id="hintPenalty" class="setting-input" min="0" max="100" value="7">
                 <small style="color: #666;">Points deducted for using hint (0-100)</small>
             </div>
 
@@ -773,7 +773,7 @@
             baseScore: 20,
             bonusPerSecond: 2,
             hintLetterCount: 4,
-            hintPenalty: 5,
+            hintPenalty: 7,
             perfectWordBonus: 50,
             gameTimeLimit: 120
         };
@@ -1137,38 +1137,66 @@
 
         // Hint functions
         function showHint() {
-            if (!currentWord || hintActive) return;
+            if (!currentWord) return;
             if (currentPosition >= currentWord.word.length) return;
             if (!gameActive) return; // Prevent hint when game is over
-
-            usedHelpThisWord = true;  // Mark that help was used
 
             const word = currentWord.word.toUpperCase();
             const correctLetter = word[currentPosition];
 
-            // Deduct penalty points
-            currentScore = Math.max(0, currentScore - settings.hintPenalty);
-            updateScoreDisplay();
+            // If hint is already active, remove one wrong letter
+            if (hintActive && hintLetters.length > 1) {
+                usedHelpThisWord = true;  // Mark that help was used
 
-            // Generate random letters
-            const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const randomLetters = [];
+                // Deduct penalty points
+                currentScore = Math.max(0, currentScore - settings.hintPenalty);
+                updateScoreDisplay();
 
-            // Add N-1 random letters (different from correct letter)
-            while (randomLetters.length < settings.hintLetterCount - 1) {
-                const randomLetter = allLetters[Math.floor(Math.random() * allLetters.length)];
-                if (randomLetter !== correctLetter && !randomLetters.includes(randomLetter)) {
-                    randomLetters.push(randomLetter);
+                // Find and remove one wrong letter
+                const wrongLetterIndex = hintLetters.findIndex(letter => letter !== correctLetter);
+                if (wrongLetterIndex !== -1) {
+                    hintLetters.splice(wrongLetterIndex, 1);
                 }
+
+                // If only correct letter remains, auto-fill it
+                if (hintLetters.length === 1) {
+                    hideHint();
+                    handleLetterInput(correctLetter);
+                    return;
+                }
+
+                displayHintLetters();
+                return;
             }
 
-            // Add the correct letter and shuffle
-            randomLetters.push(correctLetter);
-            hintLetters = randomLetters.sort(() => Math.random() - 0.5);
-            hintActive = true;
+            // First time showing hint
+            if (!hintActive) {
+                usedHelpThisWord = true;  // Mark that help was used
 
-            // Display hint
-            displayHintLetters();
+                // Deduct penalty points
+                currentScore = Math.max(0, currentScore - settings.hintPenalty);
+                updateScoreDisplay();
+
+                // Generate random letters
+                const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const randomLetters = [];
+
+                // Add N-1 random letters (different from correct letter)
+                while (randomLetters.length < settings.hintLetterCount - 1) {
+                    const randomLetter = allLetters[Math.floor(Math.random() * allLetters.length)];
+                    if (randomLetter !== correctLetter && !randomLetters.includes(randomLetter)) {
+                        randomLetters.push(randomLetter);
+                    }
+                }
+
+                // Add the correct letter and shuffle
+                randomLetters.push(correctLetter);
+                hintLetters = randomLetters.sort(() => Math.random() - 0.5);
+                hintActive = true;
+
+                // Display hint
+                displayHintLetters();
+            }
         }
 
         function displayHintLetters() {
@@ -1295,7 +1323,7 @@
                         <div style="font-size: 15px; line-height: 1.8; color: rgba(255, 255, 255, 0.95);">
                             <div style="margin-bottom: 8px;">✅ <strong>Correct Letter:</strong> ${settings.baseScore} points + ${settings.bonusPerSecond} per second remaining (${settings.letterTimeLimit}s limit)</div>
                             <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
-                            <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points</div>
+                            <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points (press again to eliminate wrong letters)</div>
                             <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
                             <div>❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
                         </div>
@@ -1351,7 +1379,7 @@
             html += `
                 </div>
                 <div class="hint-text">
-                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • / shows hint (-${settings.hintPenalty} pts) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
+                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • / shows hint, press again to eliminate letters (-${settings.hintPenalty} pts each) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
                 </div>
                 <div class="penalty-indicator" id="penaltyIndicator">
                     +${settings.revealPenaltySeconds}s penalty!
