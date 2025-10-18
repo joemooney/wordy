@@ -491,6 +491,9 @@
             <div class="title-row">
                 <h1>GRE Spelling Quiz</h1>
                 <div class="header-buttons">
+                    <button class="icon-btn" onclick="displayLeaderboard()" title="Leaderboard">
+                        <i class="fas fa-trophy"></i>
+                    </button>
                     <button class="icon-btn" onclick="showKeyboard()" title="Virtual Keyboard">
                         <i class="fas fa-keyboard"></i>
                     </button>
@@ -507,9 +510,17 @@
                     <div class="stat-label">Points</div>
                     <div class="stat-value" id="points">0</div>
                 </div>
+                <div class="stat-item" id="gameTimerItem">
+                    <div class="stat-label">Game Timer</div>
+                    <div class="stat-value" id="gameTimerDisplay">--</div>
+                </div>
                 <div class="stat-item" id="letterTimerItem">
                     <div class="stat-label">Letter Timer</div>
                     <div class="stat-value" id="letterTimerDisplay">--</div>
+                </div>
+                <div class="stat-item" id="wordsCompletedItem">
+                    <div class="stat-label">Words</div>
+                    <div class="stat-value" id="wordsCompletedDisplay">0</div>
                 </div>
                 <div class="stat-item" id="roundStatItem" style="display: none;">
                     <div class="stat-label">Round</div>
@@ -629,6 +640,16 @@
                 <small style="color: #666;">Bonus points for completing word with no hints/reveals (0-200)</small>
             </div>
 
+            <div class="setting-item">
+                <label class="setting-label" style="color: #667eea; font-size: 18px; margin-top: 15px;">Game Timer</label>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Game Time Limit (seconds)</label>
+                <input type="number" id="gameTimeLimit" class="setting-input" min="30" max="600" value="120">
+                <small style="color: #666;">Time limit for the entire game (30-600 seconds, default: 120 = 2 minutes)</small>
+            </div>
+
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
         </div>
     </div>
@@ -669,6 +690,39 @@
         </div>
     </div>
 
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Time's Up!</h2>
+            </div>
+            <div class="round-info">
+                <p style="font-size: 32px; font-weight: bold; color: #667eea;" id="finalScore">0</p>
+                <p style="font-size: 18px; margin: 10px 0;">Points</p>
+                <p style="font-size: 16px; color: #666;" id="finalWords">Words completed: 0</p>
+                <p style="font-size: 14px; color: #999; margin-top: 10px;" id="gameDate"></p>
+            </div>
+            <div class="round-buttons">
+                <button class="modal-btn" onclick="startNewGame()">New Game</button>
+                <button class="modal-btn" style="background: #28a745;" onclick="viewLeaderboard()">View Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 Leaderboard</h2>
+                <button class="close-btn" onclick="closeLeaderboard()">&times;</button>
+            </div>
+            <div id="leaderboardContent">
+                <p style="text-align: center; color: #999;">No scores yet!</p>
+            </div>
+            <button class="modal-btn" onclick="closeLeaderboard()">Close</button>
+        </div>
+    </div>
+
     <script>
         // Game state
         let currentWord = null;
@@ -696,7 +750,8 @@
             bonusPerSecond: 2,
             hintLetterCount: 4,
             hintPenalty: 10,
-            perfectWordBonus: 50
+            perfectWordBonus: 50,
+            gameTimeLimit: 120
         };
 
         // Scoring state
@@ -710,6 +765,13 @@
 
         // Perfect word tracking
         let usedHelpThisWord = false;
+
+        // Game timer state
+        let gameActive = false;
+        let gameStartTime = null;
+        let gameTimer = null;
+        let gameTimeRemaining = 0;
+        let wordsCompleted = 0;
 
         // Letter timer functions
         function startLetterTimer() {
@@ -763,10 +825,181 @@
             document.getElementById('points').textContent = currentScore;
         }
 
+        // Game timer functions
+        function startGameTimer() {
+            if (gameActive) return; // Already started
+
+            gameActive = true;
+            gameStartTime = Date.now();
+            gameTimeRemaining = settings.gameTimeLimit;
+            wordsCompleted = 0;
+
+            stopGameTimer(); // Clear any existing timer
+            gameTimer = setInterval(updateGameTimerDisplay, 100);
+            updateGameTimerDisplay();
+            updateWordsCompletedDisplay();
+        }
+
+        function stopGameTimer() {
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+        }
+
+        function getGameTimeRemaining() {
+            if (!gameStartTime || !gameActive) return 0;
+            const elapsed = (Date.now() - gameStartTime) / 1000;
+            return Math.max(0, settings.gameTimeLimit - elapsed);
+        }
+
+        function updateGameTimerDisplay() {
+            if (!gameActive) {
+                document.getElementById('gameTimerDisplay').textContent = '--';
+                return;
+            }
+
+            const remaining = getGameTimeRemaining();
+            const minutes = Math.floor(remaining / 60);
+            const seconds = Math.floor(remaining % 60);
+            const decimal = Math.floor((remaining % 1) * 10);
+
+            document.getElementById('gameTimerDisplay').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}.${decimal}`;
+
+            // Color coding based on time remaining
+            const display = document.getElementById('gameTimerDisplay');
+            if (remaining <= 0) {
+                display.style.color = '#ff4444';
+                handleGameTimeUp();
+            } else if (remaining < 10) {
+                display.style.color = '#ff9800';
+            } else if (remaining < 30) {
+                display.style.color = '#ffc107';
+            } else {
+                display.style.color = 'white';
+            }
+        }
+
+        function updateWordsCompletedDisplay() {
+            document.getElementById('wordsCompletedDisplay').textContent = wordsCompleted;
+        }
+
+        function handleGameTimeUp() {
+            if (!gameActive) return;
+
+            gameActive = false;
+            stopGameTimer();
+            stopLetterTimer();
+
+            // Show game over modal
+            showGameOver();
+        }
+
+        // Leaderboard functions
+        function saveToLeaderboard(score, words, date) {
+            const leaderboard = getLeaderboard();
+            leaderboard.push({
+                score: score,
+                words: words,
+                date: date
+            });
+
+            // Sort by score descending
+            leaderboard.sort((a, b) => b.score - a.score);
+
+            // Keep top 10
+            const top10 = leaderboard.slice(0, 10);
+
+            localStorage.setItem('spellingQuizLeaderboard', JSON.stringify(top10));
+        }
+
+        function getLeaderboard() {
+            const saved = localStorage.getItem('spellingQuizLeaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function showGameOver() {
+            const now = new Date();
+            const dateStr = now.toLocaleString();
+
+            // Save to leaderboard
+            saveToLeaderboard(currentScore, wordsCompleted, dateStr);
+
+            // Update modal content
+            document.getElementById('finalScore').textContent = currentScore;
+            document.getElementById('finalWords').textContent = `Words completed: ${wordsCompleted}`;
+            document.getElementById('gameDate').textContent = dateStr;
+
+            // Show modal
+            document.getElementById('gameOverModal').classList.add('show');
+        }
+
+        function startNewGame() {
+            // Close game over modal
+            document.getElementById('gameOverModal').classList.remove('show');
+
+            // Reset game state
+            currentScore = 0;
+            wordsCompleted = 0;
+            gameActive = false;
+            gameStartTime = null;
+
+            updateScoreDisplay();
+            updateWordsCompletedDisplay();
+
+            // Start new game
+            startGameTimer();
+            loadNextWord();
+        }
+
+        function viewLeaderboard() {
+            // Close game over modal first
+            document.getElementById('gameOverModal').classList.remove('show');
+
+            displayLeaderboard();
+        }
+
+        function displayLeaderboard() {
+            const leaderboard = getLeaderboard();
+            const content = document.getElementById('leaderboardContent');
+
+            if (leaderboard.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet! Play a game to get on the leaderboard.</p>';
+            } else {
+                let html = '<table style="width: 100%; border-collapse: collapse;">';
+                html += '<thead><tr style="border-bottom: 2px solid #667eea;">';
+                html += '<th style="padding: 10px; text-align: left;">Rank</th>';
+                html += '<th style="padding: 10px; text-align: right;">Score</th>';
+                html += '<th style="padding: 10px; text-align: right;">Words</th>';
+                html += '<th style="padding: 10px; text-align: left;">Date</th>';
+                html += '</tr></thead><tbody>';
+
+                leaderboard.forEach((entry, index) => {
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                    html += '<tr style="border-bottom: 1px solid #eee;">';
+                    html += `<td style="padding: 10px;">${medal} #${index + 1}</td>`;
+                    html += `<td style="padding: 10px; text-align: right; font-weight: bold; color: #667eea;">${entry.score}</td>`;
+                    html += `<td style="padding: 10px; text-align: right;">${entry.words}</td>`;
+                    html += `<td style="padding: 10px; font-size: 0.9em; color: #666;">${entry.date}</td>`;
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            }
+
+            document.getElementById('leaderboardModal').classList.add('show');
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardModal').classList.remove('show');
+        }
+
         // Hint functions
         function showHint() {
             if (!currentWord || hintActive) return;
             if (currentPosition >= currentWord.word.length) return;
+            if (!gameActive) return; // Prevent hint when game is over
 
             usedHelpThisWord = true;  // Mark that help was used
 
@@ -836,6 +1069,7 @@
             document.getElementById('hintLetterCount').value = settings.hintLetterCount;
             document.getElementById('hintPenalty').value = settings.hintPenalty;
             document.getElementById('perfectWordBonus').value = settings.perfectWordBonus;
+            document.getElementById('gameTimeLimit').value = settings.gameTimeLimit;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
         }
@@ -858,6 +1092,7 @@
             settings.hintLetterCount = parseInt(document.getElementById('hintLetterCount').value);
             settings.hintPenalty = parseInt(document.getElementById('hintPenalty').value);
             settings.perfectWordBonus = parseInt(document.getElementById('perfectWordBonus').value);
+            settings.gameTimeLimit = parseInt(document.getElementById('gameTimeLimit').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
 
@@ -1064,6 +1299,7 @@
 
         function handleLetterInput(letter) {
             if (!currentWord) return;
+            if (!gameActive) return; // Prevent input when game is over
 
             const word = currentWord.word.toUpperCase();
             letter = letter.toUpperCase();
@@ -1128,6 +1364,7 @@
 
         function revealNextLetter() {
             if (!currentWord) return;
+            if (!gameActive) return; // Prevent reveal when game is over
 
             usedHelpThisWord = true;  // Mark that help was used
 
@@ -1260,6 +1497,12 @@
                 currentScore += settings.perfectWordBonus;
                 updateScoreDisplay();
                 showPerfectWordBonus();
+            }
+
+            // Increment words completed
+            if (gameActive) {
+                wordsCompleted++;
+                updateWordsCompletedDisplay();
             }
 
             // Word is complete, move to next word after a short delay
@@ -1442,6 +1685,8 @@
             // Initialize score display
             updateScoreDisplay();
             updateLetterTimerDisplay();
+            updateGameTimerDisplay();
+            updateWordsCompletedDisplay();
 
             // Check round status
             try {
@@ -1466,8 +1711,9 @@
                 console.error('Error checking round status:', error);
             }
 
-            // Load first word
+            // Load first word and start game timer
             await loadNextWord();
+            startGameTimer();
         }
 
         // Start
