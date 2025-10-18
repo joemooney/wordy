@@ -1934,9 +1934,29 @@
                 return;
             }
 
-            // Don't handle keys if other modals are open
-            if (document.getElementById('settingsModal').classList.contains('show') ||
-                document.getElementById('roundStartModal').classList.contains('show')) {
+            // Handle keyboard shortcuts in Round Start modal
+            if (document.getElementById('roundStartModal').classList.contains('show')) {
+                switch(event.key) {
+                    case ' ':
+                    case 'Spacebar':
+                    case 'Enter':
+                        event.preventDefault();
+                        startNewRound();
+                        break;
+                    case 'Escape':
+                        event.preventDefault();
+                        window.location.href = '/';
+                        break;
+                }
+                return;
+            }
+
+            // Handle keyboard shortcuts in Settings modal
+            if (document.getElementById('settingsModal').classList.contains('show')) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeSettings();
+                }
                 return;
             }
 
