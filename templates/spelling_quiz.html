@@ -705,6 +705,27 @@
                 <p style="font-size: 16px; color: #666;" id="finalWords">Words completed: 0</p>
                 <p style="font-size: 14px; color: #999; margin-top: 10px;" id="gameDate"></p>
             </div>
+            <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                <h3 style="margin-bottom: 15px; color: #333; font-size: 18px;">Your Rankings</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">All Time</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="rankAllTime">-</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">This Month</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="rankMonth">-</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">This Week</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="rankWeek">-</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Today</div>
+                        <div style="font-size: 24px; font-weight: bold; color: #667eea;" id="rankToday">-</div>
+                    </div>
+                </div>
+            </div>
             <div class="round-buttons">
                 <button class="modal-btn" onclick="startNewGame()">New Game</button>
                 <button class="modal-btn" style="background: #28a745;" onclick="viewLeaderboard()">View Leaderboard</button>
@@ -900,39 +921,107 @@
         }
 
         // Leaderboard functions
-        function saveToLeaderboard(score, words, date) {
-            const leaderboard = getLeaderboard();
+        function saveToLeaderboard(score, words, timestamp) {
+            const leaderboard = getAllScores();
             leaderboard.push({
                 score: score,
                 words: words,
-                date: date
+                timestamp: timestamp,
+                dateStr: new Date(timestamp).toLocaleString()
             });
 
             // Sort by score descending
             leaderboard.sort((a, b) => b.score - a.score);
 
-            // Keep top 10
-            const top10 = leaderboard.slice(0, 10);
-
-            localStorage.setItem('spellingQuizLeaderboard', JSON.stringify(top10));
+            localStorage.setItem('spellingQuizLeaderboard', JSON.stringify(leaderboard));
         }
 
-        function getLeaderboard() {
+        function getAllScores() {
             const saved = localStorage.getItem('spellingQuizLeaderboard');
             return saved ? JSON.parse(saved) : [];
         }
 
+        function getLeaderboard() {
+            // Return top 10 for display
+            return getAllScores().slice(0, 10);
+        }
+
+        function isToday(timestamp) {
+            const today = new Date();
+            const scoreDate = new Date(timestamp);
+            return today.toDateString() === scoreDate.toDateString();
+        }
+
+        function isThisWeek(timestamp) {
+            const now = new Date();
+            const scoreDate = new Date(timestamp);
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return scoreDate >= weekAgo;
+        }
+
+        function isThisMonth(timestamp) {
+            const now = new Date();
+            const scoreDate = new Date(timestamp);
+            return now.getMonth() === scoreDate.getMonth() &&
+                   now.getFullYear() === scoreDate.getFullYear();
+        }
+
+        function getRankings(currentScore, currentTimestamp) {
+            const allScores = getAllScores();
+
+            // Filter out the current game's score (it was just added)
+            const otherScores = allScores.filter(s => s.timestamp !== currentTimestamp);
+
+            // All time ranking - count scores strictly better than current
+            const allTimeBetter = otherScores.filter(s => s.score > currentScore).length;
+            const allTimeRank = allTimeBetter + 1;
+            const allTimeTotal = allScores.length;
+
+            // Today's ranking
+            const todayScores = otherScores.filter(s => isToday(s.timestamp));
+            const todayBetter = todayScores.filter(s => s.score > currentScore).length;
+            const todayRank = todayBetter + 1;
+            const todayTotal = todayScores.length + 1; // +1 for current game
+
+            // This week's ranking
+            const weekScores = otherScores.filter(s => isThisWeek(s.timestamp));
+            const weekBetter = weekScores.filter(s => s.score > currentScore).length;
+            const weekRank = weekBetter + 1;
+            const weekTotal = weekScores.length + 1;
+
+            // This month's ranking
+            const monthScores = otherScores.filter(s => isThisMonth(s.timestamp));
+            const monthBetter = monthScores.filter(s => s.score > currentScore).length;
+            const monthRank = monthBetter + 1;
+            const monthTotal = monthScores.length + 1;
+
+            return {
+                allTime: `#${allTimeRank} of ${allTimeTotal}`,
+                today: `#${todayRank} of ${todayTotal}`,
+                week: `#${weekRank} of ${weekTotal}`,
+                month: `#${monthRank} of ${monthTotal}`
+            };
+        }
+
         function showGameOver() {
             const now = new Date();
+            const timestamp = now.getTime();
             const dateStr = now.toLocaleString();
 
-            // Save to leaderboard
-            saveToLeaderboard(currentScore, wordsCompleted, dateStr);
+            // Save to leaderboard first
+            saveToLeaderboard(currentScore, wordsCompleted, timestamp);
+
+            // Calculate rankings (after saving)
+            const rankings = getRankings(currentScore, timestamp);
 
             // Update modal content
             document.getElementById('finalScore').textContent = currentScore;
             document.getElementById('finalWords').textContent = `Words completed: ${wordsCompleted}`;
             document.getElementById('gameDate').textContent = dateStr;
+            document.getElementById('rankAllTime').textContent = rankings.allTime;
+            document.getElementById('rankToday').textContent = rankings.today;
+            document.getElementById('rankWeek').textContent = rankings.week;
+            document.getElementById('rankMonth').textContent = rankings.month;
 
             // Show modal
             document.getElementById('gameOverModal').classList.add('show');
@@ -988,11 +1077,12 @@
 
                 leaderboard.forEach((entry, index) => {
                     const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                    const dateDisplay = entry.dateStr || (entry.timestamp ? new Date(entry.timestamp).toLocaleString() : entry.date);
                     html += '<tr style="border-bottom: 1px solid #eee;">';
                     html += `<td style="padding: 10px;">${medal} #${index + 1}</td>`;
                     html += `<td style="padding: 10px; text-align: right; font-weight: bold; color: #667eea;">${entry.score}</td>`;
                     html += `<td style="padding: 10px; text-align: right;">${entry.words}</td>`;
-                    html += `<td style="padding: 10px; font-size: 0.9em; color: #666;">${entry.date}</td>`;
+                    html += `<td style="padding: 10px; font-size: 0.9em; color: #666;">${dateDisplay}</td>`;
                     html += '</tr>';
                 });
 
