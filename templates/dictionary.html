@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRE Dictionary Browser - Wordy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .home-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .home-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            font-size: 1em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .word-count {
+            color: #666;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            background: #f0f0f0;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 120px;
+            align-self: flex-start;
+            max-height: calc(100vh - 140px);
+            overflow-y: auto;
+        }
+
+        .letter-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .letter-btn {
+            padding: 8px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .letter-btn:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .letter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .word-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .word-item {
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .word-item:hover {
+            background: #f8f9ff;
+        }
+
+        .word-item.selected {
+            background: #f0f4ff;
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .word-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .word-definition {
+            color: #555;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+
+        /* Condensed view */
+        .view-condensed .word-definition {
+            display: none;
+        }
+
+        /* List view */
+        .view-list .word-definition {
+            display: none;
+        }
+
+        .view-list .word-item.selected .word-definition {
+            display: block;
+        }
+
+        /* Details view */
+        .view-details .word-definition {
+            display: block;
+        }
+
+        .keyboard-hints {
+            margin-top: 30px;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .keyboard-hints kbd {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 0.9em;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .search-container {
+                width: 100%;
+            }
+        }
+
+        /* Scrollbar styling */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1 class="title">📖 GRE Dictionary</h1>
+            <a href="/" class="home-btn" title="Return to Home (Esc)">🏠 Home</a>
+
+            <div class="search-container">
+                <input
+                    type="text"
+                    class="search-input"
+                    id="searchInput"
+                    placeholder="Search words or meanings... (supports fuzzy search)"
+                    autocomplete="off"
+                >
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <div class="controls">
+                <span class="word-count" id="wordCount">{{ total_words }} words</span>
+                <div class="view-toggle">
+                    <button class="view-btn" data-view="condensed" title="Condensed view">📋</button>
+                    <button class="view-btn active" data-view="list" title="List view">📝</button>
+                    <button class="view-btn" data-view="details" title="Details view">📄</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <div class="letter-nav" id="letterNav">
+                <!-- Letters A-Z will be generated here -->
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="loading" id="loading">Loading dictionary...</div>
+            <div class="word-list" id="wordList" style="display: none;"></div>
+            <div class="no-results" id="noResults" style="display: none;">
+                No words found matching your search.
+            </div>
+
+            <div class="keyboard-hints">
+                💡 <kbd>↑</kbd><kbd>↓</kbd> Navigate | <kbd>Enter</kbd> Show/Hide details |
+                <kbd>A-Z</kbd> Jump to letter | <kbd>Esc</kbd> Home | <kbd>/</kbd> Focus search
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let allWords = [];
+        let displayedWords = [];
+        let selectedIndex = 0;
+        let currentView = 'list';
+        let searchTimeout = null;
+
+        // Load all words on page load
+        async function loadWords() {
+            try {
+                const response = await fetch('/dictionary/all');
+                const data = await response.json();
+                allWords = data.words;
+                displayedWords = allWords;
+                renderWords();
+                updateWordCount();
+                generateLetterNav();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('wordList').style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading words:', error);
+                document.getElementById('loading').textContent = 'Error loading dictionary. Please refresh.';
+            }
+        }
+
+        // Search words with debounce
+        function handleSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const query = document.getElementById('searchInput').value.trim();
+
+                if (!query) {
+                    // Show all words if search is empty
+                    displayedWords = allWords;
+                    renderWords();
+                    updateWordCount();
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/dictionary/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+                    const data = await response.json();
+                    displayedWords = data.words;
+                    selectedIndex = 0;
+                    renderWords();
+                    updateWordCount(data.total);
+                } catch (error) {
+                    console.error('Error searching:', error);
+                }
+            }, 300); // 300ms debounce
+        }
+
+        // Render words list
+        function renderWords() {
+            const wordList = document.getElementById('wordList');
+            const noResults = document.getElementById('noResults');
+
+            if (displayedWords.length === 0) {
+                wordList.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            wordList.style.display = 'flex';
+            noResults.style.display = 'none';
+            wordList.innerHTML = '';
+
+            displayedWords.forEach((item, index) => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                if (index === selectedIndex) {
+                    wordItem.classList.add('selected');
+                }
+                wordItem.dataset.index = index;
+                wordItem.dataset.word = item.word;
+
+                wordItem.innerHTML = `
+                    <div class="word-name">${item.word}</div>
+                    <div class="word-definition">${item.definition}</div>
+                `;
+
+                wordItem.onclick = () => selectWord(index);
+
+                wordList.appendChild(wordItem);
+            });
+
+            // Scroll selected item into view
+            scrollToSelected();
+            updateActiveLetter();
+        }
+
+        // Select word by index
+        function selectWord(index) {
+            selectedIndex = index;
+            renderWords();
+        }
+
+        // Scroll selected item into view
+        function scrollToSelected() {
+            const items = document.querySelectorAll('.word-item');
+            if (items[selectedIndex]) {
+                items[selectedIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
+            }
+        }
+
+        // Navigate with arrow keys
+        function navigateUp() {
+            if (selectedIndex > 0) {
+                selectedIndex--;
+                renderWords();
+            }
+        }
+
+        function navigateDown() {
+            if (selectedIndex < displayedWords.length - 1) {
+                selectedIndex++;
+                renderWords();
+            }
+        }
+
+        // Toggle details for selected word
+        function toggleDetails() {
+            if (currentView === 'condensed') {
+                setView('list');
+            } else if (currentView === 'list') {
+                setView('details');
+            } else {
+                setView('list');
+            }
+        }
+
+        // Set view mode
+        function setView(view) {
+            currentView = view;
+            const wordList = document.getElementById('wordList');
+            wordList.className = `word-list view-${view}`;
+
+            // Update button states
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+        }
+
+        // Update word count display
+        function updateWordCount(count) {
+            const total = count !== undefined ? count : displayedWords.length;
+            const wordCount = document.getElementById('wordCount');
+
+            if (total === allWords.length) {
+                wordCount.textContent = `${total} words`;
+            } else {
+                wordCount.textContent = `${total} of ${allWords.length} words`;
+            }
+        }
+
+        // Generate A-Z letter navigation
+        function generateLetterNav() {
+            const letterNav = document.getElementById('letterNav');
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+            alphabet.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = 'letter-btn';
+                btn.textContent = letter;
+                btn.dataset.letter = letter;
+                btn.onclick = () => jumpToLetter(letter);
+                letterNav.appendChild(btn);
+            });
+        }
+
+        // Jump to first word starting with letter
+        function jumpToLetter(letter) {
+            const index = displayedWords.findIndex(item =>
+                item.word.toLowerCase().startsWith(letter.toLowerCase())
+            );
+
+            if (index !== -1) {
+                selectedIndex = index;
+                renderWords();
+            }
+        }
+
+        // Update active letter in sidebar based on current word
+        function updateActiveLetter() {
+            if (displayedWords.length === 0) return;
+
+            const currentWord = displayedWords[selectedIndex].word;
+            const firstLetter = currentWord[0].toUpperCase();
+
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.letter === firstLetter);
+            });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            // Focus search with /
+            if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+                return;
+            }
+
+            // ESC to go home or clear search
+            if (e.key === 'Escape') {
+                if (document.activeElement === document.getElementById('searchInput')) {
+                    document.getElementById('searchInput').blur();
+                } else {
+                    window.location.href = '/';
+                }
+                return;
+            }
+
+            // Don't handle other keys if search is focused
+            if (document.activeElement === document.getElementById('searchInput')) {
+                return;
+            }
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateUp();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateDown();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    toggleDetails();
+                    break;
+                default:
+                    // Jump to letter if A-Z is pressed
+                    if (e.key.length === 1 && /[a-z]/i.test(e.key)) {
+                        jumpToLetter(e.key.toUpperCase());
+                    }
+            }
+        });
+
+        // Search input handler
+        document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+        // View toggle buttons
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setView(btn.dataset.view);
+            });
+        });
+
+        // Initialize
+        loadWords();
+    </script>
+</body>
+</html>

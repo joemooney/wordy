@@ -583,6 +583,80 @@ def check_trivia_answer():
         'correct_answer': question_data['correct']
     })
 
+# Dictionary browser routes
+@app.route('/dictionary')
+def dictionary():
+    """Dictionary browser page."""
+    return render_template('dictionary.html', total_words=len(WORDS))
+
+@app.route('/dictionary/all')
+def get_all_words():
+    """Get all words in the dictionary."""
+    words_list = [{'word': word, 'definition': defn} for word, defn in WORDS.items()]
+    # Sort alphabetically
+    words_list.sort(key=lambda x: x['word'].lower())
+    return jsonify({'words': words_list, 'total': len(words_list)})
+
+@app.route('/dictionary/search', methods=['POST'])
+def search_dictionary():
+    """Search the dictionary with fuzzy matching.
+
+    Searches both word names and definitions.
+    Returns results ranked by relevance.
+    """
+    data = request.json or {}
+    query = data.get('query', '').strip().lower()
+
+    if not query:
+        # Return all words if no query
+        words_list = [{'word': word, 'definition': defn} for word, defn in WORDS.items()]
+        words_list.sort(key=lambda x: x['word'].lower())
+        return jsonify({'words': words_list, 'total': len(words_list)})
+
+    results = []
+
+    for word, definition in WORDS.items():
+        word_lower = word.lower()
+        definition_lower = definition.lower()
+        score = 0
+
+        # Exact word match (highest priority)
+        if word_lower == query:
+            score = 1000
+        # Word starts with query
+        elif word_lower.startswith(query):
+            score = 500
+        # Word contains query
+        elif query in word_lower:
+            score = 250
+        # Definition contains query (meaning-based search)
+        elif query in definition_lower:
+            score = 100
+            # Boost if query appears at start of definition
+            if definition_lower.startswith(query):
+                score = 150
+        else:
+            # Fuzzy matching - check if most characters match
+            matching_chars = sum(1 for c in query if c in word_lower)
+            if matching_chars >= len(query) * 0.7:  # 70% of characters match
+                score = matching_chars * 10
+
+        if score > 0:
+            results.append({
+                'word': word,
+                'definition': definition,
+                'score': score
+            })
+
+    # Sort by score (descending) then alphabetically
+    results.sort(key=lambda x: (-x['score'], x['word'].lower()))
+
+    # Remove score from results before sending
+    for result in results:
+        del result['score']
+
+    return jsonify({'words': results, 'total': len(results), 'query': query})
+
 if __name__ == '__main__':
     print("Starting Wordy Quiz Application...")
     print(f"Loaded {len(WORDS)} GRE vocabulary words")
