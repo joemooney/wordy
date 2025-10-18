@@ -639,8 +639,14 @@
 
             <div class="setting-item">
                 <label class="setting-label">Perfect Word Bonus</label>
-                <input type="number" id="perfectWordBonus" class="setting-input" min="0" max="200" value="50">
-                <small style="color: #666;">Bonus points for completing word with no hints/reveals (0-200)</small>
+                <input type="number" id="perfectWordBonus" class="setting-input" min="0" max="200" value="100">
+                <small style="color: #666;">Bonus for completing word with no hints/reveals/mistakes (0-200)</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Completed Word Bonus</label>
+                <input type="number" id="completedWordBonus" class="setting-input" min="0" max="200" value="50">
+                <small style="color: #666;">Bonus for completing word with no hints/reveals but with mistakes (0-200)</small>
             </div>
 
             <div class="setting-item">
@@ -775,7 +781,8 @@
             bonusPerSecond: 2,
             hintLetterCount: 4,
             hintPenalty: 7,
-            perfectWordBonus: 50,
+            perfectWordBonus: 100,
+            completedWordBonus: 50,
             gameTimeLimit: 120
         };
 
@@ -790,6 +797,7 @@
 
         // Perfect word tracking
         let usedHelpThisWord = false;
+        let wrongLetterThisWord = false;
 
         // Game timer state
         let gameActive = false;
@@ -1022,9 +1030,13 @@
                 // Deduct hints with new penalty
                 recalculatedScore -= wordResult.hintsUsed * newSettings.hintPenalty;
 
-                // Add perfect word bonus if applicable
+                // Add word completion bonuses
                 if (wordResult.perfectWord) {
+                    // Perfect word - no help and no mistakes
                     recalculatedScore += newSettings.perfectWordBonus;
+                } else if (wordResult.completedWord) {
+                    // Completed word - no help but had mistakes
+                    recalculatedScore += newSettings.completedWordBonus;
                 }
             }
 
@@ -1360,6 +1372,7 @@
             document.getElementById('hintLetterCount').value = settings.hintLetterCount;
             document.getElementById('hintPenalty').value = settings.hintPenalty;
             document.getElementById('perfectWordBonus').value = settings.perfectWordBonus;
+            document.getElementById('completedWordBonus').value = settings.completedWordBonus;
             document.getElementById('gameTimeLimit').value = settings.gameTimeLimit;
             document.querySelector(`input[name="revealMode"][value="${settings.revealMode}"]`).checked = true;
             document.querySelector(`input[name="spaceRevealMode"][value="${settings.spaceRevealMode}"]`).checked = true;
@@ -1383,6 +1396,7 @@
             settings.hintLetterCount = parseInt(document.getElementById('hintLetterCount').value);
             settings.hintPenalty = parseInt(document.getElementById('hintPenalty').value);
             settings.perfectWordBonus = parseInt(document.getElementById('perfectWordBonus').value);
+            settings.completedWordBonus = parseInt(document.getElementById('completedWordBonus').value);
             settings.gameTimeLimit = parseInt(document.getElementById('gameTimeLimit').value);
             settings.revealMode = document.querySelector('input[name="revealMode"]:checked').value;
             settings.spaceRevealMode = document.querySelector('input[name="spaceRevealMode"]:checked').value;
@@ -1445,7 +1459,8 @@
                         <h3 style="font-size: 20px; margin-bottom: 15px; text-align: center; color: white;">🎯 Scoring System</h3>
                         <div style="font-size: 15px; line-height: 1.8; color: rgba(255, 255, 255, 0.95);">
                             <div style="margin-bottom: 8px;">✅ <strong>Correct Letter:</strong> ${settings.baseScore} points + ${settings.bonusPerSecond} per second remaining (${settings.letterTimeLimit}s limit)</div>
-                            <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
+                            <div style="margin-bottom: 8px;">🎉 <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints/reveals/mistakes)</div>
+                            <div style="margin-bottom: 8px;">✅ <strong>Completed Word:</strong> +${settings.completedWordBonus} bonus (no hints/reveals but had mistakes)</div>
                             <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points (press again to eliminate wrong letters)</div>
                             <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
                             <div style="margin-bottom: 8px;">❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
@@ -1471,7 +1486,8 @@
                         <h3 style="font-size: 20px; margin-bottom: 15px; text-align: center; color: white;">🎯 Scoring System</h3>
                         <div style="font-size: 15px; line-height: 1.8; color: rgba(255, 255, 255, 0.95);">
                             <div style="margin-bottom: 8px;">✅ <strong>Correct Letter:</strong> ${settings.baseScore} points + ${settings.bonusPerSecond} per second remaining (${settings.letterTimeLimit}s limit)</div>
-                            <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
+                            <div style="margin-bottom: 8px;">🎉 <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints/reveals/mistakes)</div>
+                            <div style="margin-bottom: 8px;">✅ <strong>Completed Word:</strong> +${settings.completedWordBonus} bonus (no hints/reveals but had mistakes)</div>
                             <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points (press again to eliminate wrong letters)</div>
                             <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
                             <div style="margin-bottom: 8px;">❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
@@ -1531,6 +1547,7 @@
             currentPosition = 0;
             revealedIndices.clear();
             usedHelpThisWord = false;  // Reset perfect word tracking
+            wrongLetterThisWord = false;  // Reset wrong letter tracking
 
             // Initialize word result tracking
             if (gameActive) {
@@ -1540,6 +1557,7 @@
                     letters: [],
                     hintsUsed: 0,
                     perfectWord: true,
+                    completedWord: true,
                     startTime: Date.now()
                 };
             }
@@ -1759,6 +1777,14 @@
                     handleWordComplete();
                 }
             } else {
+                // Wrong letter - mark it
+                wrongLetterThisWord = true;
+
+                // Track in history
+                if (currentWordResult) {
+                    currentWordResult.perfectWord = false;
+                }
+
                 // Wrong letter - add penalty and visual feedback
                 if (settings.wrongLetterPenaltySeconds > 0) {
                     totalPenalty += settings.wrongLetterPenaltySeconds;
@@ -1892,6 +1918,20 @@
             }
         }
 
+        function showCompletedWordBonus() {
+            const indicator = document.getElementById('penaltyIndicator');
+            if (indicator) {
+                indicator.textContent = `✅ Completed Word! +${settings.completedWordBonus} bonus points!`;
+                indicator.style.background = 'rgba(33, 150, 243, 0.4)';
+                indicator.classList.remove('show');
+                void indicator.offsetWidth;
+                indicator.classList.add('show');
+                setTimeout(() => {
+                    indicator.style.background = 'rgba(255, 152, 0, 0.3)';
+                }, 2000);
+            }
+        }
+
         function updateDisplay() {
             if (!currentWord) return;
 
@@ -1933,15 +1973,26 @@
         }
 
         async function handleWordComplete() {
-            // Check for perfect word bonus
+            // Check for bonuses - no hints or reveals used
             if (!usedHelpThisWord) {
-                currentScore += settings.perfectWordBonus;
-                updateScoreDisplay();
-                showPerfectWordBonus();
+                if (!wrongLetterThisWord) {
+                    // Perfect word - no help and no wrong letters
+                    currentScore += settings.perfectWordBonus;
+                    updateScoreDisplay();
+                    showPerfectWordBonus();
+                } else {
+                    // Completed word - no help but had wrong letters
+                    currentScore += settings.completedWordBonus;
+                    updateScoreDisplay();
+                    showCompletedWordBonus();
+                }
             }
 
             // Save current word result to game history
             if (currentWordResult) {
+                if (usedHelpThisWord) {
+                    currentWordResult.completedWord = false;
+                }
                 currentGameHistory.wordResults.push(currentWordResult);
                 currentWordResult = null;
             }
