@@ -775,6 +775,7 @@
         let gameTimer = null;
         let gameTimeRemaining = 0;
         let wordsCompleted = 0;
+        let gameReady = false; // Waiting for user to start
 
         // Letter timer functions
         function startLetterTimer() {
@@ -937,7 +938,7 @@
             document.getElementById('gameOverModal').classList.add('show');
         }
 
-        function startNewGame() {
+        async function startNewGame() {
             // Close game over modal
             document.getElementById('gameOverModal').classList.remove('show');
 
@@ -946,13 +947,21 @@
             wordsCompleted = 0;
             gameActive = false;
             gameStartTime = null;
+            currentWord = null;
+            userInput = [];
+            revealedIndices.clear();
+            currentPosition = 0;
+            usedHelpThisWord = false;
 
             updateScoreDisplay();
             updateWordsCompletedDisplay();
+            updateGameTimerDisplay();
+            updateLetterTimerDisplay();
 
-            // Start new game
-            startGameTimer();
-            loadNextWord();
+            // Load word and show start screen
+            await loadNextWord();
+            gameReady = true; // Ready for user to start
+            showStartScreen();
         }
 
         function viewLeaderboard() {
@@ -998,7 +1007,7 @@
             document.getElementById('leaderboardModal').classList.remove('show');
         }
 
-        function restartGame() {
+        async function restartGame() {
             // Stop current game
             if (gameActive) {
                 gameActive = false;
@@ -1022,9 +1031,18 @@
             updateGameTimerDisplay();
             updateLetterTimerDisplay();
 
-            // Start fresh game
+            // Load first word and show start screen
+            await loadNextWord();
+            gameReady = true; // Ready for user to start
+            showStartScreen();
+        }
+
+        async function beginGame() {
+            if (gameActive || !gameReady) return;
+
+            // Start the game
             startGameTimer();
-            loadNextWord();
+            displayWord();
         }
 
         // Hint functions
@@ -1174,6 +1192,19 @@
             }
         }
 
+        // Show start screen
+        function showStartScreen() {
+            const html = `
+                <div style="text-align: center; padding: 60px 40px;">
+                    <h2 style="font-size: 36px; margin-bottom: 30px;">Ready to Start?</h2>
+                    <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to begin</p>
+                    <p style="font-size: 18px; opacity: 0.8; margin-bottom: 30px;">You'll have ${settings.gameTimeLimit} seconds to spell as many words as possible!</p>
+                    <div style="font-size: 48px; margin-top: 40px;">⌨️</div>
+                </div>
+            `;
+            document.getElementById('quizArea').innerHTML = html;
+        }
+
         // Display word
         function displayWord() {
             if (!currentWord) {
@@ -1191,8 +1222,10 @@
             // Reveal initial letters based on settings
             revealInitialLetters(word);
 
-            // Start the letter timer
-            startLetterTimer();
+            // Start the letter timer only if game is active
+            if (gameActive) {
+                startLetterTimer();
+            }
 
             let html = `
                 <div class="definition-display">${currentDefinition}</div>
@@ -1574,6 +1607,15 @@
                 return;
             }
 
+            // Check if waiting to start game
+            if (gameReady && !gameActive) {
+                if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
+                    e.preventDefault();
+                    beginGame();
+                }
+                return;
+            }
+
             if (e.key === 'Escape') {
                 window.location.href = '/';
                 return;
@@ -1743,9 +1785,10 @@
                 console.error('Error checking round status:', error);
             }
 
-            // Load first word and start game timer
+            // Load first word and show start screen
             await loadNextWord();
-            startGameTimer();
+            gameReady = true; // Ready for user to start
+            showStartScreen();
         }
 
         // Start
