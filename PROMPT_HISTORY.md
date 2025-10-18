@@ -259,6 +259,129 @@ git push
 
 ---
 
+## Session: GRE Dictionary Browser (2025-10-18)
+
+### Prompt: Create Comprehensive Dictionary Browser App
+
+**User Request:**
+"Add a new Home page app/game. This one will be show all the words in the dictionary, at the top there will be a search that filters the words. Use a fuzzy search if possible in case someone does not know the spelling or can search based on meaning. Navigate with arrows. Default to a condensed view showing just the word list. ENTER will show the definition details for the word with the examples etc. A list view will show a single column of words and as you arrow down to a word the definition is shown. You can optionally just show the definition. There could be a side bar column showing letters A thru Z and your relative location in the dictionary."
+
+**Implementation Details:**
+
+### Backend (`quiz_app.py:586-658`)
+
+1. **Dictionary Route** (line 587-590):
+   ```python
+   @app.route('/dictionary')
+   def dictionary():
+       """Dictionary browser page."""
+       return render_template('dictionary.html', total_words=len(WORDS))
+   ```
+
+2. **Get All Words Endpoint** (lines 592-598):
+   - Returns all 994 GRE words sorted alphabetically
+   - Format: `[{word, definition}, ...]`
+
+3. **Fuzzy Search Endpoint** (lines 600-658):
+   - POST `/dictionary/search`
+   - Multi-strategy search algorithm:
+     - **Exact match**: score = 1000
+     - **Word starts with query**: score = 500
+     - **Word contains query**: score = 250
+     - **Definition contains query**: score = 100-150
+     - **Fuzzy character match**: ≥70% characters match
+   - Searches both word names and definitions (meaning-based)
+   - Returns results ranked by relevance
+
+### Frontend (`templates/dictionary.html`)
+
+1. **Search System**:
+   - Real-time search with 300ms debounce
+   - Fuzzy matching supports typos and partial spelling
+   - Meaning-based search (searches definitions)
+   - Live word count updates
+
+2. **Three View Modes**:
+   - **Condensed**: Word list only (compact view)
+   - **List** (default): Shows definition for selected word
+   - **Details**: Shows all definitions expanded
+   - Toggle buttons with visual indicators
+
+3. **Keyboard Navigation**:
+   - `↑↓` arrows: Navigate word list
+   - `ENTER`: Toggle between view modes
+   - `A-Z` keys: Jump to first word starting with letter
+   - `/` key: Focus search bar
+   - `ESC`: Return to home (or blur search if focused)
+
+4. **A-Z Sidebar**:
+   - Vertical letter navigation (A-Z)
+   - Click to jump to letter
+   - Active letter highlighting based on current word
+   - Sticky positioning for always-visible navigation
+   - Custom scrollbar styling
+
+5. **Responsive Design**:
+   - Desktop: Full layout with sidebar
+   - Mobile: Sidebar hidden, stacked layout
+   - Touch-friendly interface
+
+6. **Visual Features**:
+   - Gradient purple background
+   - Glass-morphism effects
+   - Smooth scroll animations
+   - Selected word highlighting
+   - Hover states on all interactive elements
+
+### Home Page Integration (`templates/home.html:256-262`)
+
+- Added Dictionary Browser card to menu grid
+- Icon: 📖
+- Description includes word count and features
+- Integrated with existing arrow key navigation
+
+**Git Operations:**
+```bash
+git add quiz_app.py templates/dictionary.html templates/home.html
+git commit -m "Add comprehensive GRE Dictionary Browser feature"
+git push
+```
+
+**Commit:** `1e81146`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/quiz_app.py` (new routes and search API)
+- `/home/joe/ai/wordy/templates/dictionary.html` (new file)
+- `/home/joe/ai/wordy/templates/home.html` (added dictionary link)
+
+**User Experience Features:**
+- ✅ **994 words**: Full GRE vocabulary database
+- ✅ **Fuzzy search**: Find words even with typos
+- ✅ **Meaning search**: Search by definition content
+- ✅ **Multiple views**: Condensed, list, or full details
+- ✅ **Keyboard driven**: Complete arrow key navigation
+- ✅ **A-Z navigation**: Quick jump to any letter
+- ✅ **Real-time**: Instant search results (300ms debounce)
+- ✅ **Responsive**: Works on mobile and desktop
+- ✅ **Power user friendly**: Keyboard shortcuts for everything
+
+**Technical Highlights:**
+- Relevance-based ranking algorithm
+- Character-level fuzzy matching
+- Debounced search for performance
+- Client-side rendering for instant UI updates
+- Smooth scroll behavior
+- Sticky header and sidebar
+
+**Use Cases:**
+1. **Quick lookup**: Find definition of known word
+2. **Spelling help**: Fuzzy search finds word despite typos
+3. **Browse vocabulary**: Navigate entire dictionary with arrows
+4. **Concept search**: Search by meaning/definition
+5. **Alphabetical study**: Jump to letter sections with A-Z nav
+
+---
+
 ## Session: Standardize Round Start Modal Keyboard Shortcuts (2025-10-18)
 
 ### Prompt: Add Standard Keyboard Controls to Game Start Dialogs
