@@ -797,6 +797,8 @@
         let gameTimeRemaining = 0;
         let wordsCompleted = 0;
         let gameReady = false; // Waiting for user to start
+        let gamePaused = false;
+        let pausedTimeRemaining = 0;
 
         // Letter timer functions
         function startLetterTimer() {
@@ -1158,10 +1160,10 @@
                     hintLetters.splice(wrongLetterIndex, 1);
                 }
 
-                // If only correct letter remains, auto-fill it
+                // If only correct letter remains, auto-fill it without scoring
                 if (hintLetters.length === 1) {
                     hideHint();
-                    handleLetterInput(correctLetter);
+                    handleLetterInput(correctLetter, true); // true = no scoring
                     return;
                 }
 
@@ -1325,7 +1327,8 @@
                             <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
                             <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points (press again to eliminate wrong letters)</div>
                             <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
-                            <div>❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
+                            <div style="margin-bottom: 8px;">❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
+                            <div>⏸️ <strong>Pause (? key):</strong> View instructions anytime</div>
                         </div>
                     </div>
 
@@ -1333,6 +1336,65 @@
                 </div>
             `;
             document.getElementById('quizArea').innerHTML = html;
+        }
+
+        // Show pause screen
+        function showPauseScreen() {
+            const html = `
+                <div style="text-align: center; padding: 60px 40px;">
+                    <h2 style="font-size: 36px; margin-bottom: 30px;">⏸️ Game Paused</h2>
+                    <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to resume</p>
+                    <p style="font-size: 18px; opacity: 0.8; margin-bottom: 30px;">Time remaining: ${Math.floor(pausedTimeRemaining / 60)}:${Math.floor(pausedTimeRemaining % 60).toString().padStart(2, '0')}</p>
+
+                    <div style="background: rgba(255, 255, 255, 0.15); border-radius: 15px; padding: 25px; margin: 30px auto; max-width: 500px; text-align: left;">
+                        <h3 style="font-size: 20px; margin-bottom: 15px; text-align: center; color: white;">🎯 Scoring System</h3>
+                        <div style="font-size: 15px; line-height: 1.8; color: rgba(255, 255, 255, 0.95);">
+                            <div style="margin-bottom: 8px;">✅ <strong>Correct Letter:</strong> ${settings.baseScore} points + ${settings.bonusPerSecond} per second remaining (${settings.letterTimeLimit}s limit)</div>
+                            <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
+                            <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points (press again to eliminate wrong letters)</div>
+                            <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
+                            <div style="margin-bottom: 8px;">❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
+                            <div>⏸️ <strong>Pause (? key):</strong> View instructions anytime</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 48px; margin-top: 30px;">⏸️</div>
+                </div>
+            `;
+            document.getElementById('quizArea').innerHTML = html;
+        }
+
+        // Pause game
+        function pauseGame() {
+            if (!gameActive || gamePaused) return;
+
+            gamePaused = true;
+            pausedTimeRemaining = getGameTimeRemaining();
+
+            // Stop timers
+            stopGameTimer();
+            stopLetterTimer();
+
+            // Show pause screen
+            showPauseScreen();
+        }
+
+        // Resume game
+        function resumeGame() {
+            if (!gamePaused) return;
+
+            gamePaused = false;
+
+            // Adjust game start time to account for paused time
+            const elapsed = settings.gameTimeLimit - pausedTimeRemaining;
+            gameStartTime = Date.now() - (elapsed * 1000);
+
+            // Restart timers
+            gameTimer = setInterval(updateGameTimerDisplay, 100);
+            updateGameTimerDisplay();
+
+            // Restore the game display
+            displayWord();
         }
 
         // Display word
@@ -1379,7 +1441,7 @@
             html += `
                 </div>
                 <div class="hint-text">
-                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • / shows hint, press again to eliminate letters (-${settings.hintPenalty} pts each) • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
+                    Type the word letter by letter • SPACE reveals letter (+${settings.revealPenaltySeconds}s) • / shows hint, press again to eliminate letters (-${settings.hintPenalty} pts each) • ? pauses game • Wrong letter penalty: +${settings.wrongLetterPenaltySeconds}s
                 </div>
                 <div class="penalty-indicator" id="penaltyIndicator">
                     +${settings.revealPenaltySeconds}s penalty!
@@ -1492,7 +1554,7 @@
             }
         }
 
-        function handleLetterInput(letter) {
+        function handleLetterInput(letter, noScoring = false) {
             if (!currentWord) return;
             if (!gameActive) return; // Prevent input when game is over
 
@@ -1506,13 +1568,15 @@
 
             // Check if letter is correct
             if (letter === word[currentPosition]) {
-                // Calculate score for this letter
-                const letterScore = calculateLetterScore();
-                currentScore += letterScore;
-                updateScoreDisplay();
+                // Calculate score for this letter (unless it was auto-filled from hint)
+                if (!noScoring) {
+                    const letterScore = calculateLetterScore();
+                    currentScore += letterScore;
+                    updateScoreDisplay();
 
-                // Show score feedback
-                showScoreFeedback(letterScore);
+                    // Show score feedback
+                    showScoreFeedback(letterScore);
+                }
 
                 // Hide hint since correct letter was typed
                 hideHint();
@@ -1743,6 +1807,22 @@
                     e.preventDefault();
                     beginGame();
                 }
+                return;
+            }
+
+            // Check if game is paused
+            if (gamePaused) {
+                if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
+                    e.preventDefault();
+                    resumeGame();
+                }
+                return;
+            }
+
+            // Pause game with '?' key
+            if (e.key === '?') {
+                e.preventDefault();
+                pauseGame();
                 return;
             }
 
