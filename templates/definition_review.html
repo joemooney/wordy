@@ -235,7 +235,7 @@
         </div>
 
         <div class="keyboard-hints">
-            <strong>Keyboard shortcuts:</strong> SPACE = Reveal | ← → = Navigate | + = Favorite | - = Remove | ESC = Home
+            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | + = Favorite | - = Remove | ESC = Home
         </div>
     </div>
 
@@ -414,7 +414,11 @@
                 case ' ':
                 case 'Spacebar':
                     e.preventDefault();
-                    revealWord();
+                    if (isRevealed) {
+                        nextWord();
+                    } else {
+                        revealWord();
+                    }
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
