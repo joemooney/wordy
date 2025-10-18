@@ -800,6 +800,14 @@
         let gamePaused = false;
         let pausedTimeRemaining = 0;
 
+        // Detailed game history tracking
+        let currentGameHistory = {
+            wordResults: [],
+            settings: null,
+            startTime: null
+        };
+        let currentWordResult = null;
+
         // Letter timer functions
         function startLetterTimer() {
             stopLetterTimer();
@@ -923,14 +931,18 @@
         }
 
         // Leaderboard functions
-        function saveToLeaderboard(score, words, timestamp) {
+        function saveToLeaderboard(score, words, timestamp, gameHistory) {
             const leaderboard = getAllScores();
-            leaderboard.push({
+
+            const gameRecord = {
                 score: score,
                 words: words,
                 timestamp: timestamp,
-                dateStr: new Date(timestamp).toLocaleString()
-            });
+                dateStr: new Date(timestamp).toLocaleString(),
+                gameHistory: gameHistory // Detailed word-by-word results and settings
+            };
+
+            leaderboard.push(gameRecord);
 
             // Sort by score descending
             leaderboard.sort((a, b) => b.score - a.score);
@@ -966,6 +978,56 @@
             const scoreDate = new Date(timestamp);
             return now.getMonth() === scoreDate.getMonth() &&
                    now.getFullYear() === scoreDate.getFullYear();
+        }
+
+        // Recalculate score with new settings
+        function recalculateScore(gameHistory, newSettings) {
+            let recalculatedScore = 0;
+            const oldSettings = gameHistory.settings;
+
+            for (const wordResult of gameHistory.wordResults) {
+                for (const letterData of wordResult.letters) {
+                    // Skip letters that didn't score originally
+                    if (letterData.noScore || letterData.revealed) {
+                        continue;
+                    }
+
+                    if (letterData.correct) {
+                        // Calculate base score with new base
+                        recalculatedScore += newSettings.baseScore;
+
+                        // Calculate time bonus with proportional scaling
+                        if (letterData.timeElapsed > 0 && newSettings.bonusPerSecond > 0) {
+                            // Scale time elapsed proportionally if time limits changed
+                            let scaledTimeElapsed = letterData.timeElapsed;
+                            if (oldSettings.letterTimeLimit !== newSettings.letterTimeLimit) {
+                                // If new limit is longer, scale up the elapsed time proportionally
+                                // This assumes the player would have taken proportionally longer
+                                const scalingFactor = newSettings.letterTimeLimit / oldSettings.letterTimeLimit;
+                                scaledTimeElapsed = letterData.timeElapsed * scalingFactor;
+                            }
+
+                            // Cap at new time limit
+                            scaledTimeElapsed = Math.min(scaledTimeElapsed, newSettings.letterTimeLimit);
+
+                            // Calculate bonus based on time remaining
+                            const timeRemaining = Math.max(0, newSettings.letterTimeLimit - scaledTimeElapsed);
+                            const bonus = Math.floor(timeRemaining * newSettings.bonusPerSecond);
+                            recalculatedScore += bonus;
+                        }
+                    }
+                }
+
+                // Deduct hints with new penalty
+                recalculatedScore -= wordResult.hintsUsed * newSettings.hintPenalty;
+
+                // Add perfect word bonus if applicable
+                if (wordResult.perfectWord) {
+                    recalculatedScore += newSettings.perfectWordBonus;
+                }
+            }
+
+            return Math.max(0, recalculatedScore);
         }
 
         function getRankings(currentScore, currentTimestamp) {
@@ -1010,8 +1072,13 @@
             const timestamp = now.getTime();
             const dateStr = now.toLocaleString();
 
-            // Save to leaderboard first
-            saveToLeaderboard(currentScore, wordsCompleted, timestamp);
+            // Finalize game history
+            currentGameHistory.endTime = timestamp;
+            currentGameHistory.finalScore = currentScore;
+            currentGameHistory.wordsCompleted = wordsCompleted;
+
+            // Save to leaderboard first with detailed game history
+            saveToLeaderboard(currentScore, wordsCompleted, timestamp, currentGameHistory);
 
             // Calculate rankings (after saving)
             const rankings = getRankings(currentScore, timestamp);
@@ -1132,6 +1199,13 @@
         async function beginGame() {
             if (gameActive || !gameReady) return;
 
+            // Initialize game history with current settings
+            currentGameHistory = {
+                wordResults: [],
+                settings: JSON.parse(JSON.stringify(settings)), // Deep copy of settings
+                startTime: Date.now()
+            };
+
             // Start the game
             startGameTimer();
             displayWord();
@@ -1149,6 +1223,12 @@
             // If hint is already active, remove one wrong letter
             if (hintActive && hintLetters.length > 1) {
                 usedHelpThisWord = true;  // Mark that help was used
+
+                // Track hint usage
+                if (currentWordResult) {
+                    currentWordResult.hintsUsed++;
+                    currentWordResult.perfectWord = false;
+                }
 
                 // Deduct penalty points
                 currentScore = Math.max(0, currentScore - settings.hintPenalty);
@@ -1174,6 +1254,12 @@
             // First time showing hint
             if (!hintActive) {
                 usedHelpThisWord = true;  // Mark that help was used
+
+                // Track hint usage
+                if (currentWordResult) {
+                    currentWordResult.hintsUsed++;
+                    currentWordResult.perfectWord = false;
+                }
 
                 // Deduct penalty points
                 currentScore = Math.max(0, currentScore - settings.hintPenalty);
@@ -1411,6 +1497,18 @@
             revealedIndices.clear();
             usedHelpThisWord = false;  // Reset perfect word tracking
 
+            // Initialize word result tracking
+            if (gameActive) {
+                currentWordResult = {
+                    word: currentWord.word,
+                    definition: currentWord.definition,
+                    letters: [],
+                    hintsUsed: 0,
+                    perfectWord: true,
+                    startTime: Date.now()
+                };
+            }
+
             // Reveal initial letters based on settings
             revealInitialLetters(word);
 
@@ -1517,6 +1615,18 @@
                     const idx = nonSpaceIndices[i];
                     revealedIndices.add(idx);
                     userInput[idx] = word[idx]; // Also populate userInput
+
+                    // Track in history
+                    if (currentWordResult) {
+                        currentWordResult.letters.push({
+                            letter: word[idx],
+                            correct: true,
+                            timeElapsed: 0,
+                            revealed: true,
+                            noScore: true
+                        });
+                        currentWordResult.perfectWord = false;
+                    }
                 }
             } else {
                 const shuffled = [...nonSpaceIndices].sort(() => Math.random() - 0.5);
@@ -1524,6 +1634,18 @@
                     const idx = shuffled[i];
                     revealedIndices.add(idx);
                     userInput[idx] = word[idx]; // Also populate userInput
+
+                    // Track in history
+                    if (currentWordResult) {
+                        currentWordResult.letters.push({
+                            letter: word[idx],
+                            correct: true,
+                            timeElapsed: 0,
+                            revealed: true,
+                            noScore: true
+                        });
+                        currentWordResult.perfectWord = false;
+                    }
                 }
             }
 
@@ -1566,8 +1688,21 @@
 
             if (currentPosition >= word.length) return; // Word complete
 
+            const timeElapsed = getLetterElapsedTime();
+
             // Check if letter is correct
             if (letter === word[currentPosition]) {
+                // Track in history
+                if (currentWordResult) {
+                    currentWordResult.letters.push({
+                        letter: letter,
+                        correct: true,
+                        timeElapsed: timeElapsed,
+                        revealed: false,
+                        noScore: noScoring
+                    });
+                }
+
                 // Calculate score for this letter (unless it was auto-filled from hint)
                 if (!noScoring) {
                     const letterScore = calculateLetterScore();
@@ -1647,6 +1782,18 @@
 
             revealedIndices.add(indexToReveal);
             userInput[indexToReveal] = word[indexToReveal];
+
+            // Track in history
+            if (currentWordResult) {
+                currentWordResult.letters.push({
+                    letter: word[indexToReveal],
+                    correct: true,
+                    timeElapsed: 0,
+                    revealed: true,
+                    noScore: true
+                });
+                currentWordResult.perfectWord = false;
+            }
 
             // Add penalty
             totalPenalty += settings.revealPenaltySeconds;
@@ -1756,6 +1903,12 @@
                 currentScore += settings.perfectWordBonus;
                 updateScoreDisplay();
                 showPerfectWordBonus();
+            }
+
+            // Save current word result to game history
+            if (currentWordResult) {
+                currentGameHistory.wordResults.push(currentWordResult);
+                currentWordResult = null;
             }
 
             // Increment words completed
