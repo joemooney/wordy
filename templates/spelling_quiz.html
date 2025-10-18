@@ -1289,7 +1289,19 @@
                     <h2 style="font-size: 36px; margin-bottom: 30px;">Ready to Start?</h2>
                     <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to begin</p>
                     <p style="font-size: 18px; opacity: 0.8; margin-bottom: 30px;">You'll have ${settings.gameTimeLimit} seconds to spell as many words as possible!</p>
-                    <div style="font-size: 48px; margin-top: 40px;">⌨️</div>
+
+                    <div style="background: rgba(255, 255, 255, 0.15); border-radius: 15px; padding: 25px; margin: 30px auto; max-width: 500px; text-align: left;">
+                        <h3 style="font-size: 20px; margin-bottom: 15px; text-align: center; color: white;">🎯 Scoring System</h3>
+                        <div style="font-size: 15px; line-height: 1.8; color: rgba(255, 255, 255, 0.95);">
+                            <div style="margin-bottom: 8px;">✅ <strong>Correct Letter:</strong> ${settings.baseScore} points + ${settings.bonusPerSecond} per second remaining (${settings.letterTimeLimit}s limit)</div>
+                            <div style="margin-bottom: 8px;">⭐ <strong>Perfect Word:</strong> +${settings.perfectWordBonus} bonus (no hints or reveals)</div>
+                            <div style="margin-bottom: 8px;">💡 <strong>Hint (/ key):</strong> -${settings.hintPenalty} points</div>
+                            <div style="margin-bottom: 8px;">👁️ <strong>Reveal (SPACE):</strong> +${settings.revealPenaltySeconds}s penalty</div>
+                            <div>❌ <strong>Wrong Letter:</strong> +${settings.wrongLetterPenaltySeconds}s penalty</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 48px; margin-top: 30px;">⌨️</div>
                 </div>
             `;
             document.getElementById('quizArea').innerHTML = html;
