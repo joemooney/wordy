@@ -74,6 +74,61 @@ git push
 
 ---
 
+## Session: SPACE Key Enhancement in Review Modes (2025-10-18)
+
+### Prompt: SPACE Advances After Reveal
+
+**User Request:**
+"In GRE Word Review game, after using SPACE to reveal, pressing SPACE again is the same as right arrow to next word."
+
+**Implementation Details:**
+
+1. **GRE Word Review** (`templates/word_review.html:416-420`):
+   - Modified SPACE key handler to check `isRevealed` flag
+   - If not revealed: calls `revealDefinition()`
+   - If already revealed: calls `nextWord()`
+   - Single key for both reveal and advance
+
+2. **GRE Definition Review** (`templates/definition_review.html:417-421`):
+   - Applied same logic for consistency
+   - If not revealed: calls `revealWord()`
+   - If already revealed: calls `nextWord()`
+   - Mirrors word review behavior
+
+3. **Updated Keyboard Hints** (both files):
+   - Changed from "SPACE = Reveal" to "SPACE = Reveal / Next"
+   - Clearly indicates dual functionality
+   - Maintains documentation of arrow key navigation
+
+**Git Operations:**
+```bash
+git add -A
+git commit -m "Enhance SPACE key in review modes to advance after reveal"
+git push
+```
+
+**Commit:** `e1b979f`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/word_review.html`
+- `/home/joe/ai/wordy/templates/definition_review.html`
+
+**User Experience:**
+- **Faster workflow**: Single key for reveal → advance
+- **Intuitive**: SPACE naturally progresses through content
+- **Consistent**: Same behavior across both review modes
+- **Backward compatible**: Arrow keys still work independently
+- **Power user friendly**: Enables rapid single-handed review sessions
+
+**Workflow Example:**
+1. See word/definition (blurred)
+2. Press SPACE → reveals content
+3. Study the revealed content
+4. Press SPACE → advances to next word
+5. Repeat
+
+---
+
 ## Session: Home Screen Arrow Key Navigation (2025-10-18)
 
 ### Prompt: Add Keyboard Navigation to Home Screen
