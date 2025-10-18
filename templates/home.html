@@ -71,28 +71,23 @@
             border-color: #667eea;
         }
 
-        .menu-card.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .menu-card.active .card-icon {
-            color: white;
-        }
-
-        .menu-card.active .card-title {
-            color: white;
-        }
-
-        .menu-card.active .card-description {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
         .menu-card.selected {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
             border-color: #667eea;
-            outline: 3px solid #667eea;
-            outline-offset: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .menu-card.selected .card-icon {
+            color: white;
+        }
+
+        .menu-card.selected .card-title {
+            color: white;
+        }
+
+        .menu-card.selected .card-description {
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .menu-card.disabled {
@@ -205,7 +200,7 @@
         <p class="subtitle">Choose your quiz adventure</p>
 
         <div class="menu-grid">
-            <a href="/gre-quiz" class="menu-card active">
+            <a href="/gre-quiz" class="menu-card">
                 <div class="card-icon">📚</div>
                 <div class="card-title">GRE Vocabulary</div>
                 <div class="card-description">
