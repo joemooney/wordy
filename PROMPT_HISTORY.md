@@ -74,6 +74,71 @@ git push
 
 ---
 
+## Session: Leaderboard Dialog Enhancements (2025-10-18)
+
+### Prompt: Enhance Leaderboard with Keyboard Shortcuts and Dynamic Scoring
+
+**User Request:**
+"On the Leaderboard dialog, SPACE ENTER or ESC is close dialog. Rename Recalulated button to 'Scores' and make that the first and default button and place 'Original Scores' button to right of that button. If you hover over 'Original Scores' review a tip that the scoring has changed from the original. Hide the 'Original Scores' if the scoring has not changed from the beginning of history. One the first game store the original history. So if we clear history we can change the scoring system and start with a clean slate with the current scoring system."
+
+**Implementation Details:**
+
+1. **Keyboard Shortcuts** (`templates/spelling_quiz.html:2051-2058`):
+   - Added leaderboard modal keyboard handler
+   - SPACE, ENTER, or ESC all close the leaderboard
+   - Prevents event propagation to avoid conflicts
+
+2. **Original Settings Management** (`templates/spelling_quiz.html:942-963`):
+   - Created `getOriginalSettings()` - retrieves baseline settings from localStorage
+   - Created `saveOriginalSettings()` - stores baseline settings
+   - Created `settingsHaveChanged()` - compares current to original settings
+   - Compares: letterTimeLimit, baseScore, bonusPerSecond, hintPenalty, perfectWordBonus, completedWordBonus
+
+3. **Save Original Settings on First Game** (`templates/spelling_quiz.html:969-972`):
+   - Modified `saveToLeaderboard()` to detect first game
+   - Saves settings as baseline when leaderboard is empty
+   - If history is cleared, next game becomes new baseline
+
+4. **Button Reordering and Renaming** (`templates/spelling_quiz.html:1203-1210`):
+   - "Scores" button now first (default view)
+   - "Original Scores" button second (conditional)
+   - Swapped parameter logic: `showOriginal = false` is now default
+
+5. **Conditional Display** (`templates/spelling_quiz.html:1207-1209`):
+   - Check `hasSettingsChanged` before showing "Original Scores" button
+   - Only displays second button if scoring system has changed
+   - Provides clean interface when settings are unchanged
+
+6. **Hover Tooltip** (`templates/spelling_quiz.html:1208`):
+   - Added `title="Scoring system has changed from original"` to Original Scores button
+   - Explains why two views are available
+
+7. **Default Behavior** (`templates/spelling_quiz.html:1173`):
+   - Changed function signature to `displayLeaderboard(showOriginal = false)`
+   - "Scores" view (recalculated with current settings) is now default
+   - Cleaner user experience - see current scoring by default
+
+**Git Operations:**
+```bash
+git add -A
+git commit -m "Enhance leaderboard dialog with keyboard shortcuts and dynamic scoring display"
+git push
+```
+
+**Commit:** `4118f92`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/spelling_quiz.html`
+
+**Benefits:**
+- Keyboard-driven workflow for power users
+- Clean UI that only shows "Original Scores" when relevant
+- Automatic baseline tracking allows score system evolution
+- Clear history resets baseline for fresh start
+- Tooltip provides context for users
+
+---
+
 ## Previous Sessions (From Context Summary)
 
 ### Session 1: Game History Storage System
