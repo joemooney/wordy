@@ -71,6 +71,13 @@
             border-color: #667eea;
         }
 
+        /* Disable hover effects when using keyboard navigation */
+        .keyboard-nav .menu-card:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+
         .menu-card.selected {
             transform: translateY(-5px);
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
@@ -280,6 +287,8 @@
         // Keyboard navigation for menu cards
         let selectedIndex = 0;
         const menuCards = Array.from(document.querySelectorAll('.menu-card'));
+        const container = document.querySelector('.container');
+        let keyboardMode = false;
 
         function updateSelection() {
             // Remove selected class from all cards
@@ -297,6 +306,20 @@
             }
         }
 
+        function enableKeyboardMode() {
+            if (!keyboardMode) {
+                keyboardMode = true;
+                container.classList.add('keyboard-nav');
+            }
+        }
+
+        function disableKeyboardMode() {
+            if (keyboardMode) {
+                keyboardMode = false;
+                container.classList.remove('keyboard-nav');
+            }
+        }
+
         function navigateToSelected() {
             if (selectedIndex >= 0 && selectedIndex < menuCards.length) {
                 window.location.href = menuCards[selectedIndex].href;
@@ -310,18 +333,21 @@
             switch(e.key) {
                 case 'ArrowRight':
                     e.preventDefault();
+                    enableKeyboardMode();
                     selectedIndex = Math.min(selectedIndex + 1, menuCards.length - 1);
                     updateSelection();
                     break;
 
                 case 'ArrowLeft':
                     e.preventDefault();
+                    enableKeyboardMode();
                     selectedIndex = Math.max(selectedIndex - 1, 0);
                     updateSelection();
                     break;
 
                 case 'ArrowDown':
                     e.preventDefault();
+                    enableKeyboardMode();
                     const newDownIndex = selectedIndex + cardsPerRow;
                     if (newDownIndex < menuCards.length) {
                         selectedIndex = newDownIndex;
@@ -331,6 +357,7 @@
 
                 case 'ArrowUp':
                     e.preventDefault();
+                    enableKeyboardMode();
                     const newUpIndex = selectedIndex - cardsPerRow;
                     if (newUpIndex >= 0) {
                         selectedIndex = newUpIndex;
@@ -352,9 +379,15 @@
             }
         });
 
+        // Detect mouse movement to disable keyboard mode
+        document.addEventListener('mousemove', () => {
+            disableKeyboardMode();
+        });
+
         // Mouse hover updates selection index
         menuCards.forEach((card, index) => {
             card.addEventListener('mouseenter', () => {
+                disableKeyboardMode();
                 selectedIndex = index;
                 updateSelection();
             });
