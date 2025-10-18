@@ -939,9 +939,37 @@
             showGameOver();
         }
 
+        // Original settings management
+        function getOriginalSettings() {
+            const saved = localStorage.getItem('spellingQuizOriginalSettings');
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        function saveOriginalSettings(settings) {
+            localStorage.setItem('spellingQuizOriginalSettings', JSON.stringify(settings));
+        }
+
+        function settingsHaveChanged() {
+            const original = getOriginalSettings();
+            if (!original) return false;
+
+            // Compare relevant scoring settings
+            return original.letterTimeLimit !== settings.letterTimeLimit ||
+                   original.baseScore !== settings.baseScore ||
+                   original.bonusPerSecond !== settings.bonusPerSecond ||
+                   original.hintPenalty !== settings.hintPenalty ||
+                   original.perfectWordBonus !== settings.perfectWordBonus ||
+                   original.completedWordBonus !== settings.completedWordBonus;
+        }
+
         // Leaderboard functions
         function saveToLeaderboard(score, words, timestamp, gameHistory) {
             const leaderboard = getAllScores();
+
+            // If this is the first game, save these settings as the original baseline
+            if (leaderboard.length === 0 && gameHistory && gameHistory.settings) {
+                saveOriginalSettings(gameHistory.settings);
+            }
 
             const gameRecord = {
                 score: score,
@@ -1142,16 +1170,18 @@
             displayLeaderboard();
         }
 
-        function displayLeaderboard(useRecalculated = false) {
+        function displayLeaderboard(showOriginal = false) {
             const leaderboard = getLeaderboard();
             const content = document.getElementById('leaderboardContent');
 
             if (leaderboard.length === 0) {
                 content.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No scores yet! Play a game to get on the leaderboard.</p>';
             } else {
-                // Recalculate scores if requested and data available
+                const hasSettingsChanged = settingsHaveChanged();
+
+                // Recalculate scores if not showing original and data available
                 let displayData = leaderboard.map(entry => {
-                    if (useRecalculated && entry.gameHistory && entry.gameHistory.settings) {
+                    if (!showOriginal && entry.gameHistory && entry.gameHistory.settings) {
                         const recalcScore = recalculateScore(entry.gameHistory, settings);
                         return {
                             ...entry,
@@ -1171,11 +1201,15 @@
                 displayData.sort((a, b) => b.displayScore - a.displayScore);
 
                 let html = '<div style="margin-bottom: 15px; text-align: center;">';
-                html += '<button onclick="displayLeaderboard(false)" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (useRecalculated ? 'white' : '#667eea') + '; color: ' + (useRecalculated ? '#667eea' : 'white') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Original Scores</button>';
-                html += '<button onclick="displayLeaderboard(true)" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (useRecalculated ? '#667eea' : 'white') + '; color: ' + (useRecalculated ? 'white' : '#667eea') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Recalculated</button>';
+                // Scores button first (default)
+                html += '<button onclick="displayLeaderboard(false)" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (showOriginal ? 'white' : '#667eea') + '; color: ' + (showOriginal ? '#667eea' : 'white') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Scores</button>';
+                // Original Scores button second (only if settings changed)
+                if (hasSettingsChanged) {
+                    html += '<button onclick="displayLeaderboard(true)" title="Scoring system has changed from original" style="padding: 8px 15px; margin: 0 5px; border: 2px solid #667eea; background: ' + (showOriginal ? '#667eea' : 'white') + '; color: ' + (showOriginal ? 'white' : '#667eea') + '; border-radius: 8px; cursor: pointer; font-weight: 600;">Original Scores</button>';
+                }
                 html += '</div>';
 
-                if (useRecalculated) {
+                if (!showOriginal && hasSettingsChanged) {
                     html += '<p style="text-align: center; font-size: 13px; color: #666; margin-bottom: 15px;">Scores recalculated with current settings</p>';
                 }
 
@@ -2044,6 +2078,15 @@
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     window.location.href = '/';
+                    return;
+                }
+            }
+
+            // Handle leaderboard modal shortcuts
+            if (document.getElementById('leaderboardModal').classList.contains('show')) {
+                if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter' || e.key === 'Escape') {
+                    e.preventDefault();
+                    closeLeaderboard();
                     return;
                 }
             }
