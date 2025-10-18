@@ -74,6 +74,71 @@ git push
 
 ---
 
+## Session: Home Screen Arrow Key Navigation (2025-10-18)
+
+### Prompt: Add Keyboard Navigation to Home Screen
+
+**User Request:**
+"On the home screen the arrows should move beteen selecting the different games"
+
+**Implementation Details:**
+
+1. **CSS Visual Highlighting** (`templates/home.html:90-96`):
+   - Added `.menu-card.selected` class
+   - Enhanced outline with 3px solid border and 2px offset
+   - Transform and shadow effects to make selection clear
+   - Works alongside existing hover and active states
+
+2. **JavaScript State Management** (`templates/home.html:278-279`):
+   - Track `selectedIndex` for current card
+   - Array of all `.menu-card` elements
+   - Initialize with first card selected (index 0)
+
+3. **Arrow Key Navigation** (`templates/home.html:304-350`):
+   - **Right Arrow**: Move to next card (→)
+   - **Left Arrow**: Move to previous card (←)
+   - **Down Arrow**: Move down one row (↓)
+   - **Up Arrow**: Move up one row (↑)
+   - Responsive layout detection (2 columns on desktop, 1 on mobile)
+   - Boundary checking to prevent invalid indices
+
+4. **Additional Keyboard Controls** (`templates/home.html:338-348`):
+   - **ENTER**: Navigate to selected game
+   - **ESC**: Clear selection (deselect all)
+   - All keys prevent default behavior to avoid page scrolling
+
+5. **Mouse Integration** (`templates/home.html:353-358`):
+   - Mouse hover updates selectedIndex
+   - Seamless transition between keyboard and mouse navigation
+   - Selected state follows mouse movement
+
+6. **Accessibility Features**:
+   - Smooth scroll when navigating to keep selected card in view
+   - Visual feedback with outline and shadow
+   - Works with keyboard-only navigation
+   - First card selected on page load for immediate keyboard use
+
+**Git Operations:**
+```bash
+git add -A
+git commit -m "Add arrow key navigation to home screen menu"
+git push
+```
+
+**Commit:** `6f629fe`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/home.html`
+
+**User Experience:**
+- Power users can navigate entirely by keyboard
+- Arrow keys feel natural for grid navigation
+- Mouse and keyboard work together seamlessly
+- Clear visual feedback shows which game is selected
+- Enter key provides quick access to games
+
+---
+
 ## Session: Leaderboard Dialog Enhancements (2025-10-18)
 
 ### Prompt: Enhance Leaderboard with Keyboard Shortcuts and Dynamic Scoring
