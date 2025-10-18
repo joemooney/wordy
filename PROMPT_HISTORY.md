@@ -259,6 +259,84 @@ git push
 
 ---
 
+## Session: Standardize Round Start Modal Keyboard Shortcuts (2025-10-18)
+
+### Prompt: Add Standard Keyboard Controls to Game Start Dialogs
+
+**User Request:**
+"In the start dialogs for the games. E.g. Round Mode dialog for GRE Definitions, the SPACE or ENTER should start the round and ESC should return to home. This is how the GRE Spelling Quiz is and we should have this as a standard for the other games."
+
+**Implementation Details:**
+
+1. **GRE Vocabulary Quiz** (`templates/quiz.html:1937-1961`):
+   - Added Round Start Modal keyboard shortcuts
+   - SPACE or ENTER → `startNewRound()`
+   - ESC → return to home (`window.location.href = '/'`)
+   - Also added Settings modal ESC handler → `closeSettings()`
+
+2. **Inverse GRE Quiz** (`templates/inverse_quiz.html:1932-1956`):
+   - Applied identical keyboard shortcuts to Round Start Modal
+   - SPACE or ENTER → `startNewRound()`
+   - ESC → return to home
+   - Added Settings modal ESC handler → `closeSettings()`
+
+3. **Modal Detection Pattern** (both files):
+   ```javascript
+   // Handle keyboard shortcuts in Round Start modal
+   if (document.getElementById('roundStartModal').classList.contains('show')) {
+       switch(event.key) {
+           case ' ':
+           case 'Spacebar':
+           case 'Enter':
+               event.preventDefault();
+               startNewRound();
+               break;
+           case 'Escape':
+               event.preventDefault();
+               window.location.href = '/';
+               break;
+       }
+       return;
+   }
+
+   // Handle keyboard shortcuts in Settings modal
+   if (document.getElementById('settingsModal').classList.contains('show')) {
+       if (event.key === 'Escape') {
+           event.preventDefault();
+           closeSettings();
+       }
+       return;
+   }
+   ```
+
+**Git Operations:**
+```bash
+git add templates/quiz.html templates/inverse_quiz.html
+git commit -m "Standardize keyboard shortcuts for Round Start modals"
+git push
+```
+
+**Commit:** `253ade0`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/quiz.html`
+- `/home/joe/ai/wordy/templates/inverse_quiz.html`
+
+**User Experience:**
+- **Consistent**: All quiz games now have identical keyboard controls
+- **Efficient**: Start games with SPACE/ENTER without reaching for mouse
+- **Intuitive**: ESC key provides quick exit to home screen
+- **Accessible**: Settings modal also supports ESC to close
+- **Power user friendly**: Enables rapid workflow for repeated play sessions
+
+**Pattern Applied:**
+This establishes a standard modal keyboard control pattern used across the app:
+- Start/Confirm action: SPACE or ENTER
+- Cancel/Exit: ESC
+- Navigation: Arrow keys (where applicable)
+
+---
+
 ## Previous Sessions (From Context Summary)
 
 ### Session 1: Game History Storage System
