@@ -4,6 +4,120 @@ All development sessions with detailed actions, fixes, and git operations.
 
 ---
 
+## Session: GRE Word Review Familiarity Levels (2025-10-19)
+
+### Prompt: Add Familiarity Levels and Improve Star Icon
+
+**User Request:**
+"For the GRE Word Review, change the gold star to be the outline of a start instead of a filled in star, it is hard to tell if the star was selected when it is in unselected state. Also add a buttons 1 2 3 to indicate that the word how familiar you are with the word and compfortable with its meaning, where level 1 you are very comfortable and level 3 it is a word you are less familiar with. You should be able to review based on word level. Level zero is for words you have yet to assign a familiarity level to."
+
+**Implementation Details:**
+
+1. **Star Icon Enhancement** (`templates/word_review.html:385-392`):
+   - Changed unselected star from filled (⭐) to outline (☆)
+   - Only shows filled star (⭐) when word is favorited
+   - Added dynamic icon switching in `updateButtonStates()`
+   - Clear visual distinction between favorited and non-favorited words
+
+2. **Familiarity Level System**:
+   - **Level 0**: Unassigned (default for all words)
+   - **Level 1**: Very Familiar
+   - **Level 2**: Familiar
+   - **Level 3**: Less Familiar
+
+3. **localStorage Storage** (`templates/word_review.html:351-376`):
+   - Added `wordFamiliarity` object to track levels per word
+   - Added `currentFilter` to track active familiarity filter
+   - Extended `loadLocalStorage()` to load familiarity data
+   - Extended `saveLocalStorage()` to persist familiarity levels
+
+4. **Familiarity Controls UI** (`templates/word_review.html:326-331`):
+   - Added three familiarity buttons (1, 2, 3) below word counter
+   - Buttons display with active state when level is set
+   - Visual feedback with green glow for selected level
+   - Label: "Familiarity:" for clarity
+
+5. **Filter Controls UI** (`templates/word_review.html:313-322`):
+   - Added filter section at top of page
+   - Five filter buttons:
+     - "All Words" (default)
+     - "Level 0 (Unassigned)"
+     - "Level 1 (Very Familiar)"
+     - "Level 2 (Familiar)"
+     - "Level 3 (Less Familiar)"
+   - Active filter highlighted with purple gradient
+   - Enables focused review by familiarity level
+
+6. **Familiarity Management Functions** (`templates/word_review.html:534-605`):
+   - `setFamiliarity(level)` - Set familiarity level for current word
+   - `getFamiliarity(word)` - Get level for a word (default 0)
+   - `matchesFilter(word)` - Check if word matches current filter
+   - `setFilter(filterLevel)` - Change active filter and reload words
+   - `loadNextFilteredWord()` - Load next word matching filter
+
+7. **Keyboard Shortcuts** (`templates/word_review.html:627-637`):
+   - **1 key**: Set familiarity level 1 (Very Familiar)
+   - **2 key**: Set familiarity level 2 (Familiar)
+   - **3 key**: Set familiarity level 3 (Less Familiar)
+   - Updated keyboard hints to show "1/2/3 = Set Familiarity"
+
+8. **Button Click Handlers** (`templates/word_review.html:660-674`):
+   - Added click handlers for familiarity buttons
+   - Added click handlers for filter buttons
+   - Updates state and persists to localStorage
+
+9. **Navigation Integration** (`templates/word_review.html:479-499`):
+   - Updated `nextWord()` to respect current filter
+   - Loads filtered words when not in "all" mode
+   - Preserves filter state across navigation
+
+10. **Visual Styling** (`templates/word_review.html:195-276`):
+    - Familiarity button styles with active state
+    - Filter control styles with active highlighting
+    - Green active state for familiarity buttons
+    - Purple active state for filter buttons
+    - Responsive layout for both control sections
+
+**Git Operations:**
+```bash
+git add templates/word_review.html
+git commit -m "Add familiarity levels and improve star icon for GRE Word Review"
+git push
+```
+
+**Commit:** `ba08c14`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/word_review.html`
+
+**User Experience:**
+- **Clear Star State**: Outline star (☆) makes unselected state obvious
+- **Personalized Learning**: Mark words by comfort level
+- **Focused Practice**: Filter to practice specific familiarity levels
+- **Level 0 Filter**: Find words you haven't categorized yet
+- **Quick Shortcuts**: 1/2/3 keys for rapid categorization
+- **Persistent Data**: Familiarity levels saved in localStorage
+- **Visual Feedback**: Active buttons show current word's level
+- **Smart Navigation**: Arrow keys and next word respect filter
+
+**Benefits:**
+- Enables spaced repetition workflow (focus on level 3 words more)
+- Clear visual feedback on word mastery progress
+- Quick categorization with keyboard shortcuts
+- Filter system allows targeted study sessions
+- Level 0 helps ensure all words are reviewed and categorized
+- Star icon now clearly communicates favorited state
+
+**Workflow Example:**
+1. Start with "All Words" filter
+2. Review each word, press 1/2/3 based on comfort level
+3. After categorizing, switch to "Level 3 (Less Familiar)" filter
+4. Focus study time on challenging words
+5. As mastery improves, press 1 or 2 to reclassify words
+6. Return to "Level 0" filter periodically to catch uncategorized words
+
+---
+
 ## Session: GRE Quiz UX Improvements (2025-10-18)
 
 ### Prompt 1: SPACE Key Answer Selection
