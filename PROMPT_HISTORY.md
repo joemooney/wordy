@@ -4,6 +4,131 @@ All development sessions with detailed actions, fixes, and git operations.
 
 ---
 
+## Session: GRE Word Review Redesign with Session-Based Reviews (2025-10-19)
+
+### Prompt: Invert Familiarity Levels and Add Start Review Modal
+
+**User Request:**
+"Let's invert the familiarity with 1 being least familiar. Also move the Filter to a Start Review initial dialog where you choose the levels and the option to review a number of words or a timer count (default to 3 minutes). Also have the option to limit review to favorite works."
+
+**Implementation Details:**
+
+1. **Inverted Familiarity Levels**:
+   - **Level 1**: Least Familiar (was Level 3 - Most Familiar)
+   - **Level 2**: Somewhat Familiar (was Level 2 - Familiar, unchanged)
+   - **Level 3**: Most Familiar (was Level 1 - Least Familiar)
+   - More intuitive: lower numbers = need more practice
+   - Updated all UI labels and tooltips
+
+2. **Start Review Modal** (`templates/word_review.html:446-508`):
+   - Full-screen modal on app launch
+   - **Familiarity Level Selection**: Checkboxes for levels 0, 1, 2, 3 (all checked by default)
+   - **Favorites Only Filter**: Checkbox to review only favorited words
+   - **Review Mode Selection**: Radio buttons for Timer or Word Count
+   - **Timer Mode**: Input for minutes (default 3, range 1-60)
+   - **Count Mode**: Input for word count (default 20, range 1-100)
+   - **Keyboard Shortcuts**: ENTER to start, ESC to cancel (return home)
+
+3. **Timer-Based Review Mode** (`templates/word_review.html:646-669`):
+   - Countdown timer display (MM:SS format)
+   - Updates every second
+   - Gold color for visibility (#ffd700)
+   - Automatically ends review when time expires
+   - Tracks elapsed time for statistics
+
+4. **Count-Based Review Mode** (`templates/word_review.html:836-857`):
+   - Target word count set by user
+   - Increments `wordsReviewed` on each word advance (after reveal)
+   - Shows "Word X of Y" progress
+   - Automatically ends review when target reached
+   - Tracks elapsed time for statistics
+
+5. **Progress Tracking** (`templates/word_review.html:687-695, 829-834`):
+   - Timer mode: "Words Reviewed: X"
+   - Count mode: "Word X of Y"
+   - Updates in real-time as user progresses
+   - Displayed prominently at top of review screen
+
+6. **Review Complete Modal** (`templates/word_review.html:510-520`):
+   - Shows total words reviewed
+   - Shows time taken (timer mode) or elapsed time (count mode)
+   - **New Review button**: SPACE/ENTER to start fresh review
+   - **Home button**: ESC to return to home screen
+   - Clean summary of session results
+
+7. **Review Session State** (`templates/word_review.html:563-575`):
+   - New state management for review sessions
+   - `reviewSettings`: Stores user selections from modal
+   - `reviewActive`: Boolean flag for active review
+   - `reviewStartTime`: Timestamp for elapsed time tracking
+   - `timerInterval`: Timer interval reference
+   - `wordsReviewed`: Counter for completed words
+   - `targetWordCount`: Goal for count-based mode
+
+8. **Enhanced Filtering** (`templates/word_review.html:671-685, 910-938`):
+   - `matchesFilter()`: Checks both familiarity levels AND favorites
+   - Supports multiple familiarity levels simultaneously
+   - Favorites filter works with level filter
+   - Increased max attempts to 200 for better filtering
+   - Better error messages for no matches
+
+9. **Updated Keyboard Navigation** (`templates/word_review.html:940-1014`):
+   - **Start Modal**: ENTER starts, ESC cancels
+   - **During Review**: ESC ends review (was: go home)
+   - **Complete Modal**: SPACE/ENTER for new review, ESC for home
+   - Modal-aware keyboard handling
+   - Review session navigation when `reviewActive` is true
+
+10. **UI/UX Changes**:
+    - Removed inline filter controls from main screen
+    - Review container hidden until review starts
+    - Timer display only shown in timer mode
+    - Progress info always visible during review
+    - Cleaner, session-focused interface
+
+**Git Operations:**
+```bash
+git add templates/word_review.html
+git commit -m "Redesign GRE Word Review with Start Review modal and review modes"
+git push
+```
+
+**Commit:** `46fb4fc`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/word_review.html`
+
+**User Experience:**
+
+**Session-Based Workflow:**
+1. Launch app → See Start Review modal
+2. Select desired familiarity levels (0, 1, 2, 3)
+3. Optionally enable Favorites Only filter
+4. Choose Timer (default 3 min) OR Word Count (default 20)
+5. Press ENTER or click Start Review
+6. Review words with progress tracking
+7. Session ends automatically (timer/count) or manually (ESC)
+8. See review statistics in Complete modal
+9. Start new session or return home
+
+**Benefits:**
+- **Clearer Familiarity**: Level 1 (least familiar) needs most practice - intuitive
+- **Focused Sessions**: Time-boxed or count-based prevents endless reviewing
+- **Better Filtering**: Review exactly what you want (levels + favorites)
+- **Progress Visibility**: Always know how far through session
+- **Flexible Practice**: Quick 1-minute reviews or longer 10-minute sessions
+- **Statistics**: See words reviewed and time spent after each session
+- **Intentional Start**: No accidental reviews, deliberate session setup
+
+**Typical Use Cases:**
+1. **Quick Practice**: Timer mode, 3 minutes, Level 1 words only
+2. **Favorites Review**: Enable favorites, 5-10 words
+3. **Comprehensive Study**: All levels, 30 words, see what needs work
+4. **Focused Drill**: Level 1 + Level 2, timer mode, intensive practice
+5. **Morning Routine**: Level 0 (unassigned), categorize 20 words
+
+---
+
 ## Session: GRE Word Review Familiarity Levels (2025-10-19)
 
 ### Prompt: Add Familiarity Levels and Improve Star Icon
