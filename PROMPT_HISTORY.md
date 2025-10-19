@@ -460,6 +460,217 @@ This establishes a standard modal keyboard control pattern used across the app:
 
 ---
 
+## Session: Home Page Menu Card Styling (2025-10-18)
+
+### Prompt: Fix Inconsistent Card Styling
+
+**User Request:**
+"On the Home page. GRE Vocabulary is a different color button. The others are black on white, it is white on blue. Make all the same. If we want to put white on blue for the selected game that would be nice."
+
+**Implementation Details:**
+
+1. **Removed Active State** (`templates/home.html`):
+   - Removed hardcoded `active` class from GRE Vocabulary card
+   - Eliminated `.menu-card.active` CSS rules
+   - All cards now default to gray gradient background
+
+2. **Selected State Enhancement** (`templates/home.html:81-98`):
+   - Moved white-on-blue gradient to `.menu-card.selected` class
+   - Applied gradient: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
+   - White text for icon, title, and description when selected
+   - Transform and shadow effects for visual feedback
+
+3. **Consistent Default Styling**:
+   - All cards: `linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)`
+   - Black text (#333) on light gray background
+   - Uniform appearance when not selected
+
+**Git Operations:**
+```bash
+git add templates/home.html
+git commit -m "Fix home page menu card styling consistency"
+git push
+```
+
+**Commit:** `f6f3e2d`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/home.html`
+
+**User Experience:**
+- All cards have consistent default styling
+- Selected card (via keyboard navigation) gets highlighted with purple gradient
+- Clear visual distinction between selected and unselected states
+- Professional, uniform appearance
+
+---
+
+## Session: Fix Keyboard/Mouse Navigation Conflict (2025-10-18)
+
+### Prompt: Resolve Blue Border Conflict
+
+**User Request:**
+"there is a little conflict between the mouse and the arrow keys. the location of the mouse has a blue border on that game that is left in place even when we arrow key to another game. Maybe just hide that if the arrow key is pressed?"
+
+**Implementation Details:**
+
+1. **Keyboard Mode Detection** (`templates/home.html`):
+   - Added `keyboardMode` boolean flag
+   - Track when user is navigating with keyboard vs mouse
+   - Added `.keyboard-nav` class to container when in keyboard mode
+
+2. **Disable Hover in Keyboard Mode** (`templates/home.html:74-79`):
+   - CSS override: `.keyboard-nav .menu-card:hover` with `!important` flags
+   - Prevents hover effects during keyboard navigation
+   - Removes transform, shadow, and border-color changes
+
+3. **Mode Switching Functions** (`templates/home.html:312-324`):
+   - `enableKeyboardMode()`: Sets flag and adds class
+   - `disableKeyboardMode()`: Clears flag and removes class
+   - Arrow key handlers call `enableKeyboardMode()`
+   - Mouse movement calls `disableKeyboardMode()`
+
+4. **Mouse Event Handler** (`templates/home.html:385-396`):
+   - Detects mouse movement
+   - Exits keyboard mode on movement
+   - Restores normal hover behavior
+
+**Git Operations:**
+```bash
+git add templates/home.html
+git commit -m "Fix keyboard/mouse navigation conflict on home page"
+git push
+```
+
+**Commit:** `dd29f8c`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/home.html`
+
+**User Experience:**
+- No hover border appears during keyboard navigation
+- Clean visual feedback for current selection mode
+- Seamless transition between keyboard and mouse
+- No conflicting visual indicators
+
+---
+
+## Session: Mouse Movement Threshold for Navigation (2025-10-18)
+
+### Prompt: Fix Focus Jumping Corner Case
+
+**User Request:**
+"on the home screen there is a strange corner case where a down arrow scrolls the screen down to the next selection, but if the mouse pointer is over a button higher up in the screen then after a brief moment focus shifts back up from the one you arrowed down to back up to the one where the mouse pointer is located. Perhaps only refocus if the mouse itself is moved a decent distance"
+
+**Implementation Details:**
+
+1. **Movement Threshold System** (`templates/home.html:292-294`):
+   - Added `lastMouseX` and `lastMouseY` to track position
+   - Set `MOUSE_MOVE_THRESHOLD = 15` pixels
+   - Prevents scroll-induced jitter from exiting keyboard mode
+
+2. **Distance Calculation** (`templates/home.html:387-396`):
+   - Calculate ΔX = `abs(currentX - lastX)`
+   - Calculate ΔY = `abs(currentY - lastY)`
+   - Pythagorean distance: `√(ΔX² + ΔY²)`
+   - Only exit keyboard mode if distance > 15 pixels
+
+3. **Position Tracking** (`templates/home.html:399-405`):
+   - Initialize mouse position on first movement
+   - Update lastMouseX/Y after significant movement
+   - Ignore tiny movements from scrolling or jitter
+
+4. **Applied to Both Pages**:
+   - Implemented in `templates/home.html`
+   - Implemented in `templates/dictionary.html` for consistency
+   - Same 15-pixel threshold across all navigation
+
+**Git Operations:**
+```bash
+git add templates/home.html templates/dictionary.html
+git commit -m "Add mouse movement threshold to prevent navigation jitter"
+git push
+```
+
+**Commit:** `bc41da0`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/home.html`
+- `/home/joe/ai/wordy/templates/dictionary.html`
+
+**User Experience:**
+- Keyboard navigation stable during scrolling
+- No focus jumping when mouse is stationary
+- Requires intentional mouse movement to switch modes
+- 15 pixels is large enough to ignore jitter, small enough to feel responsive
+
+**Technical Details:**
+- Pythagorean theorem ensures diagonal movement is measured correctly
+- Threshold prevents: scroll events, touchpad jitter, accidental touches
+- First movement event initializes position (prevents false trigger on page load)
+
+---
+
+## Session: Clear Game History Feature (2025-10-18)
+
+### Prompt: Add Clear History Option
+
+**User Request:**
+"In the GRE Spelling Quiz settings have an option to clear the history of games"
+
+**Implementation Details:**
+
+1. **Danger Zone UI** (`templates/spelling_quiz.html:664-672`):
+   - Added new section below settings with visual separation
+   - Red text (#dc3545) for "Danger Zone" label
+   - Warning: "This action cannot be undone."
+   - Red button: "🗑️ Clear All Game History"
+
+2. **clearHistory() Function** (`templates/spelling_quiz.html:1260-1283`):
+   - Confirmation dialog with detailed explanation
+   - Lists what will be deleted:
+     - All leaderboard scores
+     - All game history data
+     - Baseline settings
+   - Only proceeds if user confirms
+
+3. **localStorage Cleanup**:
+   - Removes `spellingQuizLeaderboard`
+   - Removes `spellingQuizOriginalSettings`
+   - Preserves current game settings (not cleared)
+
+4. **Success Feedback**:
+   - Shows success alert after clearing
+   - Closes settings modal automatically
+   - User can start fresh with current settings as new baseline
+
+**Git Operations:**
+```bash
+git add templates/spelling_quiz.html
+git commit -m "Add clear history option to GRE Spelling Quiz settings"
+git push
+```
+
+**Commit:** `562b1ef`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/spelling_quiz.html`
+
+**User Experience:**
+- Clear visual separation for destructive action
+- Red color warns users of permanence
+- Detailed confirmation prevents accidental deletion
+- Clean slate allows experimenting with new scoring systems
+- Integrates with baseline settings system (next game becomes new baseline)
+
+**Safety Features:**
+- Confirmation dialog required
+- Lists exactly what will be deleted
+- Cannot be undone (clearly stated)
+- Settings preserved (only history cleared)
+
+---
+
 ## Previous Sessions (From Context Summary)
 
 ### Session 1: Game History Storage System
