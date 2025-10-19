@@ -1081,6 +1081,22 @@
                 roundWords.clear();
                 roundQuestions = [];
 
+                // Reset scoreboard display
+                document.getElementById('score').textContent = result.score || '0';
+                document.getElementById('total').textContent = result.total || '0';
+                document.getElementById('accuracy').textContent = '0%';
+                document.getElementById('elapsed').textContent = '0:00';
+                document.getElementById('avgTime').textContent = '--';
+
+                // Reset time tracking variables
+                quizStartTime = null;
+                currentQuestionStartTime = null;
+                totalPausedTime = 0;
+                lastPauseStartTime = null;
+
+                // Clear question history for this round
+                questionHistory = [];
+
                 // Close both modals (in case either is open)
                 document.getElementById('roundStartModal').classList.remove('show');
                 document.getElementById('roundCompleteModal').classList.remove('show');
