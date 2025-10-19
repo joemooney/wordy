@@ -4,6 +4,107 @@ All development sessions with detailed actions, fixes, and git operations.
 
 ---
 
+## Session: GRE Quiz UX Improvements (2025-10-18)
+
+### Prompt 1: SPACE Key Answer Selection
+
+**User Request:**
+"For GRE Vocabulary Quiz SPACE or ENTER should equate to a mouse press to select the button."
+
+**Implementation Details:**
+
+1. **Conditional SPACE Key Behavior** (`templates/quiz.html:1992-2003`):
+   - Modified SPACE key handler to check `answersEnabled` state
+   - If answers enabled: calls `selectCurrentChoice()` (select highlighted answer)
+   - If answers disabled: calls `togglePause()` (pause/resume functionality)
+   - Makes SPACE behave identically to ENTER for answer selection
+
+2. **Logic Flow**:
+   ```javascript
+   if (event.key === ' ' || event.code === 'Space') {
+       event.preventDefault();
+       if (answersEnabled) {
+           selectCurrentChoice();  // Select answer
+       } else {
+           togglePause();  // Pause/resume
+       }
+       return;
+   }
+   ```
+
+**Git Operations:**
+```bash
+git add templates/quiz.html
+git commit -m "Add SPACE key answer selection to GRE Vocabulary Quiz"
+git push
+```
+
+**Commit:** `507a03d`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/quiz.html`
+
+**User Experience:**
+- More intuitive keyboard navigation
+- SPACE key now dual-purpose: answer selection or pause/resume
+- Consistent with ENTER key behavior for answers
+- Preserves existing pause/resume functionality when appropriate
+
+---
+
+### Prompt 2: Start New Round Scoreboard Reset
+
+**User Request:**
+"For GRE Vocabulary Quiz, Start New Round is not resetting the scoreboard, it should clear out the round and begin a new round"
+
+**Problem:**
+The `startNewRound()` function was creating a new round but not resetting the scoreboard display (score, total, accuracy, elapsed time, avg/word) or time tracking variables, causing old stats to persist.
+
+**Implementation Details:**
+
+1. **Scoreboard Reset** (`templates/quiz.html:1084-1089`):
+   - Reset score to API result or '0'
+   - Reset total to API result or '0'
+   - Reset accuracy to '0%'
+   - Reset elapsed time to '0:00'
+   - Reset avg/word to '--'
+
+2. **Time Tracking Reset** (`templates/quiz.html:1091-1095`):
+   - Clear `quizStartTime` (set to null)
+   - Clear `currentQuestionStartTime` (set to null)
+   - Reset `totalPausedTime` to 0
+   - Clear `lastPauseStartTime` (set to null)
+
+3. **History Reset** (`templates/quiz.html:1097-1098`):
+   - Clear `questionHistory` array for fresh round start
+   - Prevents old questions from appearing in review
+
+**Git Operations:**
+```bash
+git add templates/quiz.html
+git commit -m "Fix Start New Round to properly reset scoreboard"
+git push
+```
+
+**Commit:** `0dc73f4`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/quiz.html`
+
+**User Experience:**
+- Clean slate when starting new round
+- No confusing carryover stats from previous round
+- Accurate time tracking for each round
+- Professional, polished behavior
+
+**Benefits:**
+- Scoreboard always reflects current round progress
+- Time statistics accurate for each round independently
+- Clear visual feedback that new round has started
+- Consistent with user expectations
+
+---
+
 ## Session: Continued from Context Summary (2025-10-18)
 
 ### Context
