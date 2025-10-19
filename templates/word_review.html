@@ -192,6 +192,89 @@
             cursor: not-allowed;
         }
 
+        .familiarity-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .familiarity-label {
+            font-size: 16px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .familiarity-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .familiarity-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .familiarity-button.active {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: rgba(76, 175, 80, 0.8);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .filter-controls {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-header {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .filter-button.active {
+            background: rgba(102, 126, 234, 0.6);
+            border-color: rgba(102, 126, 234, 0.9);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+        }
+
         .keyboard-hints {
             text-align: center;
             margin-top: 30px;
@@ -220,21 +303,39 @@
     <div class="container">
         <div class="header">
             <div class="title-section">
-                <button class="icon-button" id="starButton" title="Favorite (+ key)">⭐</button>
+                <button class="icon-button" id="starButton" title="Favorite (+ key)">☆</button>
                 <h1>GRE Word Review</h1>
                 <button class="icon-button" id="trashButton" title="Remove (- key)">🗑️</button>
             </div>
             <button class="home-button" onclick="window.location.href='/'" title="Home (Esc)">🏠</button>
         </div>
 
+        <div class="filter-controls">
+            <div class="filter-header">Filter by Familiarity Level</div>
+            <div class="filter-buttons">
+                <button class="filter-button active" data-level="all">All Words</button>
+                <button class="filter-button" data-level="0">Level 0 (Unassigned)</button>
+                <button class="filter-button" data-level="1">Level 1 (Very Familiar)</button>
+                <button class="filter-button" data-level="2">Level 2 (Familiar)</button>
+                <button class="filter-button" data-level="3">Level 3 (Less Familiar)</button>
+            </div>
+        </div>
+
         <div class="word-counter" id="wordCounter">Loading...</div>
+
+        <div class="familiarity-controls">
+            <span class="familiarity-label">Familiarity:</span>
+            <button class="familiarity-button" data-level="1" title="Very Familiar (1 key)">1</button>
+            <button class="familiarity-button" data-level="2" title="Familiar (2 key)">2</button>
+            <button class="familiarity-button" data-level="3" title="Less Familiar (3 key)">3</button>
+        </div>
 
         <div id="content">
             <div class="loading">Loading word...</div>
         </div>
 
         <div class="keyboard-hints">
-            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | + = Favorite | - = Remove | ESC = Home
+            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | 1/2/3 = Set Familiarity | + = Favorite | - = Remove | ESC = Home
         </div>
     </div>
 
@@ -247,11 +348,14 @@
         let words = [];
         let removedWords = new Set();
         let favoritedWords = new Set();
+        let wordFamiliarity = {}; // Maps word to familiarity level (0-3, default 0)
+        let currentFilter = 'all'; // Current familiarity filter
 
         // Load saved data from localStorage
         function loadLocalStorage() {
             const savedRemoved = localStorage.getItem('wordReviewRemovedWords');
             const savedFavorited = localStorage.getItem('wordReviewFavoritedWords');
+            const savedFamiliarity = localStorage.getItem('wordReviewFamiliarity');
 
             if (savedRemoved) {
                 removedWords = new Set(JSON.parse(savedRemoved));
@@ -259,12 +363,16 @@
             if (savedFavorited) {
                 favoritedWords = new Set(JSON.parse(savedFavorited));
             }
+            if (savedFamiliarity) {
+                wordFamiliarity = JSON.parse(savedFamiliarity);
+            }
         }
 
         // Save to localStorage
         function saveLocalStorage() {
             localStorage.setItem('wordReviewRemovedWords', JSON.stringify([...removedWords]));
             localStorage.setItem('wordReviewFavoritedWords', JSON.stringify([...favoritedWords]));
+            localStorage.setItem('wordReviewFamiliarity', JSON.stringify(wordFamiliarity));
         }
 
         // Update button states
@@ -274,17 +382,33 @@
 
             if (!currentWord) return;
 
+            // Update star icon and state
             if (favoritedWords.has(currentWord.word)) {
                 starButton.classList.add('favorited');
+                starButton.textContent = '⭐'; // Filled star
             } else {
                 starButton.classList.remove('favorited');
+                starButton.textContent = '☆'; // Outline star
             }
 
+            // Update trash button state
             if (removedWords.has(currentWord.word)) {
                 trashButton.classList.add('removed');
             } else {
                 trashButton.classList.remove('removed');
             }
+
+            // Update familiarity button states
+            const currentLevel = wordFamiliarity[currentWord.word] || 0;
+            const familiarityButtons = document.querySelectorAll('.familiarity-button');
+            familiarityButtons.forEach(btn => {
+                const level = parseInt(btn.dataset.level);
+                if (level === currentLevel) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
         }
 
         // Fetch a random word
@@ -358,14 +482,18 @@
                 currentWord = words[currentWordIndex];
                 displayWord();
             } else {
-                // Load a new word
-                const newWord = await fetchWord();
-                if (newWord) {
-                    words.push(newWord);
-                    totalWords++;
-                    currentWordIndex++;
-                    currentWord = newWord;
-                    displayWord();
+                // Load a new word that matches the filter
+                if (currentFilter === 'all') {
+                    const newWord = await fetchWord();
+                    if (newWord) {
+                        words.push(newWord);
+                        totalWords++;
+                        currentWordIndex++;
+                        currentWord = newWord;
+                        displayWord();
+                    }
+                } else {
+                    loadNextFilteredWord();
                 }
             }
         }
@@ -407,6 +535,79 @@
             updateButtonStates();
         }
 
+        // Set familiarity level
+        function setFamiliarity(level) {
+            if (!currentWord) return;
+
+            wordFamiliarity[currentWord.word] = level;
+            saveLocalStorage();
+            updateButtonStates();
+        }
+
+        // Get familiarity level for a word
+        function getFamiliarity(word) {
+            return wordFamiliarity[word] || 0;
+        }
+
+        // Check if word matches current filter
+        function matchesFilter(word) {
+            if (currentFilter === 'all') return true;
+
+            const level = getFamiliarity(word);
+            return level === parseInt(currentFilter);
+        }
+
+        // Set filter and reload words
+        function setFilter(filterLevel) {
+            currentFilter = filterLevel;
+
+            // Update filter button states
+            const filterButtons = document.querySelectorAll('.filter-button');
+            filterButtons.forEach(btn => {
+                if (btn.dataset.level === filterLevel) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Reset word list and load new filtered word
+            words = [];
+            currentWordIndex = 0;
+            totalWords = 0;
+            loadNextFilteredWord();
+        }
+
+        // Load next word that matches the filter
+        async function loadNextFilteredWord() {
+            const maxAttempts = 100; // Prevent infinite loop
+            let attempts = 0;
+
+            while (attempts < maxAttempts) {
+                const newWord = await fetchWord();
+                if (!newWord) {
+                    const content = document.getElementById('content');
+                    content.innerHTML = '<div class="error">Failed to load words. Please try a different filter.</div>';
+                    return;
+                }
+
+                if (matchesFilter(newWord.word)) {
+                    words.push(newWord);
+                    currentWord = newWord;
+                    totalWords++;
+                    currentWordIndex = words.length - 1;
+                    displayWord();
+                    return;
+                }
+
+                attempts++;
+            }
+
+            // If we couldn't find a matching word after many attempts
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="error">No words found matching this filter. Try a different filter.</div>';
+        }
+
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             switch(e.key) {
@@ -426,6 +627,18 @@
                 case 'ArrowLeft':
                     e.preventDefault();
                     previousWord();
+                    break;
+                case '1':
+                    e.preventDefault();
+                    setFamiliarity(1);
+                    break;
+                case '2':
+                    e.preventDefault();
+                    setFamiliarity(2);
+                    break;
+                case '3':
+                    e.preventDefault();
+                    setFamiliarity(3);
                     break;
                 case '+':
                 case '=':
@@ -447,6 +660,22 @@
         // Button click handlers
         document.getElementById('starButton').addEventListener('click', toggleFavorite);
         document.getElementById('trashButton').addEventListener('click', toggleRemoved);
+
+        // Familiarity button click handlers
+        document.querySelectorAll('.familiarity-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const level = parseInt(btn.dataset.level);
+                setFamiliarity(level);
+            });
+        });
+
+        // Filter button click handlers
+        document.querySelectorAll('.filter-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filterLevel = btn.dataset.level;
+                setFilter(filterLevel);
+            });
+        });
 
         // Initialize
         async function init() {
