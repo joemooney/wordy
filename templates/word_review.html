@@ -297,10 +297,229 @@
             border-radius: 15px;
             margin-top: 20px;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .modal-header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .modal-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .modal-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item, .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .checkbox-item:hover, .radio-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .checkbox-item input, .radio-item input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .input-group input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .modal-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .modal-button.primary {
+            background: rgba(76, 175, 80, 0.5);
+            border-color: rgba(76, 175, 80, 0.8);
+        }
+
+        .modal-button.primary:hover {
+            background: rgba(76, 175, 80, 0.7);
+        }
+
+        .progress-info {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .timer-display {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .review-hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Start Review Modal -->
+    <div class="modal show" id="startReviewModal">
+        <div class="modal-content">
+            <div class="modal-header">Start Word Review</div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Familiarity Levels</div>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="level0" checked>
+                        <span>Level 0 (Unassigned)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="level1" checked>
+                        <span>Level 1 (Least Familiar)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="level2" checked>
+                        <span>Level 2 (Somewhat Familiar)</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" id="level3" checked>
+                        <span>Level 3 (Most Familiar)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Additional Filters</div>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="favoritesOnly">
+                    <span>⭐ Favorites Only</span>
+                </label>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-section-title">Review Mode</div>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="reviewMode" value="timer" checked>
+                        <span>Time-based Review</span>
+                    </label>
+                    <div class="input-group">
+                        <label for="timerMinutes">Minutes:</label>
+                        <input type="number" id="timerMinutes" min="1" max="60" value="3">
+                    </div>
+                    <label class="radio-item">
+                        <input type="radio" name="reviewMode" value="count">
+                        <span>Word Count Review</span>
+                    </label>
+                    <div class="input-group">
+                        <label for="wordCount">Number of words:</label>
+                        <input type="number" id="wordCount" min="1" max="100" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="window.location.href='/'">Cancel (ESC)</button>
+                <button class="modal-button primary" onclick="startReview()">Start Review (ENTER)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Complete Modal -->
+    <div class="modal" id="reviewCompleteModal">
+        <div class="modal-content">
+            <div class="modal-header">Review Complete!</div>
+            <div id="reviewStats" style="text-align: center; font-size: 18px; margin: 20px 0;"></div>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="window.location.href='/'">Home (ESC)</button>
+                <button class="modal-button primary" onclick="newReview()">New Review (SPACE/ENTER)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container review-hidden" id="reviewContainer">
         <div class="header">
             <div class="title-section">
                 <button class="icon-button" id="starButton" title="Favorite (+ key)">☆</button>
@@ -310,24 +529,15 @@
             <button class="home-button" onclick="window.location.href='/'" title="Home (Esc)">🏠</button>
         </div>
 
-        <div class="filter-controls">
-            <div class="filter-header">Filter by Familiarity Level</div>
-            <div class="filter-buttons">
-                <button class="filter-button active" data-level="all">All Words</button>
-                <button class="filter-button" data-level="0">Level 0 (Unassigned)</button>
-                <button class="filter-button" data-level="1">Level 1 (Very Familiar)</button>
-                <button class="filter-button" data-level="2">Level 2 (Familiar)</button>
-                <button class="filter-button" data-level="3">Level 3 (Less Familiar)</button>
-            </div>
-        </div>
-
+        <div class="progress-info" id="progressInfo">Loading...</div>
+        <div class="timer-display review-hidden" id="timerDisplay">3:00</div>
         <div class="word-counter" id="wordCounter">Loading...</div>
 
         <div class="familiarity-controls">
             <span class="familiarity-label">Familiarity:</span>
-            <button class="familiarity-button" data-level="1" title="Very Familiar (1 key)">1</button>
-            <button class="familiarity-button" data-level="2" title="Familiar (2 key)">2</button>
-            <button class="familiarity-button" data-level="3" title="Less Familiar (3 key)">3</button>
+            <button class="familiarity-button" data-level="1" title="Least Familiar (1 key)">1</button>
+            <button class="familiarity-button" data-level="2" title="Somewhat Familiar (2 key)">2</button>
+            <button class="familiarity-button" data-level="3" title="Most Familiar (3 key)">3</button>
         </div>
 
         <div id="content">
@@ -335,7 +545,7 @@
         </div>
 
         <div class="keyboard-hints">
-            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | 1/2/3 = Set Familiarity | + = Favorite | - = Remove | ESC = Home
+            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | 1/2/3 = Set Familiarity | + = Favorite | - = Remove | ESC = End Review
         </div>
     </div>
 
@@ -349,7 +559,20 @@
         let removedWords = new Set();
         let favoritedWords = new Set();
         let wordFamiliarity = {}; // Maps word to familiarity level (0-3, default 0)
-        let currentFilter = 'all'; // Current familiarity filter
+
+        // Review session state
+        let reviewSettings = {
+            levels: [0, 1, 2, 3],
+            favoritesOnly: false,
+            mode: 'timer', // 'timer' or 'count'
+            timerMinutes: 3,
+            wordCount: 20
+        };
+        let reviewActive = false;
+        let reviewStartTime = null;
+        let timerInterval = null;
+        let wordsReviewed = 0;
+        let targetWordCount = 0;
 
         // Load saved data from localStorage
         function loadLocalStorage() {
@@ -373,6 +596,140 @@
             localStorage.setItem('wordReviewRemovedWords', JSON.stringify([...removedWords]));
             localStorage.setItem('wordReviewFavoritedWords', JSON.stringify([...favoritedWords]));
             localStorage.setItem('wordReviewFamiliarity', JSON.stringify(wordFamiliarity));
+        }
+
+        // Start review session
+        function startReview() {
+            // Gather settings from modal
+            reviewSettings.levels = [];
+            if (document.getElementById('level0').checked) reviewSettings.levels.push(0);
+            if (document.getElementById('level1').checked) reviewSettings.levels.push(1);
+            if (document.getElementById('level2').checked) reviewSettings.levels.push(2);
+            if (document.getElementById('level3').checked) reviewSettings.levels.push(3);
+
+            if (reviewSettings.levels.length === 0) {
+                alert('Please select at least one familiarity level');
+                return;
+            }
+
+            reviewSettings.favoritesOnly = document.getElementById('favoritesOnly').checked;
+            reviewSettings.mode = document.querySelector('input[name="reviewMode"]:checked').value;
+            reviewSettings.timerMinutes = parseInt(document.getElementById('timerMinutes').value);
+            reviewSettings.wordCount = parseInt(document.getElementById('wordCount').value);
+
+            // Initialize review state
+            reviewActive = true;
+            wordsReviewed = 0;
+            words = [];
+            currentWordIndex = 0;
+            totalWords = 0;
+            reviewStartTime = Date.now(); // For elapsed time tracking
+
+            // Hide start modal, show review container
+            document.getElementById('startReviewModal').classList.remove('show');
+            document.getElementById('reviewContainer').classList.remove('review-hidden');
+
+            // Setup timer or count mode
+            if (reviewSettings.mode === 'timer') {
+                const timerDisplay = document.getElementById('timerDisplay');
+                timerDisplay.classList.remove('review-hidden');
+                startTimer();
+            } else {
+                targetWordCount = reviewSettings.wordCount;
+                document.getElementById('timerDisplay').classList.add('review-hidden');
+            }
+
+            // Load first word
+            loadNextFilteredWord();
+        }
+
+        // Start timer countdown
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - reviewStartTime;
+                const remaining = (reviewSettings.timerMinutes * 60 * 1000) - elapsed;
+
+                if (remaining <= 0) {
+                    endReview();
+                } else {
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const elapsed = Date.now() - reviewStartTime;
+            const remaining = Math.max(0, (reviewSettings.timerMinutes * 60 * 1000) - elapsed);
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('timerDisplay').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Check if word matches current filter
+        function matchesFilter(word) {
+            // Check familiarity level
+            const level = getFamiliarity(word);
+            if (!reviewSettings.levels.includes(level)) {
+                return false;
+            }
+
+            // Check favorites filter
+            if (reviewSettings.favoritesOnly && !favoritedWords.has(word)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        // Update progress info
+        function updateProgressInfo() {
+            const progressInfo = document.getElementById('progressInfo');
+            if (reviewSettings.mode === 'count') {
+                progressInfo.textContent = `Word ${wordsReviewed} of ${targetWordCount}`;
+            } else {
+                progressInfo.textContent = `Words Reviewed: ${wordsReviewed}`;
+            }
+        }
+
+        // End review session
+        function endReview() {
+            reviewActive = false;
+
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Hide review container
+            document.getElementById('reviewContainer').classList.add('review-hidden');
+
+            // Show stats
+            const reviewStats = document.getElementById('reviewStats');
+            let statsHTML = `<p><strong>Words Reviewed:</strong> ${wordsReviewed}</p>`;
+
+            if (reviewSettings.mode === 'timer') {
+                statsHTML += `<p><strong>Time:</strong> ${reviewSettings.timerMinutes} minutes</p>`;
+            } else {
+                const elapsed = Date.now() - reviewStartTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                statsHTML += `<p><strong>Time Elapsed:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}</p>`;
+            }
+
+            reviewStats.innerHTML = statsHTML;
+
+            // Show review complete modal
+            document.getElementById('reviewCompleteModal').classList.add('show');
+        }
+
+        // Start new review
+        function newReview() {
+            document.getElementById('reviewCompleteModal').classList.remove('show');
+            document.getElementById('startReviewModal').classList.add('show');
         }
 
         // Update button states
@@ -473,28 +830,29 @@
         function updateWordCounter() {
             const counter = document.getElementById('wordCounter');
             counter.textContent = `Word ${currentWordIndex + 1} of ${totalWords}`;
+            updateProgressInfo();
         }
 
         // Navigate to next word
         async function nextWord() {
+            // Increment words reviewed count (if revealed)
+            if (isRevealed && reviewActive) {
+                wordsReviewed++;
+
+                // Check if count-based review is complete
+                if (reviewSettings.mode === 'count' && wordsReviewed >= targetWordCount) {
+                    endReview();
+                    return;
+                }
+            }
+
             if (currentWordIndex < totalWords - 1) {
                 currentWordIndex++;
                 currentWord = words[currentWordIndex];
                 displayWord();
             } else {
-                // Load a new word that matches the filter
-                if (currentFilter === 'all') {
-                    const newWord = await fetchWord();
-                    if (newWord) {
-                        words.push(newWord);
-                        totalWords++;
-                        currentWordIndex++;
-                        currentWord = newWord;
-                        displayWord();
-                    }
-                } else {
-                    loadNextFilteredWord();
-                }
+                // Load next filtered word
+                await loadNextFilteredWord();
             }
         }
 
@@ -549,38 +907,9 @@
             return wordFamiliarity[word] || 0;
         }
 
-        // Check if word matches current filter
-        function matchesFilter(word) {
-            if (currentFilter === 'all') return true;
-
-            const level = getFamiliarity(word);
-            return level === parseInt(currentFilter);
-        }
-
-        // Set filter and reload words
-        function setFilter(filterLevel) {
-            currentFilter = filterLevel;
-
-            // Update filter button states
-            const filterButtons = document.querySelectorAll('.filter-button');
-            filterButtons.forEach(btn => {
-                if (btn.dataset.level === filterLevel) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-
-            // Reset word list and load new filtered word
-            words = [];
-            currentWordIndex = 0;
-            totalWords = 0;
-            loadNextFilteredWord();
-        }
-
         // Load next word that matches the filter
         async function loadNextFilteredWord() {
-            const maxAttempts = 100; // Prevent infinite loop
+            const maxAttempts = 200; // Prevent infinite loop
             let attempts = 0;
 
             while (attempts < maxAttempts) {
@@ -605,55 +934,82 @@
 
             // If we couldn't find a matching word after many attempts
             const content = document.getElementById('content');
-            content.innerHTML = '<div class="error">No words found matching this filter. Try a different filter.</div>';
+            content.innerHTML = '<div class="error">No words found matching this filter. Try a different filter or settings.</div>';
         }
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case ' ':
-                case 'Spacebar':
+            // Handle Start Review Modal
+            if (document.getElementById('startReviewModal').classList.contains('show')) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
-                    if (isRevealed) {
-                        nextWord();
-                    } else {
-                        revealDefinition();
-                    }
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    nextWord();
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    previousWord();
-                    break;
-                case '1':
-                    e.preventDefault();
-                    setFamiliarity(1);
-                    break;
-                case '2':
-                    e.preventDefault();
-                    setFamiliarity(2);
-                    break;
-                case '3':
-                    e.preventDefault();
-                    setFamiliarity(3);
-                    break;
-                case '+':
-                case '=':
-                    e.preventDefault();
-                    toggleFavorite();
-                    break;
-                case '-':
-                case '_':
-                    e.preventDefault();
-                    toggleRemoved();
-                    break;
-                case 'Escape':
+                    startReview();
+                } else if (e.key === 'Escape') {
                     e.preventDefault();
                     window.location.href = '/';
-                    break;
+                }
+                return;
+            }
+
+            // Handle Review Complete Modal
+            if (document.getElementById('reviewCompleteModal').classList.contains('show')) {
+                if (e.key === ' ' || e.key === 'Spacebar' || e.key === 'Enter') {
+                    e.preventDefault();
+                    newReview();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    window.location.href = '/';
+                }
+                return;
+            }
+
+            // Handle review session
+            if (reviewActive) {
+                switch(e.key) {
+                    case ' ':
+                    case 'Spacebar':
+                        e.preventDefault();
+                        if (isRevealed) {
+                            nextWord();
+                        } else {
+                            revealDefinition();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        nextWord();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        previousWord();
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        setFamiliarity(1);
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        setFamiliarity(2);
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        setFamiliarity(3);
+                        break;
+                    case '+':
+                    case '=':
+                        e.preventDefault();
+                        toggleFavorite();
+                        break;
+                    case '-':
+                    case '_':
+                        e.preventDefault();
+                        toggleRemoved();
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        endReview();
+                        break;
+                }
             }
         });
 
@@ -669,30 +1025,11 @@
             });
         });
 
-        // Filter button click handlers
-        document.querySelectorAll('.filter-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filterLevel = btn.dataset.level;
-                setFilter(filterLevel);
-            });
-        });
-
         // Initialize
-        async function init() {
+        function init() {
             loadLocalStorage();
-
-            // Fetch first word
-            const firstWord = await fetchWord();
-            if (firstWord) {
-                words.push(firstWord);
-                currentWord = firstWord;
-                totalWords = 1;
-                currentWordIndex = 0;
-                displayWord();
-            } else {
-                const content = document.getElementById('content');
-                content.innerHTML = '<div class="error">Failed to load words. Please refresh the page.</div>';
-            }
+            // App starts with Start Review modal visible
+            // No need to load words until user clicks Start Review
         }
 
         // Start the app
