@@ -289,6 +289,9 @@
         const menuCards = Array.from(document.querySelectorAll('.menu-card'));
         const container = document.querySelector('.container');
         let keyboardMode = false;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        const MOUSE_MOVE_THRESHOLD = 15; // pixels
 
         function updateSelection() {
             // Remove selected class from all cards
@@ -380,9 +383,26 @@
         });
 
         // Detect mouse movement to disable keyboard mode
-        document.addEventListener('mousemove', () => {
-            disableKeyboardMode();
+        // Only disable if mouse moves a significant distance (prevents scroll-induced movement)
+        document.addEventListener('mousemove', (e) => {
+            const deltaX = Math.abs(e.clientX - lastMouseX);
+            const deltaY = Math.abs(e.clientY - lastMouseY);
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if (distance > MOUSE_MOVE_THRESHOLD) {
+                disableKeyboardMode();
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
         });
+
+        // Initialize mouse position on first movement
+        document.addEventListener('mousemove', (e) => {
+            if (lastMouseX === 0 && lastMouseY === 0) {
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        }, { once: true });
 
         // Mouse hover updates selection index
         menuCards.forEach((card, index) => {
