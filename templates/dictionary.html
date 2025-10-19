@@ -215,6 +215,11 @@
             background: #f8f9ff;
         }
 
+        /* Disable hover effects when using keyboard navigation */
+        body.keyboard-nav .word-item:hover {
+            background: transparent;
+        }
+
         .word-item.selected {
             background: #f0f4ff;
             border-color: #667eea;
@@ -374,6 +379,21 @@
         let selectedIndex = 0;
         let currentView = 'list';
         let searchTimeout = null;
+        let keyboardMode = false;
+
+        function enableKeyboardMode() {
+            if (!keyboardMode) {
+                keyboardMode = true;
+                document.body.classList.add('keyboard-nav');
+            }
+        }
+
+        function disableKeyboardMode() {
+            if (keyboardMode) {
+                keyboardMode = false;
+                document.body.classList.remove('keyboard-nav');
+            }
+        }
 
         // Load all words on page load
         async function loadWords() {
@@ -465,6 +485,7 @@
 
         // Select word by index
         function selectWord(index) {
+            disableKeyboardMode();
             selectedIndex = index;
             renderWords();
         }
@@ -483,6 +504,7 @@
         // Navigate with arrow keys
         function navigateUp() {
             if (selectedIndex > 0) {
+                enableKeyboardMode();
                 selectedIndex--;
                 renderWords();
             }
@@ -490,6 +512,7 @@
 
         function navigateDown() {
             if (selectedIndex < displayedWords.length - 1) {
+                enableKeyboardMode();
                 selectedIndex++;
                 renderWords();
             }
@@ -622,6 +645,11 @@
             btn.addEventListener('click', () => {
                 setView(btn.dataset.view);
             });
+        });
+
+        // Detect mouse movement to disable keyboard mode
+        document.addEventListener('mousemove', () => {
+            disableKeyboardMode();
         });
 
         // Initialize
