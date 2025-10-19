@@ -1989,10 +1989,16 @@
                 return;
             }
 
-            // Spacebar always works for pause/resume (even when paused)
+            // Spacebar selects current choice if answers are enabled, otherwise pause/resume
             if (event.key === ' ' || event.code === 'Space') {
                 event.preventDefault();
-                togglePause();
+                if (answersEnabled) {
+                    // Select the currently focused choice
+                    selectCurrentChoice();
+                } else {
+                    // Pause/resume when answers are not enabled
+                    togglePause();
+                }
                 return;
             }
 
