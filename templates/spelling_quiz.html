@@ -660,6 +660,16 @@
             </div>
 
             <button class="modal-btn" onclick="saveSettings()">Save Settings</button>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+                <div class="setting-item">
+                    <label class="setting-label" style="color: #dc3545;">Danger Zone</label>
+                    <small style="color: #666; display: block; margin-bottom: 10px;">This action cannot be undone.</small>
+                    <button class="modal-btn" onclick="clearHistory()" style="background: #dc3545; margin-top: 0;">
+                        🗑️ Clear All Game History
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1245,6 +1255,31 @@
 
         function closeLeaderboard() {
             document.getElementById('leaderboardModal').classList.remove('show');
+        }
+
+        function clearHistory() {
+            // Confirm before clearing
+            const confirm = window.confirm(
+                'Are you sure you want to clear all game history?\n\n' +
+                'This will permanently delete:\n' +
+                '• All leaderboard scores\n' +
+                '• All game history data\n' +
+                '• Baseline settings\n\n' +
+                'This action cannot be undone!'
+            );
+
+            if (confirm) {
+                // Clear leaderboard
+                localStorage.removeItem('spellingQuizLeaderboard');
+                // Clear original settings baseline
+                localStorage.removeItem('spellingQuizOriginalSettings');
+
+                // Show success message
+                alert('✅ Game history cleared successfully!\n\nAll scores and history have been deleted.');
+
+                // Close settings modal
+                closeSettings();
+            }
         }
 
         async function restartGame() {
