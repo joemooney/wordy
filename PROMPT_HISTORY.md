@@ -4,6 +4,83 @@ All development sessions with detailed actions, fixes, and git operations.
 
 ---
 
+## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
+
+### Prompt: Implement ESC Pause and Exit Pattern
+
+**User Request:**
+"In GRE Spelling Quiz, ESC should pause the game and ESC again should return to home menu. This should be the default behavior for games unless to decide otherwise."
+
+**Implementation Details:**
+
+1. **ESC Key Handler Update** (all quiz files):
+   - First ESC press: Calls `pauseGame()` or `togglePause()` to pause the game
+   - Second ESC press (when paused): Navigates to home (`window.location.href = '/'`)
+   - Replaced `abandonRound()` call with pause functionality
+   - Provides better UX by allowing users to pause before quitting
+
+2. **GRE Spelling Quiz** (`templates/spelling_quiz.html:2147-2172`):
+   - When paused: SPACE/ENTER/ESC handlers
+   - SPACE or ENTER when paused → `resumeGame()`
+   - ESC when paused → home
+   - ESC when active → `pauseGame()`
+   - Updated pause screen text to mention ESC option (line 1551)
+
+3. **GRE Vocabulary Quiz** (`templates/quiz.html:2008-2039`):
+   - When paused: SPACE/ENTER handlers check `isPaused` state
+   - SPACE or ENTER when paused → `togglePause()` (resume)
+   - ESC when paused → home
+   - ESC when active → `togglePause()` (pause)
+   - Updated pause overlay hint text (line 786)
+
+4. **Inverse GRE Quiz** (`templates/inverse_quiz.html:1987-2012`):
+   - Applied same two-stage ESC pattern
+   - Check `isPaused` state for conditional handling
+   - ESC pauses first, then exits to home
+   - Updated pause overlay hint text (line 786)
+
+5. **Pause Screen Updates** (all files):
+   - Added ESC key mention to pause hints
+   - "Press SPACE to resume | ESC to return home"
+   - Provides clear instructions when game is paused
+   - Consistent messaging across all quiz games
+
+**Git Operations:**
+```bash
+git add templates/spelling_quiz.html templates/quiz.html templates/inverse_quiz.html
+git commit -m "Implement two-stage ESC behavior for all quiz games"
+git push
+```
+
+**Commit:** `e00850a`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/spelling_quiz.html`
+- `/home/joe/ai/wordy/templates/quiz.html`
+- `/home/joe/ai/wordy/templates/inverse_quiz.html`
+
+**User Experience:**
+- **Safety**: Prevents accidental exits by requiring two ESC presses
+- **Flexibility**: Users can pause to review instructions before deciding to quit
+- **Consistency**: Standard behavior across all quiz games
+- **Intuitive**: ESC naturally progresses from pause to exit
+- **Clear feedback**: Pause screens indicate ESC will go home
+
+**Benefits:**
+- Reduces frustration from accidental quits
+- Allows reviewing game instructions mid-game
+- Provides clear escape route (pause → home)
+- Maintains muscle memory across all quiz types
+- Professional, polished user experience
+
+**Pattern Established:**
+This creates a standard ESC behavior pattern for quiz games:
+1. First ESC: Pause game (show instructions/rules)
+2. Second ESC (when paused): Return to home menu
+3. SPACE/ENTER when paused: Resume game
+
+---
+
 ## Session: GRE Word Review - No Repetition and Completion Detection (2025-10-19)
 
 ### Prompt: Prevent Word Repetition and Show End Dialog
