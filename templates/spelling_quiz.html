@@ -1548,7 +1548,7 @@
             const html = `
                 <div style="text-align: center; padding: 60px 40px;">
                     <h2 style="font-size: 36px; margin-bottom: 30px;">⏸️ Game Paused</h2>
-                    <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to resume</p>
+                    <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to resume | <strong>ESC</strong> to return home</p>
                     <p style="font-size: 18px; opacity: 0.8; margin-bottom: 30px;">Time remaining: ${Math.floor(pausedTimeRemaining / 60)}:${Math.floor(pausedTimeRemaining % 60).toString().padStart(2, '0')}</p>
 
                     <div style="background: rgba(255, 255, 255, 0.15); border-radius: 15px; padding: 25px; margin: 30px auto; max-width: 500px; text-align: left;">
@@ -2149,6 +2149,10 @@
                 if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
                     e.preventDefault();
                     resumeGame();
+                } else if (e.key === 'Escape') {
+                    // ESC when paused goes to home
+                    e.preventDefault();
+                    window.location.href = '/';
                 }
                 return;
             }
@@ -2160,8 +2164,10 @@
                 return;
             }
 
+            // ESC pauses the game (first press), then goes home (second press when paused)
             if (e.key === 'Escape') {
-                window.location.href = '/';
+                e.preventDefault();
+                pauseGame();
                 return;
             }
 

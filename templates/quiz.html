@@ -783,7 +783,7 @@
 <body>
     <div class="pause-overlay" id="pauseOverlay">
         <div class="pause-message">⏸️ PAUSED</div>
-        <div class="pause-hint">Press SPACE to resume</div>
+        <div class="pause-hint">Press SPACE to resume | ESC to return home</div>
     </div>
 
     <div class="quiz-content" id="quizContent">
@@ -2005,6 +2005,19 @@
                 return;
             }
 
+            // Check if game is paused
+            if (isPaused) {
+                if (event.key === ' ' || event.code === 'Space' || event.key === 'Enter') {
+                    event.preventDefault();
+                    togglePause();
+                } else if (event.key === 'Escape') {
+                    // ESC when paused goes to home
+                    event.preventDefault();
+                    window.location.href = '/';
+                }
+                return;
+            }
+
             // Spacebar selects current choice if answers are enabled, otherwise pause/resume
             if (event.key === ' ' || event.code === 'Space') {
                 event.preventDefault();
@@ -2018,15 +2031,12 @@
                 return;
             }
 
-            // Escape key to abandon round
+            // ESC pauses the game (first press), then goes home (second press when paused)
             if (event.key === 'Escape') {
                 event.preventDefault();
-                abandonRound();
+                togglePause();
                 return;
             }
-
-            // Other keys don't work when paused
-            if (isPaused) return;
 
             const buttons = document.querySelectorAll('.choice-btn');
 
