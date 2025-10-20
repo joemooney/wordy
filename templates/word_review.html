@@ -573,6 +573,7 @@
         let timerInterval = null;
         let wordsReviewed = 0;
         let targetWordCount = 0;
+        let wordsShownThisSession = new Set(); // Track words already shown
 
         // Load saved data from localStorage
         function loadLocalStorage() {
@@ -624,6 +625,7 @@
             currentWordIndex = 0;
             totalWords = 0;
             reviewStartTime = Date.now(); // For elapsed time tracking
+            wordsShownThisSession.clear(); // Reset words shown tracker
 
             // Hide start modal, show review container
             document.getElementById('startReviewModal').classList.remove('show');
@@ -909,7 +911,7 @@
 
         // Load next word that matches the filter
         async function loadNextFilteredWord() {
-            const maxAttempts = 200; // Prevent infinite loop
+            const maxAttempts = 300; // Increased to handle exhaustive searches
             let attempts = 0;
 
             while (attempts < maxAttempts) {
@@ -920,11 +922,13 @@
                     return;
                 }
 
-                if (matchesFilter(newWord.word)) {
+                // Check if word matches filter AND hasn't been shown this session
+                if (matchesFilter(newWord.word) && !wordsShownThisSession.has(newWord.word)) {
                     words.push(newWord);
                     currentWord = newWord;
                     totalWords++;
                     currentWordIndex = words.length - 1;
+                    wordsShownThisSession.add(newWord.word); // Mark as shown
                     displayWord();
                     return;
                 }
@@ -932,9 +936,38 @@
                 attempts++;
             }
 
-            // If we couldn't find a matching word after many attempts
-            const content = document.getElementById('content');
-            content.innerHTML = '<div class="error">No words found matching this filter. Try a different filter or settings.</div>';
+            // If we couldn't find a new word after many attempts, all matching words have been shown
+            endReviewAllWordsComplete();
+        }
+
+        // End review because all matching words have been shown
+        function endReviewAllWordsComplete() {
+            reviewActive = false;
+
+            // Stop timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Hide review container
+            document.getElementById('reviewContainer').classList.add('review-hidden');
+
+            // Show stats with special message
+            const reviewStats = document.getElementById('reviewStats');
+            let statsHTML = '<p style="font-size: 20px; margin-bottom: 15px;">🎉 <strong>All Matching Words Completed!</strong></p>';
+            statsHTML += `<p><strong>Words Reviewed:</strong> ${wordsReviewed}</p>`;
+
+            const elapsed = Date.now() - reviewStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            statsHTML += `<p><strong>Time Elapsed:</strong> ${minutes}:${seconds.toString().padStart(2, '0')}</p>`;
+            statsHTML += `<p style="margin-top: 15px; font-size: 14px; opacity: 0.9;">You've reviewed all words matching your selected filters!</p>`;
+
+            reviewStats.innerHTML = statsHTML;
+
+            // Show review complete modal
+            document.getElementById('reviewCompleteModal').classList.add('show');
         }
 
         // Keyboard navigation
