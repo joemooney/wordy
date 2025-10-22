@@ -827,6 +827,9 @@
         };
         let currentWordResult = null;
 
+        // Track used words in current game to prevent repeats
+        let usedWords = new Set();
+
         // Letter timer functions
         function startLetterTimer() {
             stopLetterTimer();
@@ -1161,6 +1164,7 @@
             revealedIndices.clear();
             currentPosition = 0;
             usedHelpThisWord = false;
+            usedWords.clear(); // Reset used words for new game
 
             updateScoreDisplay();
             updateWordsCompletedDisplay();
@@ -1299,6 +1303,7 @@
             revealedIndices.clear();
             currentPosition = 0;
             usedHelpThisWord = false;
+            usedWords.clear(); // Reset used words for new game
 
             // Update displays
             updateScoreDisplay();
@@ -2091,6 +2096,32 @@
         }
 
         async function loadNextWord() {
+            // Keep fetching until we get a word we haven't used yet
+            let attempts = 0;
+            const maxAttempts = 50; // Prevent infinite loop
+
+            while (attempts < maxAttempts) {
+                const wordData = await fetchWord();
+                if (wordData) {
+                    const wordText = wordData.word.toLowerCase();
+
+                    // Check if we've already used this word
+                    if (!usedWords.has(wordText)) {
+                        usedWords.add(wordText);
+                        currentWord = wordData;
+                        displayWord();
+                        return;
+                    }
+                    // If word was already used, try again
+                    attempts++;
+                } else {
+                    // Failed to fetch word
+                    return;
+                }
+            }
+
+            // If we couldn't find a new word after max attempts, just use whatever we got
+            // (This means we've likely used most/all words)
             const wordData = await fetchWord();
             if (wordData) {
                 currentWord = wordData;
