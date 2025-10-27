@@ -92,24 +92,22 @@ def load_trivia_questions():
 # Load trivia questions
 TRIVIA_CATEGORIES = load_trivia_questions()
 
-# Load CERF words for letter grid game
-def load_cerf_words(filename='ENGLISH_CERF_WORDS.csv'):
-    """Load CERF words from CSV file."""
+# Load words for letter grid game
+def load_grid_words(filename='wordlist.txt'):
+    """Load words from wordlist file."""
     words = []
     try:
         with open(filename, 'r', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            next(reader)  # Skip header
-            for row in reader:
-                if len(row) >= 2:
-                    word = row[0].strip().lower()
-                    if len(word) >= 3:  # Only words with 3+ letters
-                        words.append(word)
+            for line in f:
+                word = line.strip().lower()
+                if len(word) >= 3 and word.isalpha():  # Only words with 3+ letters, alphabetic only
+                    words.append(word)
     except FileNotFoundError:
         print("Warning: {} not found".format(filename))
     return words
 
-CERF_WORDS = set(load_cerf_words())
+GRID_WORDS = set(load_grid_words())
+print("Loaded {} words for Letter Grid game from wordlist.txt".format(len(GRID_WORDS)))
 
 def find_words_from_letters(letters):
     """Find all valid words that can be formed from the given letters."""
@@ -118,7 +116,7 @@ def find_words_from_letters(letters):
     letter_counts = Counter(letters_lower)
     valid_words = []
 
-    for word in CERF_WORDS:
+    for word in GRID_WORDS:
         word_counts = Counter(word)
         # Check if word can be formed from available letters
         if all(word_counts[char] <= letter_counts[char] for char in word_counts):
