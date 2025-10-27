@@ -80,12 +80,12 @@ def load_trivia_questions():
                     })
 
         except Exception as e:
-            print(f"Error loading {csv_file}: {e}")
+            print("Error loading {}: {}".format(csv_file, e))
             continue
 
         if questions:
             categories[category_name] = questions
-            print(f"Loaded {len(questions)} questions for category: {category_name}")
+            print("Loaded {} questions for category: {}".format(len(questions), category_name))
 
     return categories
 
@@ -119,7 +119,7 @@ def save_stats(stats):
         with open(STATS_FILE, 'w', encoding='utf-8') as f:
             json.dump(stats, f, indent=2)
     except IOError as e:
-        print(f"Error saving stats: {e}")
+        print("Error saving stats: {}".format(e))
 
 def get_user_id():
     """Get or create a user ID for this session."""
@@ -658,8 +658,19 @@ def search_dictionary():
     return jsonify({'words': results, 'total': len(results), 'query': query})
 
 if __name__ == '__main__':
+    import socket
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+
     print("Starting Wordy Quiz Application...")
-    print(f"Loaded {len(WORDS)} GRE vocabulary words")
-    print(f"Loaded {len(TRIVIA_CATEGORIES)} trivia categories with {sum(len(q) for q in TRIVIA_CATEGORIES.values())} questions")
-    print("Open your browser to: http://localhost:5000")
+    print("Loaded {} GRE vocabulary words".format(len(WORDS)))
+    print("Loaded {} trivia categories with {} questions".format(
+        len(TRIVIA_CATEGORIES),
+        sum(len(q) for q in TRIVIA_CATEGORIES.values())
+    ))
+    print("\n" + "="*50)
+    print("Server is running and accessible at:")
+    print("  Local:   http://localhost:5000")
+    print("  Network: http://{}:5000".format(local_ip))
+    print("="*50 + "\n")
     app.run(debug=True, host='0.0.0.0', port=5000)
