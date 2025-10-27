@@ -545,7 +545,7 @@
         </div>
 
         <div class="keyboard-hints">
-            <strong>Keyboard shortcuts:</strong> SPACE = Reveal / Next | ← → = Navigate | 1/2/3 = Set Familiarity | + = Favorite | - = Remove | ESC = End Review
+            <strong>Keyboard shortcuts:</strong> SPACE or CLICK = Reveal / Next | ← → = Navigate | 1/2/3 = Set Familiarity | + = Favorite | - = Remove | ESC = End Review
         </div>
     </div>
 
@@ -802,7 +802,7 @@
                     <div class="word">${currentWord.word}</div>
                     <div class="definition-container" id="definitionContainer">
                         <div class="definition blurred" id="definition">${currentWord.definition}</div>
-                        <div class="reveal-hint" id="revealHint">Click or press SPACE to reveal</div>
+                        <div class="reveal-hint" id="revealHint">Click/tap or press SPACE to reveal</div>
                     </div>
                 </div>
             `;
@@ -816,9 +816,13 @@
             definitionContainer.addEventListener('click', revealDefinition);
         }
 
-        // Reveal definition
+        // Reveal definition or go to next word
         function revealDefinition() {
-            if (isRevealed) return;
+            if (isRevealed) {
+                // If already revealed, go to next word
+                nextWord();
+                return;
+            }
 
             const definition = document.getElementById('definition');
             const revealHint = document.getElementById('revealHint');
