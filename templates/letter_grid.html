@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Grid - Wordy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .left-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 30px auto;
+            max-width: 400px;
+        }
+
+        .letter-tile {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border: 3px solid #ccc;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .letter-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            border-color: #667eea;
+        }
+
+        .letter-tile.selected {
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            color: white;
+            border-color: white;
+            transform: scale(0.95);
+        }
+
+        .letter-tile:active {
+            transform: scale(0.9);
+        }
+
+        .current-word-container {
+            text-align: center;
+            margin: 30px 0;
+            min-height: 80px;
+        }
+
+        .current-word {
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-word.gold {
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .current-word.error {
+            color: #ff4444;
+        }
+
+        .word-info {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #28a745, #20c997);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+        }
+
+        .btn-info {
+            background: linear-gradient(145deg, #17a2b8, #138496);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .right-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats-section {
+            margin-bottom: 25px;
+        }
+
+        .stats-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .found-words-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .found-words-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .found-words-list {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .word-item {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .word-text {
+            font-weight: 600;
+        }
+
+        .word-length {
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 24px;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 968px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+
+            .right-panel {
+                order: -1;
+            }
+
+            h1 {
+                font-size: 36px;
+            }
+
+            .letter-tile {
+                font-size: 28px;
+            }
+
+            .current-word {
+                font-size: 36px;
+            }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .letter-tile {
+                font-size: 32px;
+            }
+
+            .btn {
+                padding: 18px 35px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-btn">← Home</a>
+
+    <div class="container">
+        <header>
+            <h1>🔤 Letter Grid</h1>
+            <p class="subtitle">Find all the words you can make from these 9 letters!</p>
+        </header>
+
+        <div id="loadingScreen" class="loading">
+            Loading game...
+        </div>
+
+        <div id="gameScreen" style="display: none;">
+            <div class="game-container">
+                <div class="left-panel">
+                    <div class="letter-grid" id="letterGrid">
+                        <!-- Letters will be inserted here -->
+                    </div>
+
+                    <div class="current-word-container">
+                        <div class="current-word" id="currentWord">&nbsp;</div>
+                        <div class="word-info" id="wordInfo">&nbsp;</div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-secondary" onclick="clearWord()" id="clearBtn">Clear</button>
+                        <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" disabled>Submit</button>
+                        <button class="btn btn-info" onclick="newGame()">New Game</button>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="stats-section">
+                        <div class="stats-title">📊 Progress</div>
+                        <div class="stat-item">
+                            <span class="stat-label">Words Found:</span>
+                            <span class="stat-value" id="wordsFound">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Words:</span>
+                            <span class="stat-value" id="totalWords">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Words Remaining:</span>
+                            <span class="stat-value" id="wordsRemaining">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="found-words-section">
+                        <div class="found-words-title">✅ Found Words</div>
+                        <div class="found-words-list" id="foundWordsList">
+                            <p style="opacity: 0.6; text-align: center;">No words found yet...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentLetters = [];
+        let selectedIndices = [];
+        let currentWord = '';
+        let validWords = [];
+        let foundWords = new Set();
+        let showMatchCount = true; // Option to show matching words count
+
+        // Initialize game
+        async function init() {
+            await newGame();
+        }
+
+        async function newGame() {
+            try {
+                const response = await fetch('/letter-grid/new-game', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+
+                const data = await response.json();
+                currentLetters = data.letters;
+                validWords = data.words.map(w => w.toLowerCase());
+                foundWords.clear();
+                selectedIndices = [];
+                currentWord = '';
+
+                renderGrid();
+                updateStats();
+                updateCurrentWord();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('gameScreen').style.display = 'block';
+            } catch (error) {
+                console.error('Error starting new game:', error);
+                document.getElementById('loadingScreen').innerHTML = 'Error loading game. Please refresh.';
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('letterGrid');
+            grid.innerHTML = '';
+
+            currentLetters.forEach((letter, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.textContent = letter;
+                tile.dataset.index = index;
+                tile.onclick = () => selectLetter(index);
+                grid.appendChild(tile);
+            });
+        }
+
+        function selectLetter(index) {
+            // Toggle selection
+            const tileIndex = selectedIndices.indexOf(index);
+            if (tileIndex > -1) {
+                selectedIndices.splice(tileIndex, 1);
+            } else {
+                selectedIndices.push(index);
+            }
+
+            updateSelectedTiles();
+            updateCurrentWord();
+        }
+
+        function updateSelectedTiles() {
+            document.querySelectorAll('.letter-tile').forEach((tile, index) => {
+                if (selectedIndices.includes(index)) {
+                    tile.classList.add('selected');
+                } else {
+                    tile.classList.remove('selected');
+                }
+            });
+        }
+
+        function updateCurrentWord() {
+            currentWord = selectedIndices.map(i => currentLetters[i]).join('');
+            const wordDisplay = document.getElementById('currentWord');
+            const wordInfo = document.getElementById('wordInfo');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (currentWord.length === 0) {
+                wordDisplay.innerHTML = '&nbsp;';
+                wordInfo.innerHTML = '&nbsp;';
+                wordDisplay.className = 'current-word';
+                submitBtn.disabled = true;
+                return;
+            }
+
+            const lowerWord = currentWord.toLowerCase();
+
+            // Check if already found
+            if (foundWords.has(lowerWord)) {
+                wordDisplay.textContent = currentWord;
+                wordDisplay.className = 'current-word gold';
+                wordInfo.textContent = '✓ Already found!';
+                submitBtn.disabled = true;
+            }
+            // Check if it's a valid word
+            else if (validWords.includes(lowerWord)) {
+                wordDisplay.textContent = currentWord;
+                wordDisplay.className = 'current-word';
+                submitBtn.disabled = false;
+
+                if (showMatchCount) {
+                    const matchCount = getMatchingWordsCount(lowerWord);
+                    wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+                } else {
+                    wordInfo.innerHTML = '&nbsp;';
+                }
+            }
+            // Not a valid word
+            else {
+                wordDisplay.textContent = currentWord;
+                wordDisplay.className = 'current-word';
+                submitBtn.disabled = currentWord.length < 3;
+
+                if (showMatchCount && currentWord.length >= 2) {
+                    const matchCount = getMatchingWordsCount(lowerWord);
+                    wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+                } else {
+                    wordInfo.innerHTML = '&nbsp;';
+                }
+            }
+        }
+
+        function getMatchingWordsCount(partial) {
+            // Count how many valid words start with or contain these letters
+            return validWords.filter(word => {
+                // Check if word can be formed with letters typed so far
+                const partialLetters = partial.toLowerCase().split('');
+                const wordLetters = word.split('');
+                return partialLetters.every(letter => wordLetters.includes(letter));
+            }).length;
+        }
+
+        function clearWord() {
+            selectedIndices = [];
+            updateSelectedTiles();
+            updateCurrentWord();
+        }
+
+        function submitWord() {
+            const lowerWord = currentWord.toLowerCase();
+
+            if (lowerWord.length < 3) {
+                showError('Word must be at least 3 letters!');
+                return;
+            }
+
+            if (foundWords.has(lowerWord)) {
+                showError('Already found!');
+                return;
+            }
+
+            if (validWords.includes(lowerWord)) {
+                // Correct word!
+                foundWords.add(lowerWord);
+                addFoundWord(lowerWord);
+                updateStats();
+                clearWord();
+
+                // Check if all words found
+                if (foundWords.size === validWords.length) {
+                    setTimeout(() => {
+                        alert('🎉 Congratulations! You found all ' + validWords.length + ' words!');
+                    }, 300);
+                }
+            } else {
+                // Wrong word
+                showError('Not a valid word!');
+            }
+        }
+
+        function showError(message) {
+            const wordDisplay = document.getElementById('currentWord');
+            const wordInfo = document.getElementById('wordInfo');
+
+            wordDisplay.textContent = currentWord + ' ❌';
+            wordDisplay.className = 'current-word error';
+            wordInfo.textContent = message;
+
+            setTimeout(() => {
+                updateCurrentWord();
+            }, 1500);
+        }
+
+        function addFoundWord(word) {
+            const list = document.getElementById('foundWordsList');
+
+            if (foundWords.size === 1) {
+                list.innerHTML = '';
+            }
+
+            const wordItem = document.createElement('div');
+            wordItem.className = 'word-item';
+            wordItem.innerHTML = `
+                <span class="word-text">${word.toUpperCase()}</span>
+                <span class="word-length">${word.length} letters</span>
+            `;
+            list.insertBefore(wordItem, list.firstChild);
+        }
+
+        function updateStats() {
+            const found = foundWords.size;
+            const total = validWords.length;
+            const remaining = total - found;
+            const percent = total > 0 ? Math.round((found / total) * 100) : 0;
+
+            document.getElementById('wordsFound').textContent = found;
+            document.getElementById('totalWords').textContent = total;
+            document.getElementById('wordsRemaining').textContent = remaining;
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressFill').textContent = percent + '%';
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (!document.getElementById('submitBtn').disabled) {
+                    submitWord();
+                }
+            } else if (e.key === 'Escape') {
+                clearWord();
+            } else if (e.key === 'Backspace') {
+                if (selectedIndices.length > 0) {
+                    selectedIndices.pop();
+                    updateSelectedTiles();
+                    updateCurrentWord();
+                }
+            } else if (/^[a-zA-Z]$/.test(e.key)) {
+                // Find first unselected tile with this letter
+                const letter = e.key.toUpperCase();
+                for (let i = 0; i < currentLetters.length; i++) {
+                    if (currentLetters[i] === letter && !selectedIndices.includes(i)) {
+                        selectLetter(i);
+                        break;
+                    }
+                }
+            }
+        });
+
+        // Initialize game on load
+        init();
+    </script>
+</body>
+</html>
