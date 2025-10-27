@@ -314,6 +314,8 @@
 
         .key:active {
             transform: translateY(0);
+            background: rgba(118, 75, 162, 1);
+            box-shadow: 0 0 15px rgba(118, 75, 162, 0.6);
         }
 
         .key.space {
@@ -322,6 +324,26 @@
 
         .key.wide {
             min-width: 90px;
+        }
+
+        /* Better touch targets for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .key {
+                padding: 20px;
+                min-width: 55px;
+                font-size: 20px;
+            }
+
+            .icon-btn {
+                min-width: 60px;
+                min-height: 60px;
+            }
+
+            .letter-box {
+                width: 45px;
+                height: 55px;
+                font-size: 26px;
+            }
         }
 
         /* Modal styles */
@@ -829,6 +851,13 @@
 
         // Track used words in current game to prevent repeats
         let usedWords = new Set();
+
+        // Touch device detection
+        function isTouchDevice() {
+            return (('ontouchstart' in window) ||
+                   (navigator.maxTouchPoints > 0) ||
+                   (navigator.msMaxTouchPoints > 0));
+        }
 
         // Letter timer functions
         function startLetterTimer() {
@@ -1523,11 +1552,18 @@
 
         // Show start screen
         function showStartScreen() {
+            const isTouch = isTouchDevice();
+            const startInstruction = isTouch
+                ? '<p style="font-size: 24px; margin-bottom: 20px;">Tap the <strong>START</strong> button to begin</p>'
+                : '<p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to begin</p>';
+
             const html = `
                 <div style="text-align: center; padding: 60px 40px;">
                     <h2 style="font-size: 36px; margin-bottom: 30px;">Ready to Start?</h2>
-                    <p style="font-size: 24px; margin-bottom: 20px;">Press <strong>ENTER</strong> or <strong>SPACE</strong> to begin</p>
+                    ${startInstruction}
+                    ${isTouch ? '<button onclick="beginGame()" class="modal-btn" style="max-width: 300px; margin: 20px auto; font-size: 24px; padding: 20px;">START GAME</button>' : ''}
                     <p style="font-size: 18px; opacity: 0.8; margin-bottom: 30px;">You'll have ${settings.gameTimeLimit} seconds to spell as many words as possible!</p>
+                    ${isTouch ? '<p style="font-size: 16px; opacity: 0.8; margin-bottom: 20px;">📱 Touch keyboard will appear automatically!</p>' : ''}
 
                     <div style="background: rgba(255, 255, 255, 0.15); border-radius: 15px; padding: 25px; margin: 30px auto; max-width: 500px; text-align: left;">
                         <h3 style="font-size: 20px; margin-bottom: 15px; text-align: center; color: white;">🎯 Scoring System</h3>
@@ -1677,7 +1713,7 @@
                 <div class="keyboard-container" id="keyboardContainer">
                     <div class="keyboard-header">
                         <h3>Virtual Keyboard</h3>
-                        <button class="keyboard-close" onclick="hideKeyboard()">Close</button>
+                        <button class="keyboard-close" onclick="hideKeyboard()">Hide ▼</button>
                     </div>
                     <div class="keyboard-row">
                         <button class="key" onclick="handleVirtualKey('Q')">Q</button>
@@ -1713,6 +1749,7 @@
                     </div>
                     <div class="keyboard-row">
                         <button class="key wide" onclick="handleVirtualKey('Backspace')">⌫ Back</button>
+                        <button class="key" onclick="showHint()" style="background: rgba(255, 193, 7, 0.6);">💡 Hint</button>
                         <button class="key space" onclick="handleVirtualKey(' ')">SPACE (Reveal)</button>
                     </div>
                 </div>
@@ -1722,6 +1759,14 @@
 
             // Reset hint state
             hideHint();
+
+            // Auto-show keyboard on touch devices
+            if (isTouchDevice()) {
+                const keyboard = document.getElementById('keyboardContainer');
+                if (keyboard) {
+                    keyboard.classList.add('show');
+                }
+            }
         }
 
         function revealInitialLetters(word) {
@@ -2342,6 +2387,11 @@
             updateLetterTimerDisplay();
             updateGameTimerDisplay();
             updateWordsCompletedDisplay();
+
+            // Add visual indicator for touch devices
+            if (isTouchDevice()) {
+                document.body.classList.add('touch-device');
+            }
 
             // Check round status
             try {
