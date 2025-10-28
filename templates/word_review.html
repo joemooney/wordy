@@ -116,6 +116,7 @@
             font-weight: bold;
             margin-bottom: 30px;
             letter-spacing: 2px;
+            word-break: break-word;
         }
 
         .definition-container {
@@ -602,6 +603,19 @@
                 font-size: 14px;
             }
         }
+
+        /* Responsive word sizing for smaller screens */
+        @media (max-width: 600px) {
+            .word {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .word {
+                font-size: 28px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -961,7 +975,7 @@
 
             content.innerHTML = `
                 <div class="word-display">
-                    <div class="word">${currentWord.word}</div>
+                    <div class="word" id="wordElement">${currentWord.word}</div>
                     <div class="definition-container" id="definitionContainer">
                         <div class="definition blurred" id="definition">${currentWord.definition}</div>
                         <div class="reveal-hint" id="revealHint">Click/tap or press SPACE to reveal</div>
@@ -972,10 +986,41 @@
             isRevealed = false;
             updateWordCounter();
             updateButtonStates();
+            adjustWordSize();
 
             // Add click listener to definition container
             const definitionContainer = document.getElementById('definitionContainer');
             definitionContainer.addEventListener('click', revealDefinition);
+        }
+
+        // Dynamically adjust word size based on length
+        function adjustWordSize() {
+            const wordElement = document.getElementById('wordElement');
+            if (!wordElement || !currentWord) return;
+
+            const wordLength = currentWord.word.length;
+            const screenWidth = window.innerWidth;
+
+            // Base font size
+            let fontSize = 48;
+
+            // Adjust for screen width
+            if (screenWidth <= 400) {
+                fontSize = 28;
+            } else if (screenWidth <= 600) {
+                fontSize = 36;
+            }
+
+            // Further adjust for long words
+            if (wordLength > 15) {
+                fontSize = Math.min(fontSize, fontSize * (15 / wordLength));
+            } else if (wordLength > 12) {
+                fontSize = fontSize * 0.85;
+            } else if (wordLength > 10) {
+                fontSize = fontSize * 0.95;
+            }
+
+            wordElement.style.fontSize = fontSize + 'px';
         }
 
         // Reveal definition or go to next word
@@ -1229,6 +1274,13 @@
             loadLocalStorage();
             // App starts with Start Review modal visible
             // No need to load words until user clicks Start Review
+
+            // Adjust word size on window resize (e.g., device rotation)
+            window.addEventListener('resize', () => {
+                if (currentWord) {
+                    adjustWordSize();
+                }
+            });
         }
 
         // Start the app
