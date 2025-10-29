@@ -129,8 +129,17 @@ def find_words_from_letters(letters):
 
     return valid_words
 
-def generate_letter_grid():
-    """Generate a 3x3 grid of letters from a random 9-letter word."""
+def generate_letter_grid(max_words=150, max_attempts=100):
+    """Generate a 3x3 grid of letters from a random 9-letter word.
+
+    Args:
+        max_words: Maximum number of valid words allowed (default 150)
+        max_attempts: Maximum number of 9-letter words to try (default 100)
+
+    Returns:
+        tuple: (letters, valid_words) where letters is a list of 9 uppercase letters
+               and valid_words is a list of valid words that can be formed
+    """
     if not NINE_LETTER_WORDS:
         # Fallback if no 9-letter words available
         fallback_letters = ['S', 'T', 'A', 'R', 'E', 'I', 'N', 'O', 'D']
@@ -138,18 +147,29 @@ def generate_letter_grid():
         valid_words = find_words_from_letters(fallback_letters)
         return fallback_letters, valid_words
 
-    # Pick a random 9-letter word
-    base_word = random.choice(NINE_LETTER_WORDS)
+    # Try to find a 9-letter word that generates <= max_words valid words
+    for attempt in range(max_attempts):
+        # Pick a random 9-letter word
+        base_word = random.choice(NINE_LETTER_WORDS)
 
-    # Use the letters from this word for the grid
-    letters = [letter.upper() for letter in base_word]
+        # Use the letters from this word for the grid
+        letters = [letter.upper() for letter in base_word]
 
-    # Shuffle the letters so it's not obvious what the 9-letter word is
-    random.shuffle(letters)
+        # Shuffle the letters so it's not obvious what the 9-letter word is
+        random.shuffle(letters)
 
-    # Find all valid words from these letters (will include the base word)
-    valid_words = find_words_from_letters(letters)
+        # Find all valid words from these letters (will include the base word)
+        valid_words = find_words_from_letters(letters)
 
+        # Check if this word meets our criteria
+        if len(valid_words) <= max_words:
+            print("Found suitable grid with {} words (attempt {}/{})".format(
+                len(valid_words), attempt + 1, max_attempts))
+            return letters, valid_words
+
+    # If we couldn't find a suitable word after max_attempts, return the last one
+    print("Warning: Could not find grid with <= {} words after {} attempts. Using grid with {} words.".format(
+        max_words, max_attempts, len(valid_words)))
     return letters, valid_words
 
 # Stats database functions
