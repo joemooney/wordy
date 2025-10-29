@@ -657,13 +657,8 @@
         }
 
         function deleteWord(word) {
-            if (!confirm(`Exclude "${word.toUpperCase()}" from future games?`)) {
-                return;
-            }
-
             deletedWords.add(word.toLowerCase());
             saveDeletedWords();
-            alert(`"${word.toUpperCase()}" will be excluded from future games.`);
         }
 
         async function saveDeletedWords() {
@@ -778,7 +773,7 @@
                 wordItem.innerHTML = `
                     <span class="word-text">${word.toUpperCase()}</span>
                     <span class="word-length">${word.length} letters</span>
-                    <button class="btn-trash" onclick="deleteWord('${word}')" title="Exclude from future games">🗑️</button>
+                    <button class="btn-trash" onclick="deleteWord('${word}')" title="Exclude from future games">✕</button>
                 `;
                 list.appendChild(wordItem);
             });
