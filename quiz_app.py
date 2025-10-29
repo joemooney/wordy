@@ -663,6 +663,38 @@ def new_letter_grid_game():
         'words': valid_words  # Include for validation on client side
     })
 
+@app.route('/letter-grid/delete-word', methods=['POST'])
+def delete_letter_grid_word():
+    """Save deleted words to file."""
+    try:
+        data = request.json or {}
+        words = data.get('words', [])
+
+        # Write to words_deleted.txt
+        with open('words_deleted.txt', 'w', encoding='utf-8') as f:
+            for word in words:
+                f.write(word + '\n')
+
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print("Error saving deleted words: {}".format(e))
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/letter-grid/get-deleted-words')
+def get_deleted_words():
+    """Get list of deleted words."""
+    try:
+        if not os.path.exists('words_deleted.txt'):
+            return jsonify({'words': []})
+
+        with open('words_deleted.txt', 'r', encoding='utf-8') as f:
+            words = [line.strip() for line in f if line.strip()]
+
+        return jsonify({'words': words})
+    except Exception as e:
+        print("Error loading deleted words: {}".format(e))
+        return jsonify({'words': []}), 500
+
 # Dictionary browser routes
 @app.route('/dictionary')
 def dictionary():

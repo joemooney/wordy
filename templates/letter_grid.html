@@ -273,6 +273,33 @@
             font-size: 14px;
         }
 
+        .btn-trash {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-trash:hover {
+            background: rgba(255, 0, 0, 0.4);
+            transform: scale(1.1);
+        }
+
+        .btn-success {
+            background: rgba(40, 167, 69, 0.8);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background: rgba(40, 167, 69, 1);
+            transform: translateY(-2px);
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -361,6 +388,8 @@
                     <div class="controls">
                         <button class="btn btn-secondary" onclick="clearWord()" id="clearBtn">Clear</button>
                         <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" disabled>Submit</button>
+                        <button class="btn btn-success" onclick="resolveWord()" id="resolveBtn" style="display: none;">Resolve</button>
+                        <button class="btn btn-info" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
                         <button class="btn btn-info" onclick="newGame()">New Game</button>
                     </div>
                 </div>
@@ -403,10 +432,13 @@
         let currentWord = '';
         let validWords = [];
         let foundWords = new Set();
-        let showMatchCount = true; // Option to show matching words count
+        let deletedWords = new Set(); // Words excluded from future games
+        let hintEnabled = false; // Whether hint mode is enabled
+        let possibleMatches = []; // Current possible word matches
 
         // Initialize game
         async function init() {
+            await loadDeletedWords();
             await newGame();
         }
 
@@ -502,11 +534,16 @@
                 wordDisplay.className = 'current-word';
                 submitBtn.disabled = false;
 
-                if (showMatchCount) {
-                    const matchCount = getMatchingWordsCount(lowerWord);
+                if (hintEnabled) {
+                    possibleMatches = getMatchingWords(lowerWord);
+                    const matchCount = possibleMatches.length;
                     wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+
+                    // Show resolve button if only one match
+                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
                 } else {
                     wordInfo.innerHTML = '&nbsp;';
+                    document.getElementById('resolveBtn').style.display = 'none';
                 }
             }
             // Not a valid word
@@ -515,23 +552,109 @@
                 wordDisplay.className = 'current-word';
                 submitBtn.disabled = currentWord.length < 3;
 
-                if (showMatchCount && currentWord.length >= 2) {
-                    const matchCount = getMatchingWordsCount(lowerWord);
+                if (hintEnabled && currentWord.length >= 2) {
+                    possibleMatches = getMatchingWords(lowerWord);
+                    const matchCount = possibleMatches.length;
                     wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+
+                    // Show resolve button if only one match
+                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
                 } else {
                     wordInfo.innerHTML = '&nbsp;';
+                    document.getElementById('resolveBtn').style.display = 'none';
                 }
             }
         }
 
-        function getMatchingWordsCount(partial) {
-            // Count how many valid words start with or contain these letters
+        function getMatchingWords(partial) {
+            // Find all valid words that can be formed with the selected letters
+            const partialLower = partial.toLowerCase();
             return validWords.filter(word => {
-                // Check if word can be formed with letters typed so far
-                const partialLetters = partial.toLowerCase().split('');
-                const wordLetters = word.split('');
-                return partialLetters.every(letter => wordLetters.includes(letter));
-            }).length;
+                // Check if word starts with the partial word
+                if (!word.startsWith(partialLower)) {
+                    return false;
+                }
+                // Check if word hasn't been found yet
+                if (foundWords.has(word)) {
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        function toggleHint() {
+            hintEnabled = !hintEnabled;
+            const hintBtn = document.getElementById('hintBtn');
+            hintBtn.textContent = hintEnabled ? '💡 Hint: ON' : '💡 Hint';
+            hintBtn.style.backgroundColor = hintEnabled ? '#28a745' : '';
+            updateCurrentWord();
+        }
+
+        function resolveWord() {
+            if (possibleMatches.length !== 1) {
+                return;
+            }
+
+            const targetWord = possibleMatches[0];
+            // Clear current selection
+            selectedIndices = [];
+
+            // Select each letter needed to complete the word
+            for (let i = 0; i < targetWord.length; i++) {
+                const letter = targetWord[i].toUpperCase();
+                // Find next unselected tile with this letter
+                for (let j = 0; j < currentLetters.length; j++) {
+                    if (currentLetters[j] === letter && !selectedIndices.includes(j)) {
+                        selectedIndices.push(j);
+                        break;
+                    }
+                }
+            }
+
+            updateSelectedTiles();
+            updateCurrentWord();
+        }
+
+        function deleteWord(word) {
+            if (!confirm(`Exclude "${word.toUpperCase()}" from future games?`)) {
+                return;
+            }
+
+            deletedWords.add(word.toLowerCase());
+            saveDeletedWords();
+            alert(`"${word.toUpperCase()}" will be excluded from future games.`);
+        }
+
+        async function saveDeletedWords() {
+            try {
+                const response = await fetch('/letter-grid/delete-word', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        words: Array.from(deletedWords)
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to save deleted words');
+                }
+            } catch (error) {
+                console.error('Error saving deleted words:', error);
+            }
+        }
+
+        async function loadDeletedWords() {
+            try {
+                const response = await fetch('/letter-grid/get-deleted-words');
+                if (response.ok) {
+                    const data = await response.json();
+                    deletedWords = new Set(data.words || []);
+                }
+            } catch (error) {
+                console.error('Error loading deleted words:', error);
+            }
         }
 
         function clearWord() {
@@ -592,13 +715,32 @@
                 list.innerHTML = '';
             }
 
-            const wordItem = document.createElement('div');
-            wordItem.className = 'word-item';
-            wordItem.innerHTML = `
-                <span class="word-text">${word.toUpperCase()}</span>
-                <span class="word-length">${word.length} letters</span>
-            `;
-            list.insertBefore(wordItem, list.firstChild);
+            // Clear and rebuild the list sorted alphabetically
+            displayFoundWords();
+        }
+
+        function displayFoundWords() {
+            const list = document.getElementById('foundWordsList');
+
+            if (foundWords.size === 0) {
+                list.innerHTML = '<p style="opacity: 0.6; text-align: center;">No words found yet...</p>';
+                return;
+            }
+
+            // Sort words alphabetically
+            const sortedWords = Array.from(foundWords).sort();
+
+            list.innerHTML = '';
+            sortedWords.forEach(word => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.innerHTML = `
+                    <span class="word-text">${word.toUpperCase()}</span>
+                    <span class="word-length">${word.length} letters</span>
+                    <button class="btn-trash" onclick="deleteWord('${word}')" title="Exclude from future games">🗑️</button>
+                `;
+                list.appendChild(wordItem);
+            });
         }
 
         function updateStats() {
