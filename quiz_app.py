@@ -93,7 +93,7 @@ def load_trivia_questions():
 TRIVIA_CATEGORIES = load_trivia_questions()
 
 # Load words for letter grid game
-def load_grid_words(filename='wordlist.txt'):
+def load_grid_words(filename):
     """Load words from wordlist file."""
     words = []
     try:
@@ -106,8 +106,13 @@ def load_grid_words(filename='wordlist.txt'):
         print("Warning: {} not found".format(filename))
     return words
 
-GRID_WORDS = set(load_grid_words())
-print("Loaded {} words for Letter Grid game from wordlist.txt".format(len(GRID_WORDS)))
+wordlist="wordlist_50000.txt"
+GRID_WORDS = set(load_grid_words(wordlist))
+print("Loaded {} words for Letter Grid game from {}".format(len(GRID_WORDS), wordlist))
+
+# Create list of 9-letter words for grid generation
+NINE_LETTER_WORDS = [word for word in GRID_WORDS if len(word) == 9]
+print("Found {} nine-letter words for grid generation".format(len(NINE_LETTER_WORDS)))
 
 def find_words_from_letters(letters):
     """Find all valid words that can be formed from the given letters."""
@@ -125,27 +130,27 @@ def find_words_from_letters(letters):
     return valid_words
 
 def generate_letter_grid():
-    """Generate a 3x3 grid of letters that can form valid words."""
-    # Common letters weighted by frequency
-    letter_pool = 'aaaaaabbccddddeeeeeeeefffggghhhhiiiiiiijkllllmmnnnnnnnooooooooppqrrrrrrsssssstttttttuuuuvvwwxyyyz'
+    """Generate a 3x3 grid of letters from a random 9-letter word."""
+    if not NINE_LETTER_WORDS:
+        # Fallback if no 9-letter words available
+        fallback_letters = ['S', 'T', 'A', 'R', 'E', 'I', 'N', 'O', 'D']
+        random.shuffle(fallback_letters)
+        valid_words = find_words_from_letters(fallback_letters)
+        return fallback_letters, valid_words
 
-    max_attempts = 100
-    for attempt in range(max_attempts):
-        # Generate 9 random letters
-        letters = [random.choice(letter_pool).upper() for _ in range(9)]
+    # Pick a random 9-letter word
+    base_word = random.choice(NINE_LETTER_WORDS)
 
-        # Find valid words from these letters
-        valid_words = find_words_from_letters(letters)
+    # Use the letters from this word for the grid
+    letters = [letter.upper() for letter in base_word]
 
-        # We need at least 10 words for a good game
-        if len(valid_words) >= 10:
-            return letters, valid_words
+    # Shuffle the letters so it's not obvious what the 9-letter word is
+    random.shuffle(letters)
 
-    # Fallback: create a grid with known common letters
-    fallback_letters = ['S', 'T', 'A', 'R', 'E', 'I', 'N', 'O', 'D']
-    random.shuffle(fallback_letters)
-    valid_words = find_words_from_letters(fallback_letters)
-    return fallback_letters, valid_words
+    # Find all valid words from these letters (will include the base word)
+    valid_words = find_words_from_letters(letters)
+
+    return letters, valid_words
 
 # Stats database functions
 def load_stats():
