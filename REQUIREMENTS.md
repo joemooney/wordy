@@ -91,7 +91,8 @@ All system requirements organized by main categories.
   - Selects correct tiles in grid automatically
 - **Show Nine button (🔍):**
   - Reveals the nine-letter base word
-  - Displays in alert dialog
+  - Visually selects tiles in grid to spell the word
+  - Displays word in current word area (same as manual typing)
   - Helpful when stuck or curious about the puzzle solution
 - **Word exclusion:**
   - Trash button (🗑️) on each found word

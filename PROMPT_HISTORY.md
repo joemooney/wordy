@@ -507,11 +507,12 @@ The 150-word limit provides:
    - Modified `/letter-grid/new-game` endpoint to include base_word in response
    - Fallback word generation also returns base word
 
-4. **Frontend Changes** (`templates/letter_grid.html:453, 471, 610-616`):
+4. **Frontend Changes** (`templates/letter_grid.html:453, 471, 610-632`):
    - Added `nineLetterWord` variable to game state
    - Store base_word from API response in `newGame()`
    - Created `showNineLetterWord()` function
-   - Displays word in alert dialog in uppercase
+   - **Updated**: Visually selects tiles in grid to spell the word (was alert dialog)
+   - Clears current selection, finds each letter tile, updates display
 
 5. **CSS Additions** (`templates/letter_grid.html:169-171`):
    - Added `.btn-warning` style with orange gradient
