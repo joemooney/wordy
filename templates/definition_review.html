@@ -140,6 +140,7 @@
             font-weight: bold;
             letter-spacing: 2px;
             transition: filter 0.3s ease;
+            word-break: break-word;
         }
 
         .word.blurred {
@@ -214,6 +215,35 @@
             background: rgba(255, 0, 0, 0.2);
             border-radius: 15px;
             margin-top: 20px;
+        }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .definition {
+                font-size: 22px;
+            }
+
+            .word {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .definition {
+                font-size: 18px;
+            }
+
+            .word {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -328,10 +358,41 @@
             isRevealed = false;
             updateWordCounter();
             updateButtonStates();
+            adjustWordSize();
 
             // Add click listener to word container
             const wordContainer = document.getElementById('wordContainer');
             wordContainer.addEventListener('click', revealWord);
+        }
+
+        // Dynamically adjust word size based on length
+        function adjustWordSize() {
+            const wordElement = document.getElementById('word');
+            if (!wordElement || !currentWord) return;
+
+            const wordLength = currentWord.word.length;
+            const screenWidth = window.innerWidth;
+
+            // Base font size
+            let fontSize = 42;
+
+            // Adjust for screen width
+            if (screenWidth <= 400) {
+                fontSize = 24;
+            } else if (screenWidth <= 600) {
+                fontSize = 32;
+            }
+
+            // Further adjust for long words
+            if (wordLength > 15) {
+                fontSize = Math.min(fontSize, fontSize * (15 / wordLength));
+            } else if (wordLength > 12) {
+                fontSize = fontSize * 0.85;
+            } else if (wordLength > 10) {
+                fontSize = fontSize * 0.95;
+            }
+
+            wordElement.style.fontSize = fontSize + 'px';
         }
 
         // Reveal word
@@ -452,6 +513,13 @@
         // Initialize
         async function init() {
             loadLocalStorage();
+
+            // Adjust word size on window resize (e.g., device rotation)
+            window.addEventListener('resize', () => {
+                if (currentWord) {
+                    adjustWordSize();
+                }
+            });
 
             // Fetch first word
             const firstWord = await fetchWord();
