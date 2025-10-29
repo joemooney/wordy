@@ -608,11 +608,27 @@
         }
 
         function showNineLetterWord() {
-            if (nineLetterWord) {
-                alert(`The nine-letter word is: ${nineLetterWord.toUpperCase()}`);
-            } else {
-                alert('Nine-letter word not available.');
+            if (!nineLetterWord) {
+                return;
             }
+
+            // Clear current selection
+            selectedIndices = [];
+
+            // Select each letter needed to spell the nine-letter word
+            for (let i = 0; i < nineLetterWord.length; i++) {
+                const letter = nineLetterWord[i].toUpperCase();
+                // Find next unselected tile with this letter
+                for (let j = 0; j < currentLetters.length; j++) {
+                    if (currentLetters[j] === letter && !selectedIndices.includes(j)) {
+                        selectedIndices.push(j);
+                        break;
+                    }
+                }
+            }
+
+            updateSelectedTiles();
+            updateCurrentWord();
         }
 
         function resolveWord() {
