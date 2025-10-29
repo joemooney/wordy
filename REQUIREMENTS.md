@@ -18,17 +18,35 @@ All system requirements organized by main categories.
 - Reverse of standard GRE quiz
 - Same scoring and tracking
 
-### GRE Word Review
+### Word Review
 - Self-test mode showing word with hidden definition
-- Click or press SPACE to reveal definition
+- Click/tap or press SPACE to reveal definition
+- Click/tap on revealed definition to advance to next word
 - No scoring, just practice
 - Favorite/remove word functionality
+- Familiarity levels (0-3) for word tracking
+- **Session-based reviews:**
+  - Time-based mode (1-60 minutes)
+  - Word count mode (1-100 words)
+  - Filter by familiarity levels
+  - Favorites-only filter
+  - No word repetition within session
+  - Progress tracking (words reviewed, time elapsed)
+  - Completion dialog when done
+- **Two-stage ESC behavior:**
+  - First ESC: End review (with confirmation)
+  - Second ESC (in modal): Return home
+- **Dynamic word sizing:** Adjusts for long words on small screens
+- **Responsive modals:** Optimized for older iPads and small screens
 
 ### GRE Definition Review
 - Self-test mode showing definition with hidden word
-- Click or press SPACE to reveal word
+- Click/tap or press SPACE to reveal word
+- Click/tap on revealed word to advance to next word
 - No scoring, just practice
 - Favorite/remove word functionality
+- **Dynamic word sizing:** Adjusts for long words on small screens
+- **Responsive design:** Optimized for all screen sizes
 
 ### Spelling Quiz (Main Focus)
 - Type word letter by letter from definition
@@ -40,8 +58,65 @@ All system requirements organized by main categories.
 
 ### Trivia Quiz
 - General knowledge quiz
-- Multiple categories
+- 22 categories (Celebrities, Geography, Music, Movies, etc.)
+- 48,472+ questions from CSV files
+- Multiple choice format (2-4 choices per question)
+- Category selection
 - Score tracking
+
+### Letter Grid
+- **3×3 letter grid word-finding puzzle**
+- **Grid generation:** Based on random 9-letter word (5,137 words available)
+  - Guarantees at least one 9-letter word solution
+  - Letters shuffled to hide the base word
+  - Finds all valid words (3+ letters) from those letters
+- **Word discovery:**
+  - Click/tap tiles to select letters
+  - Build words from available letters
+  - Submit to check validity
+  - Track found words vs. total words
+- **Progress tracking:**
+  - Words found / Total words / Remaining
+  - Percentage completion with progress bar
+  - Found words displayed alphabetically
+- **Hint mode (💡 button):**
+  - Toggle to show match count as you type
+  - Displays "X possible word(s) with these letters"
+  - Only counts words starting with typed letters (not yet found)
+- **Resolve button:**
+  - Appears when hint is ON and exactly 1 match exists
+  - Auto-fills remaining letters to complete the word
+  - Selects correct tiles in grid automatically
+- **Word exclusion:**
+  - Trash button (🗑️) on each found word
+  - Click to exclude word from future games
+  - Confirmation dialog before exclusion
+  - Persists in words_deleted.txt file
+- **Controls:**
+  - Click tiles or use keyboard (letter keys)
+  - Enter to submit, Escape to clear
+  - Backspace to undo last letter
+  - New Game button
+- **Data storage:**
+  - Word list: wordlist_50000.txt (49,301 words)
+  - Deleted words: words_deleted.txt (user-excluded words)
+- **Responsive design:**
+  - Touch-friendly for iPad/iPhone
+  - Viewport optimized to prevent zoom on iPhone
+
+### Dictionary Browser
+- Browse all 994 GRE words
+- **Search functionality:**
+  - Search by word or definition
+  - Fuzzy matching algorithm
+  - Ranking by relevance (exact, starts-with, contains)
+- **Keyboard navigation:**
+  - Arrow keys to navigate
+  - Type to search
+- **Display:**
+  - Alphabetically sorted
+  - Word + definition pairs
+  - Total word count
 
 ---
 
@@ -220,12 +295,30 @@ All system requirements organized by main categories.
 - Session management (if needed)
 
 ### Frontend
-- Responsive design
-- Mobile-friendly
-- Clean, modern UI with gradients
-- Real-time updates
-- Modal dialogs
-- Virtual keyboard support
+- **Responsive design:**
+  - Media queries for screen height (≤800px, ≤700px, ≤600px)
+  - Media queries for screen width (≤600px, ≤400px)
+  - Dynamic modal sizing for older iPads
+  - Compact spacing and typography for small screens
+- **Touch device support:**
+  - Auto-detection of touch devices (iPad, iPhone, Android)
+  - Virtual keyboard for Spelling Quiz
+  - Touch-optimized button sizes (55px min-width, 20px padding)
+  - Viewport fixes to prevent auto-zoom on iPhone
+- **Dynamic content sizing:**
+  - Words automatically resize based on length and screen size
+  - Proportional scaling for long words (>10, >12, >15 letters)
+  - Responsive on device rotation
+- **Clean, modern UI:**
+  - Purple gradient backgrounds (#667eea → #764ba2)
+  - Glassmorphism effects (backdrop-filter blur)
+  - Real-time updates and smooth transitions
+  - Modal dialogs with responsive breakpoints
+- **Keyboard navigation:**
+  - Extensive keyboard shortcuts across all modes
+  - Arrow keys, SPACE, ENTER, ESC support
+  - Type-to-search in Dictionary
+  - Letter keys for game input
 
 ### Data Format
 - Word list: pipe-delimited format (word|definition)
