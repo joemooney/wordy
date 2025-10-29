@@ -132,9 +132,15 @@
 
         .controls {
             display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .controls-row {
+            display: flex;
             gap: 15px;
             justify-content: center;
-            margin-top: 20px;
         }
 
         .btn {
@@ -158,6 +164,10 @@
 
         .btn-info {
             background: linear-gradient(145deg, #17a2b8, #138496);
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #ffc107, #ff9800);
         }
 
         .btn:hover {
@@ -386,11 +396,16 @@
                     </div>
 
                     <div class="controls">
-                        <button class="btn btn-secondary" onclick="clearWord()" id="clearBtn">Clear</button>
-                        <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" disabled>Submit</button>
-                        <button class="btn btn-success" onclick="resolveWord()" id="resolveBtn" style="display: none;">Resolve</button>
-                        <button class="btn btn-info" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
-                        <button class="btn btn-info" onclick="newGame()">New Game</button>
+                        <div class="controls-row">
+                            <button class="btn btn-secondary" onclick="clearWord()" id="clearBtn">Clear</button>
+                            <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" disabled>Submit</button>
+                            <button class="btn btn-success" onclick="resolveWord()" id="resolveBtn" style="display: none;">Resolve</button>
+                        </div>
+                        <div class="controls-row">
+                            <button class="btn btn-info" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
+                            <button class="btn btn-warning" onclick="showNineLetterWord()" id="showNineBtn">🔍 Show Nine</button>
+                            <button class="btn btn-info" onclick="newGame()">New Game</button>
+                        </div>
                     </div>
                 </div>
 
@@ -435,6 +450,7 @@
         let deletedWords = new Set(); // Words excluded from future games
         let hintEnabled = false; // Whether hint mode is enabled
         let possibleMatches = []; // Current possible word matches
+        let nineLetterWord = ''; // The base nine-letter word for this game
 
         // Initialize game
         async function init() {
@@ -452,6 +468,7 @@
                 const data = await response.json();
                 currentLetters = data.letters;
                 validWords = data.words.map(w => w.toLowerCase());
+                nineLetterWord = data.base_word; // Store the base nine-letter word
                 foundWords.clear();
                 selectedIndices = [];
                 currentWord = '';
@@ -588,6 +605,14 @@
             hintBtn.textContent = hintEnabled ? '💡 Hint: ON' : '💡 Hint';
             hintBtn.style.backgroundColor = hintEnabled ? '#28a745' : '';
             updateCurrentWord();
+        }
+
+        function showNineLetterWord() {
+            if (nineLetterWord) {
+                alert(`The nine-letter word is: ${nineLetterWord.toUpperCase()}`);
+            } else {
+                alert('Nine-letter word not available.');
+            }
         }
 
         function resolveWord() {

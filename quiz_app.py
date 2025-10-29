@@ -137,15 +137,17 @@ def generate_letter_grid(max_words=150, max_attempts=100):
         max_attempts: Maximum number of 9-letter words to try (default 100)
 
     Returns:
-        tuple: (letters, valid_words) where letters is a list of 9 uppercase letters
-               and valid_words is a list of valid words that can be formed
+        tuple: (letters, valid_words, base_word) where letters is a list of 9 uppercase letters,
+               valid_words is a list of valid words that can be formed,
+               and base_word is the original 9-letter word used to generate the grid
     """
     if not NINE_LETTER_WORDS:
         # Fallback if no 9-letter words available
         fallback_letters = ['S', 'T', 'A', 'R', 'E', 'I', 'N', 'O', 'D']
         random.shuffle(fallback_letters)
         valid_words = find_words_from_letters(fallback_letters)
-        return fallback_letters, valid_words
+        fallback_word = ''.join(fallback_letters).lower()
+        return fallback_letters, valid_words, fallback_word
 
     # Try to find a 9-letter word that generates <= max_words valid words
     for attempt in range(max_attempts):
@@ -165,12 +167,12 @@ def generate_letter_grid(max_words=150, max_attempts=100):
         if len(valid_words) <= max_words:
             print("Found suitable grid with {} words (attempt {}/{})".format(
                 len(valid_words), attempt + 1, max_attempts))
-            return letters, valid_words
+            return letters, valid_words, base_word
 
     # If we couldn't find a suitable word after max_attempts, return the last one
     print("Warning: Could not find grid with <= {} words after {} attempts. Using grid with {} words.".format(
         max_words, max_attempts, len(valid_words)))
-    return letters, valid_words
+    return letters, valid_words, base_word
 
 # Stats database functions
 def load_stats():
@@ -672,7 +674,7 @@ def letter_grid():
 @app.route('/letter-grid/new-game', methods=['POST'])
 def new_letter_grid_game():
     """Generate a new letter grid and return valid words."""
-    letters, valid_words = generate_letter_grid()
+    letters, valid_words, base_word = generate_letter_grid()
 
     # Sort words by length for better display
     valid_words.sort(key=lambda x: (len(x), x))
@@ -680,7 +682,8 @@ def new_letter_grid_game():
     return jsonify({
         'letters': letters,
         'total_words': len(valid_words),
-        'words': valid_words  # Include for validation on client side
+        'words': valid_words,  # Include for validation on client side
+        'base_word': base_word  # The nine-letter word used to generate the grid
     })
 
 @app.route('/letter-grid/delete-word', methods=['POST'])
