@@ -95,9 +95,9 @@ All system requirements organized by main categories.
   - Displays word in current word area (same as manual typing)
   - Helpful when stuck or curious about the puzzle solution
 - **Word exclusion:**
-  - Trash button (🗑️) on each found word
-  - Click to exclude word from future games
-  - Confirmation dialog before exclusion
+  - X button (✕) on each found word
+  - Click to immediately exclude word from future games
+  - No confirmation required for faster workflow
   - Persists in words_deleted.txt file
 - **Button Layout:**
   - Row 1: Clear, Submit, Resolve (main game actions)

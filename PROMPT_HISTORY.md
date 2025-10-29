@@ -557,6 +557,59 @@ Row 2: [💡 Hint] [🔍 Show Nine] [New Game]  ← Helpers
 
 ---
 
+### Prompt 13: Simplify Word Exclusion UI
+
+**User Request:**
+"Instead of a trash icon show an X and don't prompt to confirm"
+
+**Implementation Details:**
+
+1. **Icon Change** (`templates/letter_grid.html:776`):
+   - Changed from trash emoji (🗑️) to X symbol (✕)
+   - Cleaner, more minimal appearance
+   - Consistent with common UI patterns for removal
+
+2. **Removed Confirmation Dialog** (`templates/letter_grid.html:659-662`):
+   - Deleted `confirm()` prompt asking to confirm exclusion
+   - Deleted success `alert()` notification
+   - Function now immediately adds word to deletedWords and saves
+   - Faster workflow for excluding unwanted words
+
+3. **Simplified deleteWord() Function**:
+   ```javascript
+   function deleteWord(word) {
+       deletedWords.add(word.toLowerCase());
+       saveDeletedWords();
+   }
+   ```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Change trash icon to X and remove confirmation dialogs"
+git push
+```
+
+**Commit:** `e8d93a9`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+- `/home/joe/ai/wordy/REQUIREMENTS.md`
+
+**User Experience:**
+- **Faster workflow**: No interruptions from confirmation dialogs
+- **Cleaner UI**: Simple X is more visually clean than emoji
+- **Immediate feedback**: Word is excluded instantly on click
+- **Less friction**: Power users can quickly clean up word lists
+
+**Benefits:**
+- Reduces clicks from 2 (confirm + OK) to 1 (just X)
+- No modal dialogs interrupting gameplay
+- Simpler, more streamlined interface
+- Consistent with modern UI/UX patterns
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
