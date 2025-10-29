@@ -477,6 +477,85 @@ The 150-word limit provides:
 
 ---
 
+### Prompt 12: Letter Grid Button Layout and Nine-Letter Reveal
+
+**User Request:**
+"In Word Grid, move the 'Hint On'/'New Game' buttons onto a separate line, they are causing the width of the screen to keep shifting when the Resolve button becomes enabled. Also, have a button to reveal the nine letter word."
+
+**Problem:**
+- Button layout was causing screen width to shift when Resolve button appeared/disappeared
+- No way to reveal the nine-letter base word if player was stuck
+
+**Implementation Details:**
+
+1. **Two-Row Button Layout** (`templates/letter_grid.html:133-144, 394-406`):
+   - Changed `.controls` to use `flex-direction: column`
+   - Created `.controls-row` class for button grouping
+   - Row 1: Clear, Submit, Resolve (main game actions)
+   - Row 2: Hint, Show Nine, New Game (helper functions)
+   - Prevents width shifting when Resolve button appears
+
+2. **Show Nine Button** (`templates/letter_grid.html:402`):
+   - Added button with 🔍 icon and "Show Nine" label
+   - Orange gradient styling (btn-warning class)
+   - Calls `showNineLetterWord()` function
+   - Positioned in second row with other helper buttons
+
+3. **Backend Changes** (`quiz_app.py:132-175, 674-687`):
+   - Modified `generate_letter_grid()` to return base_word as third value
+   - Updated return tuple: `(letters, valid_words, base_word)`
+   - Modified `/letter-grid/new-game` endpoint to include base_word in response
+   - Fallback word generation also returns base word
+
+4. **Frontend Changes** (`templates/letter_grid.html:453, 471, 610-616`):
+   - Added `nineLetterWord` variable to game state
+   - Store base_word from API response in `newGame()`
+   - Created `showNineLetterWord()` function
+   - Displays word in alert dialog in uppercase
+
+5. **CSS Additions** (`templates/letter_grid.html:169-171`):
+   - Added `.btn-warning` style with orange gradient
+   - Background: `linear-gradient(145deg, #ffc107, #ff9800)`
+   - Consistent with other button styling
+
+**Git Operations:**
+```bash
+git add quiz_app.py templates/letter_grid.html
+git commit -m "Improve Letter Grid button layout and add nine-letter word reveal"
+git push
+
+git add REQUIREMENTS.md
+git commit -m "Update REQUIREMENTS.md with Letter Grid button layout and reveal feature"
+git push
+```
+
+**Commits:** `0db0fb2`, `f79c767`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/quiz_app.py`
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+- `/home/joe/ai/wordy/REQUIREMENTS.md`
+
+**User Experience:**
+- **Stable layout**: No more width shifting when Resolve button appears
+- **Logical grouping**: Actions in top row, helpers in bottom row
+- **Help when stuck**: Can reveal nine-letter word if needed
+- **Clean interface**: Two rows keep buttons organized and accessible
+
+**Technical Benefits:**
+- Backend now tracks and returns base word
+- Frontend stores word for later reveal
+- Simple alert-based reveal mechanism
+- CSS flexbox handles responsive layout
+
+**Button Organization:**
+```
+Row 1: [Clear] [Submit] [Resolve]     ← Main actions
+Row 2: [💡 Hint] [🔍 Show Nine] [New Game]  ← Helpers
+```
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
