@@ -70,6 +70,8 @@ All system requirements organized by main categories.
   - Guarantees at least one 9-letter word solution
   - Letters shuffled to hide the base word
   - Finds all valid words (3+ letters) from those letters
+  - **Word limit:** Maximum 150 words per game (prevents overwhelming puzzles)
+  - Tries up to 100 different 9-letter words to find suitable grid
 - **Word discovery:**
   - Click/tap tiles to select letters
   - Build words from available letters
@@ -87,16 +89,23 @@ All system requirements organized by main categories.
   - Appears when hint is ON and exactly 1 match exists
   - Auto-fills remaining letters to complete the word
   - Selects correct tiles in grid automatically
+- **Show Nine button (🔍):**
+  - Reveals the nine-letter base word
+  - Displays in alert dialog
+  - Helpful when stuck or curious about the puzzle solution
 - **Word exclusion:**
   - Trash button (🗑️) on each found word
   - Click to exclude word from future games
   - Confirmation dialog before exclusion
   - Persists in words_deleted.txt file
+- **Button Layout:**
+  - Row 1: Clear, Submit, Resolve (main game actions)
+  - Row 2: Hint, Show Nine, New Game (helper functions)
+  - Two-row layout prevents width shifting when Resolve appears
 - **Controls:**
   - Click tiles or use keyboard (letter keys)
   - Enter to submit, Escape to clear
   - Backspace to undo last letter
-  - New Game button
 - **Data storage:**
   - Word list: wordlist_50000.txt (49,301 words)
   - Deleted words: words_deleted.txt (user-excluded words)
