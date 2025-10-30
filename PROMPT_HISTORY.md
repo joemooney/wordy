@@ -2418,3 +2418,166 @@ Users need to:
 - Pronunciation audio from API
 
 ---
+
+### Prompt 20: Add "All Valid Words" Tab to Review Panel
+
+**User Request:**
+"In 'Words for Review' add an option to review all game words (valid words and disputed words)"
+
+**Problem:**
+Users wanted to browse and review all valid words in the current game, not just disputed or pending-delete words. This would help them:
+- Learn new words by browsing the full word list
+- Verify word definitions using Wordnik
+- Remove unwanted words from the valid list
+- Better understand the complete puzzle vocabulary
+
+**Implementation Details:**
+
+1. **Added Third Tab** (`letter_grid.html:706-708`):
+   ```html
+   <button class="tab-btn" onclick="showReviewTab('all-words')" id="allWordsTab">
+       All Valid Words (<span id="allWordsCount">0</span>)
+   </button>
+   ```
+
+2. **Updated CSS for Three Tabs** (`letter_grid.html:429-448`):
+   ```css
+   .review-tabs {
+       display: flex;
+       flex-wrap: wrap;  /* Allow wrapping on small screens */
+       gap: 10px;
+   }
+
+   .tab-btn {
+       flex: 1;
+       min-width: 140px;  /* Ensure readable tab width */
+       font-size: 14px;   /* Slightly smaller for three tabs */
+   }
+   ```
+
+3. **Added All-Words Styling** (`letter_grid.html:494-496, 541-543`):
+   ```css
+   .review-word-item.all-words {
+       border-left: 4px solid #4dabf7;  /* Blue border */
+   }
+
+   .word-details-status.all-words {
+       background: #4dabf7;  /* Blue badge */
+   }
+   ```
+
+4. **Updated Tab Switching Logic** (`letter_grid.html:1208-1218`):
+   ```javascript
+   function showReviewTab(tab) {
+       currentReviewTab = tab;
+
+       // Update all three tab buttons
+       document.getElementById('pendingDeleteTab').classList.toggle('active', tab === 'pending-delete');
+       document.getElementById('disputedTab').classList.toggle('active', tab === 'disputed');
+       document.getElementById('allWordsTab').classList.toggle('active', tab === 'all-words');
+
+       updateReviewWordsList();
+   }
+   ```
+
+5. **Updated Review Counts** (`letter_grid.html:1225-1229`):
+   ```javascript
+   function updateReviewCounts() {
+       document.getElementById('pendingDeleteCount').textContent = pendingDeleteWords.size;
+       document.getElementById('disputedCount').textContent = disputedWords.size;
+       document.getElementById('allWordsCount').textContent = validWords.length;  // New
+   }
+   ```
+
+6. **Updated Word List Display** (`letter_grid.html:1231-1264`):
+   ```javascript
+   function updateReviewWordsList() {
+       let words = [];
+
+       if (currentReviewTab === 'pending-delete') {
+           words = Array.from(pendingDeleteWords);
+       } else if (currentReviewTab === 'disputed') {
+           words = Array.from(disputedWords);
+       } else if (currentReviewTab === 'all-words') {
+           words = [...validWords];  // All valid words for current game
+       }
+
+       // ... display words ...
+   }
+   ```
+
+7. **Updated Status Display** (`letter_grid.html:1321-1342`):
+   ```javascript
+   function displayWordDetails(word, wordData, error = null) {
+       let status, statusClass;
+
+       if (currentReviewTab === 'pending-delete') {
+           status = 'Pending Delete';
+           statusClass = 'pending-delete';
+       } else if (currentReviewTab === 'disputed') {
+           status = 'Disputed';
+           statusClass = 'disputed';
+       } else if (currentReviewTab === 'all-words') {
+           status = 'Valid Word';
+           statusClass = 'all-words';
+       }
+       // ... display with status ...
+   }
+   ```
+
+8. **Updated Action Buttons** (`letter_grid.html:1394-1410`):
+   - All Valid Words tab: Shows only "Remove from Valid Words" button
+   - Allows users to delete words they don't want in their list
+   - Uses same permanent delete workflow
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add 'All Valid Words' tab to Review Panel
+
+Enhanced Review Panel with third tab:
+- Browse all valid words for current game
+- View Wordnik definitions for any word
+- Remove unwanted words from valid list
+- Three-tab layout with responsive wrapping
+- Color-coded status: red (pending), yellow (disputed), blue (valid)
+- Updated counts for all three categories
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html` (+20 lines modified)
+- `/home/joe/ai/wordy/REQUIREMENTS.md` (+7 lines added)
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` (this entry)
+
+**User Experience Benefits:**
+- Educational: Browse and learn all valid words
+- Comprehensive: See definitions for any word in the game
+- Control: Remove unwanted valid words
+- Organization: Three clear categories for word management
+
+**Technical Benefits:**
+- Reuses existing Wordnik integration
+- Consistent tab switching logic
+- Responsive design with flex-wrap
+- Color-coded visual feedback
+- Clean separation of concerns
+
+**UI Color Scheme:**
+- 🔴 Red (#ff6b6b): Pending Delete words
+- 🟡 Yellow (#ffd93d): Disputed words
+- 🔵 Blue (#4dabf7): Valid words
+
+**Use Case Example:**
+1. User plays game and wonders about word "tarn"
+2. Clicks "📋 Review Words" button
+3. Switches to "All Valid Words" tab
+4. Scrolls to "TARN" in alphabetical list
+5. Clicks to see Wordnik definition: "small mountain lake"
+6. Now knows it's a valid word and what it means!
+
+---

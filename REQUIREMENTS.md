@@ -109,7 +109,7 @@ All system requirements organized by main categories.
   - Logs disputed words to console
 - **Review Panel (📋 Review Words button):**
   - Accessible from Found Words section
-  - Two tabs: "Pending Delete" and "Disputed"
+  - Three tabs: "Pending Delete", "Disputed", and "All Valid Words"
   - **Word deletion workflow:**
     - Clicking X on found word marks for deletion (not immediate)
     - Word removed from current game but pending review
@@ -131,11 +131,17 @@ All system requirements organized by main categories.
     - Stored in localStorage as 'letterGridApprovedWords'
     - Automatically included in all future games
     - Can be revoked by deleting the word
+  - **All Valid Words tab:**
+    - Browse all valid words for current game
+    - View definitions and examples for any word
+    - Can remove words from valid list if needed
+    - Helpful for learning and verifying word list
   - **UI features:**
     - Two-panel layout: word list (left) + details (right)
     - Auto-selects first word in list
-    - Visual status indicators (Pending Delete / Disputed)
-    - Responsive design for smaller screens
+    - Visual status indicators (Pending Delete / Disputed / Valid Word)
+    - Color-coded borders: red (pending delete), yellow (disputed), blue (valid)
+    - Responsive design for smaller screens with tab wrapping
     - Back to Game button to return
 - **Button Layout:**
   - Row 1: Dispute, Clear, Submit, Resolve (main game actions)

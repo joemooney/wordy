@@ -428,18 +428,21 @@
 
         .review-tabs {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 12px;
+            min-width: 140px;
+            padding: 12px 8px;
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             color: white;
             font-weight: bold;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -488,6 +491,10 @@
             border-left: 4px solid #ffd93d;
         }
 
+        .review-word-item.all-words {
+            border-left: 4px solid #4dabf7;
+        }
+
         .review-details-panel {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -529,6 +536,10 @@
         .word-details-status.disputed {
             background: #ffd93d;
             color: #333;
+        }
+
+        .word-details-status.all-words {
+            background: #4dabf7;
         }
 
         .word-details-section {
@@ -702,6 +713,9 @@
                             </button>
                             <button class="tab-btn" onclick="showReviewTab('disputed')" id="disputedTab">
                                 Disputed (<span id="disputedCount">0</span>)
+                            </button>
+                            <button class="tab-btn" onclick="showReviewTab('all-words')" id="allWordsTab">
+                                All Valid Words (<span id="allWordsCount">0</span>)
                             </button>
                         </div>
                         <div class="review-words-list" id="reviewWordsList">
@@ -1197,6 +1211,7 @@
             // Update tab buttons
             document.getElementById('pendingDeleteTab').classList.toggle('active', tab === 'pending-delete');
             document.getElementById('disputedTab').classList.toggle('active', tab === 'disputed');
+            document.getElementById('allWordsTab').classList.toggle('active', tab === 'all-words');
 
             // Update word list
             updateReviewWordsList();
@@ -1210,13 +1225,20 @@
         function updateReviewCounts() {
             document.getElementById('pendingDeleteCount').textContent = pendingDeleteWords.size;
             document.getElementById('disputedCount').textContent = disputedWords.size;
+            document.getElementById('allWordsCount').textContent = validWords.length;
         }
 
         function updateReviewWordsList() {
             const list = document.getElementById('reviewWordsList');
-            const words = currentReviewTab === 'pending-delete'
-                ? Array.from(pendingDeleteWords)
-                : Array.from(disputedWords);
+            let words = [];
+
+            if (currentReviewTab === 'pending-delete') {
+                words = Array.from(pendingDeleteWords);
+            } else if (currentReviewTab === 'disputed') {
+                words = Array.from(disputedWords);
+            } else if (currentReviewTab === 'all-words') {
+                words = [...validWords]; // All valid words for the current game
+            }
 
             if (words.length === 0) {
                 list.innerHTML = '<p style="opacity: 0.6; text-align: center; margin-top: 20px;">No words to review</p>';
@@ -1298,8 +1320,18 @@
 
         function displayWordDetails(word, wordData, error = null) {
             const detailsPanel = document.getElementById('reviewWordDetails');
-            const status = currentReviewTab === 'pending-delete' ? 'Pending Delete' : 'Disputed';
-            const statusClass = currentReviewTab === 'pending-delete' ? 'pending-delete' : 'disputed';
+            let status, statusClass;
+
+            if (currentReviewTab === 'pending-delete') {
+                status = 'Pending Delete';
+                statusClass = 'pending-delete';
+            } else if (currentReviewTab === 'disputed') {
+                status = 'Disputed';
+                statusClass = 'disputed';
+            } else if (currentReviewTab === 'all-words') {
+                status = 'Valid Word';
+                statusClass = 'all-words';
+            }
 
             let html = `
                 <div class="word-details-content">
@@ -1359,11 +1391,21 @@
                 `;
             }
 
-            html += `
-                <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
-                    🗑️ ${currentReviewTab === 'pending-delete' ? 'Permanently Delete' : 'Remove from Valid Words'}
-                </button>
-            `;
+            if (currentReviewTab === 'all-words') {
+                // For all valid words, just show delete option
+                html += `
+                    <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
+                        🗑️ Remove from Valid Words
+                    </button>
+                `;
+            } else {
+                // For pending-delete and disputed
+                html += `
+                    <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
+                        🗑️ ${currentReviewTab === 'pending-delete' ? 'Permanently Delete' : 'Remove from Valid Words'}
+                    </button>
+                `;
+            }
 
             html += '</div></div>';
 
