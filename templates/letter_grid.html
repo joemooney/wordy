@@ -747,6 +747,9 @@
                 updateStats();
                 // Don't clear - allow user to add more letters (e.g., "job" -> "jobs")
 
+                // Update the current word display to refresh hint count
+                updateCurrentWord();
+
                 // Check if all words found
                 if (foundWords.size === validWords.length) {
                     setTimeout(() => {
