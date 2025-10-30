@@ -774,6 +774,65 @@ git push
 
 ---
 
+### Prompt 17: Keep Letters Selected After Submitting Word
+
+**User Request:**
+"When you solve a word do not clear the letters, we may want to add letters, for example we enter 'job' we may want to add an 's' for 'jobs'"
+
+**Problem:**
+After submitting a valid word, the `clearWord()` function was called, which removed all selected tiles. This forced users to re-select all letters if they wanted to build on the word (e.g., "job" → "jobs").
+
+**Implementation Details:**
+
+**Changed** (`templates/letter_grid.html:748`):
+```javascript
+// Before:
+if (validWords.includes(lowerWord)) {
+    foundWords.add(lowerWord);
+    addFoundWord(lowerWord);
+    updateStats();
+    clearWord();  // ← Removed this line
+}
+
+// After:
+if (validWords.includes(lowerWord)) {
+    foundWords.add(lowerWord);
+    addFoundWord(lowerWord);
+    updateStats();
+    // Don't clear - allow user to add more letters (e.g., "job" -> "jobs")
+}
+```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Keep letters selected after submitting a word"
+git push
+```
+
+**Commit:** `79b3c44`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+
+**User Experience:**
+- **Build on words**: Submit "JOB", then add "S" to submit "JOBS"
+- **Less re-work**: Don't need to re-select all letters each time
+- **Faster workflow**: Can quickly try variations of the same word
+- **Manual clear still works**: Clear button and ESC key still available
+
+**Workflow Example:**
+1. Select J-O-B tiles → Submit "JOB" ✓
+2. Letters stay selected (J-O-B still highlighted)
+3. Click S tile → Now have "JOBS"
+4. Submit "JOBS" ✓
+5. Click E-D tiles → Now have "JOBSED" (invalid)
+6. Press Backspace twice → Back to "JOBS"
+7. Click E tile → "JOBE" (invalid)
+8. Press Clear → Start fresh
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
