@@ -587,7 +587,7 @@
                 wordDisplay.className = 'current-word';
                 submitBtn.disabled = currentWord.length < 3;
 
-                if (hintEnabled && currentWord.length >= 2) {
+                if (hintEnabled && currentWord.length >= 1) {
                     possibleMatches = getMatchingWords(lowerWord);
                     const matchCount = possibleMatches.length;
                     wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
