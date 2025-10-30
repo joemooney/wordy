@@ -83,8 +83,8 @@ All system requirements organized by main categories.
   - Found words displayed alphabetically
 - **Hint mode (💡 button):**
   - Toggle to show match count as you type
-  - Displays "X possible word(s) with these letters"
-  - Only counts words starting with typed letters (not yet found)
+  - Displays "X remaining word(s) with these letters"
+  - Only counts words starting with typed letters that haven't been found yet
 - **Resolve button:**
   - Appears when hint is ON and exactly 1 match exists
   - Auto-fills remaining letters to complete the word

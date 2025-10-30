@@ -610,6 +610,40 @@ git push
 
 ---
 
+### Prompt 14: Clarify Hint Shows Remaining Words
+
+**User Request:**
+"For the hint of possible matches, show the possible REMAINING matches, not the total possible matches count."
+
+**Implementation:**
+
+The code was already correctly filtering out found words in `getMatchingWords()` (line 595-596 checks `if (foundWords.has(word))`), but the display text said "possible" which was ambiguous.
+
+**Changes Made** (`templates/letter_grid.html:557, 575`):
+- Changed hint text from "X possible word(s)" to "X remaining word(s)"
+- Makes it clear the count excludes already-found words
+- No logic changes needed - filtering was already correct
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Change hint text from 'possible' to 'remaining' words"
+git push
+```
+
+**Commit:** `aa70ec0`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+- `/home/joe/ai/wordy/REQUIREMENTS.md`
+
+**User Experience:**
+- **Clearer feedback**: "remaining" accurately describes what's being counted
+- **Less confusion**: Users understand these are unfound words only
+- **Better UX**: More precise language improves understanding
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
