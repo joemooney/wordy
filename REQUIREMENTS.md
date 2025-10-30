@@ -95,10 +95,12 @@ All system requirements organized by main categories.
   - Displays word in current word area (same as manual typing)
   - Helpful when stuck or curious about the puzzle solution
 - **Word exclusion:**
-  - X button (✕) on each found word
-  - Click to immediately exclude word from future games
+  - Red X button on each found word (high visibility)
+  - Click to immediately remove word from current game and exclude from future games
+  - Updates found/remaining counts instantly
   - No confirmation required for faster workflow
   - Persists in words_deleted.txt file
+  - Can exclude multiple words (not limited like a radio button)
 - **Button Layout:**
   - Row 1: Clear, Submit, Resolve (main game actions)
   - Row 2: Hint, Show Nine, New Game (helper functions)

@@ -644,6 +644,78 @@ git push
 
 ---
 
+### Prompt 15: Improve X Button Visibility and Word Removal
+
+**User Request:**
+"The X button to delete a word in the Word Grid, is hard to see, also it looks like it is some type of radio button what only allows one found word to be removed. Remove the word when you click on the X and reduce the count of words to find and found."
+
+**Problems:**
+1. X button was transparent/faint and hard to see
+2. Styling looked like a radio button (suggested single selection)
+3. Clicking X only excluded word from future games, didn't remove from current game
+4. Counts (found/remaining) didn't update when removing word
+
+**Implementation Details:**
+
+1. **Improved Button Styling** (`templates/letter_grid.html:286-304`):
+   - Changed from transparent `rgba(255, 0, 0, 0.2)` to solid red `#dc3545`
+   - White text color for maximum contrast
+   - Increased font size from 14px to 16px
+   - Added bold font weight
+   - Larger padding (6px 10px instead of 4px 8px)
+   - Enhanced hover effect with box shadow and 1.15x scale
+   - Removed border for cleaner look
+
+2. **Fixed deleteWord() Function** (`templates/letter_grid.html:663-676`):
+   ```javascript
+   function deleteWord(word) {
+       const lowerWord = word.toLowerCase();
+
+       // Add to deleted words for future games
+       deletedWords.add(lowerWord);
+       saveDeletedWords();
+
+       // Remove from found words in current game
+       foundWords.delete(lowerWord);
+
+       // Update the display and stats
+       displayFoundWords();
+       updateStats();
+   }
+   ```
+
+3. **Count Updates**:
+   - `foundWords.delete(lowerWord)` removes word from found Set
+   - `displayFoundWords()` rebuilds the word list without deleted word
+   - `updateStats()` recalculates found/remaining/percentage
+   - Stats panel updates immediately
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Improve X button visibility and fix word deletion to update counts"
+git push
+```
+
+**Commit:** `caefb6d`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+- `/home/joe/ai/wordy/REQUIREMENTS.md`
+
+**User Experience:**
+- **Highly visible**: Solid red button stands out clearly
+- **Clear purpose**: Looks like a delete button, not a radio button
+- **Immediate feedback**: Word disappears and counts update instantly
+- **Multiple deletions**: Can click X on any/all words
+- **Dual function**: Removes from current game AND excludes from future games
+
+**Before vs After:**
+- **Before**: Transparent button, word stayed in list, counts unchanged
+- **After**: Red button, word removed from list, counts updated correctly
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
