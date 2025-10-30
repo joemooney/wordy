@@ -546,7 +546,19 @@
             if (foundWords.has(lowerWord)) {
                 wordDisplay.textContent = currentWord;
                 wordDisplay.className = 'current-word gold';
-                wordInfo.textContent = '✓ Already found!';
+
+                if (hintEnabled) {
+                    possibleMatches = getMatchingWords(lowerWord);
+                    const matchCount = possibleMatches.length;
+                    wordInfo.textContent = `✓ Already found! (${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters)`;
+
+                    // Show resolve button if only one match
+                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                } else {
+                    wordInfo.textContent = '✓ Already found!';
+                    document.getElementById('resolveBtn').style.display = 'none';
+                }
+
                 submitBtn.disabled = true;
             }
             // Check if it's a valid word
