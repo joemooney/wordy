@@ -554,7 +554,7 @@
                 if (hintEnabled) {
                     possibleMatches = getMatchingWords(lowerWord);
                     const matchCount = possibleMatches.length;
-                    wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+                    wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
 
                     // Show resolve button if only one match
                     document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
@@ -572,7 +572,7 @@
                 if (hintEnabled && currentWord.length >= 2) {
                     possibleMatches = getMatchingWords(lowerWord);
                     const matchCount = possibleMatches.length;
-                    wordInfo.textContent = `${matchCount} possible word${matchCount !== 1 ? 's' : ''} with these letters`;
+                    wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
 
                     // Show resolve button if only one match
                     document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
