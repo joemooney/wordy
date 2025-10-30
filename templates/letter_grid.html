@@ -745,7 +745,7 @@
                 foundWords.add(lowerWord);
                 addFoundWord(lowerWord);
                 updateStats();
-                clearWord();
+                // Don't clear - allow user to add more letters (e.g., "job" -> "jobs")
 
                 // Check if all words found
                 if (foundWords.size === validWords.length) {
