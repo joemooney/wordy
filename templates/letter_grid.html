@@ -749,10 +749,21 @@
 
                 // Show word in gold to indicate it was found
                 const wordDisplay = document.getElementById('currentWord');
+                const wordInfo = document.getElementById('wordInfo');
                 wordDisplay.className = 'current-word gold';
 
-                // Update the current word display to refresh hint count
-                updateCurrentWord();
+                // Update hint count if enabled, but don't say "Already found" for the word we just submitted
+                if (hintEnabled) {
+                    possibleMatches = getMatchingWords(lowerWord);
+                    const matchCount = possibleMatches.length;
+                    wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
+
+                    // Show resolve button if only one match
+                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                } else {
+                    wordInfo.innerHTML = '&nbsp;';
+                    document.getElementById('resolveBtn').style.display = 'none';
+                }
 
                 // Check if all words found
                 if (foundWords.size === validWords.length) {
