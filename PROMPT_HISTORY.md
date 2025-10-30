@@ -716,6 +716,64 @@ git push
 
 ---
 
+### Prompt 16: Show Hint Count for Already Found Words
+
+**User Request:**
+"when showing the hint of remaining matches and you have entered an 'Already found!', also keep showing the remaining count"
+
+**Implementation Details:**
+
+Modified the "Already found" condition to show remaining count when hint is enabled (`templates/letter_grid.html:546-563`):
+
+**Before:**
+```javascript
+if (foundWords.has(lowerWord)) {
+    wordInfo.textContent = '✓ Already found!';
+}
+```
+
+**After:**
+```javascript
+if (foundWords.has(lowerWord)) {
+    if (hintEnabled) {
+        possibleMatches = getMatchingWords(lowerWord);
+        const matchCount = possibleMatches.length;
+        wordInfo.textContent = `✓ Already found! (${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters)`;
+
+        // Show resolve button if only one match
+        document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+    } else {
+        wordInfo.textContent = '✓ Already found!';
+    }
+}
+```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Show remaining word count in hint even for already found words"
+git push
+```
+
+**Commit:** `e881d80`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+
+**User Experience:**
+- **Consistent hints**: Remaining count always shown when hint mode is ON
+- **Better information**: Users see how many other words exist with those letters
+- **Discovery aid**: Helps users find related words they may have missed
+- **Resolve works**: Resolve button still appears for single remaining matches
+
+**Example:**
+- Type "CAT" that's already found
+- Without hint: "✓ Already found!"
+- With hint: "✓ Already found! (2 remaining words with these letters)"
+- User might try "CATS" or "CATCH" next
+
+---
+
 ## Session: Two-Stage ESC Behavior for Quiz Games (2025-10-19)
 
 ### Prompt: Implement ESC Pause and Exit Pattern
