@@ -107,6 +107,36 @@ All system requirements organized by main categories.
   - Click to add rejected word to disputed words list
   - No duplicates (tracks in Set)
   - Logs disputed words to console
+- **Review Panel (📋 Review Words button):**
+  - Accessible from Found Words section
+  - Two tabs: "Pending Delete" and "Disputed"
+  - **Word deletion workflow:**
+    - Clicking X on found word marks for deletion (not immediate)
+    - Word removed from current game but pending review
+    - Review panel shows all pending deletions
+    - User can permanently delete or undo
+  - **Wordnik API integration:**
+    - Fetches definitions and examples for each word
+    - Displays up to 3 definitions with part of speech
+    - Shows up to 3 example sentences
+    - Requires free API key from developer.wordnik.com
+    - Graceful error handling with setup instructions
+  - **Disputed words review:**
+    - Shows all words marked as disputed during gameplay
+    - Can approve word (✓ button) to add to valid word list
+    - Can permanently delete word (🗑️ button)
+    - Approved words persist across games via localStorage
+  - **Word approval system:**
+    - Approved words added to valid words list
+    - Stored in localStorage as 'letterGridApprovedWords'
+    - Automatically included in all future games
+    - Can be revoked by deleting the word
+  - **UI features:**
+    - Two-panel layout: word list (left) + details (right)
+    - Auto-selects first word in list
+    - Visual status indicators (Pending Delete / Disputed)
+    - Responsive design for smaller screens
+    - Back to Game button to return
 - **Button Layout:**
   - Row 1: Dispute, Clear, Submit, Resolve (main game actions)
   - Row 2: Hint, Show Nine, New Game (helper functions)

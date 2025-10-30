@@ -378,6 +378,237 @@
                 font-size: 20px;
             }
         }
+
+        /* Review Panel Styles */
+        #reviewPanel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .review-header h2 {
+            font-size: 36px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .review-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .review-list-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .review-list-panel h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .review-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+        }
+
+        .review-words-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .review-word-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .review-word-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .review-word-item.selected {
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid white;
+        }
+
+        .review-word-item.pending-delete {
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .review-word-item.disputed {
+            border-left: 4px solid #ffd93d;
+        }
+
+        .review-details-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .word-details-content {
+            color: white;
+        }
+
+        .word-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .word-details-title {
+            font-size: 48px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .word-details-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .word-details-status.pending-delete {
+            background: #ff6b6b;
+        }
+
+        .word-details-status.disputed {
+            background: #ffd93d;
+            color: #333;
+        }
+
+        .word-details-section {
+            margin-bottom: 30px;
+        }
+
+        .word-details-section h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .word-definition {
+            font-size: 18px;
+            line-height: 1.6;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .word-examples {
+            font-size: 16px;
+            line-height: 1.8;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .word-examples li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+            border-left: 3px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .word-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-approve {
+            flex: 1;
+            background: linear-gradient(145deg, #28a745, #20c997);
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+
+        .btn-delete {
+            flex: 1;
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+
+        .api-error {
+            padding: 20px;
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .review-container {
+                grid-template-columns: 1fr;
+            }
+
+            .review-list-panel {
+                max-height: 300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -445,6 +676,44 @@
                         <div class="found-words-list" id="foundWordsList">
                             <p style="opacity: 0.6; text-align: center;">No words found yet...</p>
                         </div>
+                        <button class="btn btn-primary" onclick="showReviewPanel()" id="reviewBtn" style="margin-top: 15px; width: 100%;">
+                            📋 Review Words
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Panel -->
+        <div id="reviewPanel" style="display: none;">
+            <div class="container">
+                <div class="review-header">
+                    <h2>📋 Review Words</h2>
+                    <button class="btn btn-secondary" onclick="closeReviewPanel()">← Back to Game</button>
+                </div>
+
+                <div class="review-container">
+                    <!-- Words to Review List -->
+                    <div class="review-list-panel">
+                        <h3>Words for Review</h3>
+                        <div class="review-tabs">
+                            <button class="tab-btn active" onclick="showReviewTab('pending-delete')" id="pendingDeleteTab">
+                                Pending Delete (<span id="pendingDeleteCount">0</span>)
+                            </button>
+                            <button class="tab-btn" onclick="showReviewTab('disputed')" id="disputedTab">
+                                Disputed (<span id="disputedCount">0</span>)
+                            </button>
+                        </div>
+                        <div class="review-words-list" id="reviewWordsList">
+                            <p style="opacity: 0.6; text-align: center; margin-top: 20px;">No words to review</p>
+                        </div>
+                    </div>
+
+                    <!-- Word Details Panel -->
+                    <div class="review-details-panel">
+                        <div id="reviewWordDetails" class="word-details-empty">
+                            <p style="opacity: 0.6; text-align: center;">Select a word to see details</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -458,16 +727,21 @@
         let currentWord = '';
         let validWords = [];
         let foundWords = new Set();
-        let deletedWords = new Set(); // Words excluded from future games
+        let deletedWords = new Set(); // Words permanently excluded from future games
+        let pendingDeleteWords = new Set(); // Words marked for deletion pending review
         let disputedWords = new Set(); // Words disputed by user
+        let approvedWords = new Set(); // Words approved as valid after dispute
         let hintEnabled = false; // Whether hint mode is enabled
         let possibleMatches = []; // Current possible word matches
         let nineLetterWord = ''; // The base nine-letter word for this game
         let lastRejectedWord = ''; // Track last rejected word for dispute button
+        let currentReviewTab = 'pending-delete'; // Current review tab
+        let selectedReviewWord = null; // Currently selected word in review panel
 
         // Initialize game
         async function init() {
             await loadDeletedWords();
+            loadApprovedWords();
             await newGame();
         }
 
@@ -481,6 +755,17 @@
                 const data = await response.json();
                 currentLetters = data.letters;
                 validWords = data.words.map(w => w.toLowerCase());
+
+                // Add approved words to valid words
+                approvedWords.forEach(word => {
+                    if (!validWords.includes(word)) {
+                        validWords.push(word);
+                    }
+                });
+
+                // Remove deleted words from valid words
+                validWords = validWords.filter(word => !deletedWords.has(word));
+
                 nineLetterWord = data.base_word; // Store the base nine-letter word
                 foundWords.clear();
                 selectedIndices = [];
@@ -684,9 +969,8 @@
         function deleteWord(word) {
             const lowerWord = word.toLowerCase();
 
-            // Add to deleted words for future games
-            deletedWords.add(lowerWord);
-            saveDeletedWords();
+            // Mark for deletion pending review (don't immediately delete)
+            pendingDeleteWords.add(lowerWord);
 
             // Remove from found words in current game
             foundWords.delete(lowerWord);
@@ -694,6 +978,15 @@
             // Update the display and stats
             displayFoundWords();
             updateStats();
+
+            // Show notification
+            const wordDisplay = document.getElementById('currentWord');
+            const originalText = wordDisplay.textContent;
+            wordDisplay.textContent = `${word.toUpperCase()} marked for review`;
+            wordDisplay.className = 'current-word';
+            setTimeout(() => {
+                updateCurrentWord();
+            }, 1500);
         }
 
         async function saveDeletedWords() {
@@ -884,6 +1177,264 @@
                 }
             }
         });
+
+        // Review Panel Functions
+        function showReviewPanel() {
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('reviewPanel').style.display = 'block';
+            currentReviewTab = 'pending-delete';
+            updateReviewPanel();
+        }
+
+        function closeReviewPanel() {
+            document.getElementById('reviewPanel').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+        }
+
+        function showReviewTab(tab) {
+            currentReviewTab = tab;
+
+            // Update tab buttons
+            document.getElementById('pendingDeleteTab').classList.toggle('active', tab === 'pending-delete');
+            document.getElementById('disputedTab').classList.toggle('active', tab === 'disputed');
+
+            // Update word list
+            updateReviewWordsList();
+        }
+
+        function updateReviewPanel() {
+            updateReviewCounts();
+            updateReviewWordsList();
+        }
+
+        function updateReviewCounts() {
+            document.getElementById('pendingDeleteCount').textContent = pendingDeleteWords.size;
+            document.getElementById('disputedCount').textContent = disputedWords.size;
+        }
+
+        function updateReviewWordsList() {
+            const list = document.getElementById('reviewWordsList');
+            const words = currentReviewTab === 'pending-delete'
+                ? Array.from(pendingDeleteWords)
+                : Array.from(disputedWords);
+
+            if (words.length === 0) {
+                list.innerHTML = '<p style="opacity: 0.6; text-align: center; margin-top: 20px;">No words to review</p>';
+                document.getElementById('reviewWordDetails').innerHTML = '<p style="opacity: 0.6; text-align: center;">Select a word to see details</p>';
+                return;
+            }
+
+            words.sort();
+            list.innerHTML = '';
+
+            words.forEach(word => {
+                const item = document.createElement('div');
+                item.className = `review-word-item ${currentReviewTab}`;
+                item.textContent = word.toUpperCase();
+                item.onclick = () => selectReviewWord(word);
+                list.appendChild(item);
+            });
+
+            // Auto-select first word
+            if (words.length > 0) {
+                selectReviewWord(words[0]);
+            }
+        }
+
+        async function selectReviewWord(word) {
+            selectedReviewWord = word;
+
+            // Update selection styling
+            document.querySelectorAll('.review-word-item').forEach(item => {
+                item.classList.toggle('selected', item.textContent.toLowerCase() === word.toLowerCase());
+            });
+
+            // Show loading state
+            const detailsPanel = document.getElementById('reviewWordDetails');
+            detailsPanel.innerHTML = '<div class="loading-spinner">🔍 Looking up word...</div>';
+
+            // Fetch word details from Wordnik API
+            try {
+                const wordData = await fetchWordnikData(word);
+                displayWordDetails(word, wordData);
+            } catch (error) {
+                displayWordDetails(word, null, error.message);
+            }
+        }
+
+        async function fetchWordnikData(word) {
+            // Wordnik API key - users should replace with their own
+            const WORDNIK_API_KEY = 'YOUR_API_KEY_HERE'; // TODO: Replace with actual API key
+            const baseUrl = 'https://api.wordnik.com/v4/word.json';
+
+            try {
+                // Fetch definitions
+                const defResponse = await fetch(
+                    `${baseUrl}/${encodeURIComponent(word)}/definitions?api_key=${WORDNIK_API_KEY}&limit=3&includeRelated=false&useCanonical=true&includeTags=false`
+                );
+
+                let definitions = [];
+                if (defResponse.ok) {
+                    definitions = await defResponse.json();
+                }
+
+                // Fetch examples
+                const exResponse = await fetch(
+                    `${baseUrl}/${encodeURIComponent(word)}/examples?api_key=${WORDNIK_API_KEY}&limit=3&useCanonical=true`
+                );
+
+                let examples = [];
+                if (exResponse.ok) {
+                    const exData = await exResponse.json();
+                    examples = exData.examples || [];
+                }
+
+                return { definitions, examples };
+            } catch (error) {
+                console.error('Error fetching from Wordnik:', error);
+                throw new Error('Failed to fetch word data from Wordnik API');
+            }
+        }
+
+        function displayWordDetails(word, wordData, error = null) {
+            const detailsPanel = document.getElementById('reviewWordDetails');
+            const status = currentReviewTab === 'pending-delete' ? 'Pending Delete' : 'Disputed';
+            const statusClass = currentReviewTab === 'pending-delete' ? 'pending-delete' : 'disputed';
+
+            let html = `
+                <div class="word-details-content">
+                    <div class="word-details-header">
+                        <div class="word-details-title">${word.toUpperCase()}</div>
+                        <div class="word-details-status ${statusClass}">${status}</div>
+                    </div>
+            `;
+
+            if (error) {
+                html += `
+                    <div class="api-error">
+                        <strong>⚠️ API Error:</strong> ${error}
+                        <p style="margin-top: 10px; font-size: 14px;">
+                            To use this feature, you need a Wordnik API key.
+                            Get one free at <a href="https://developer.wordnik.com/" target="_blank" style="color: white; text-decoration: underline;">developer.wordnik.com</a>
+                        </p>
+                    </div>
+                `;
+            } else if (wordData) {
+                // Display definitions
+                if (wordData.definitions && wordData.definitions.length > 0) {
+                    html += '<div class="word-details-section"><h4>📖 Definitions:</h4>';
+                    wordData.definitions.forEach((def, idx) => {
+                        html += `
+                            <div class="word-definition">
+                                <strong>${idx + 1}.</strong> ${def.text || def.definition || 'No definition available'}
+                                ${def.partOfSpeech ? `<br><em style="opacity: 0.8;">(${def.partOfSpeech})</em>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                } else {
+                    html += '<div class="word-details-section"><p style="opacity: 0.7;">No definitions found.</p></div>';
+                }
+
+                // Display examples
+                if (wordData.examples && wordData.examples.length > 0) {
+                    html += '<div class="word-details-section"><h4>💬 Examples:</h4><ul class="word-examples">';
+                    wordData.examples.forEach(ex => {
+                        html += `<li>${ex.text || ex}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+            } else {
+                html += '<div class="word-details-section"><p style="opacity: 0.7;">No data available.</p></div>';
+            }
+
+            // Add action buttons
+            html += '<div class="word-actions">';
+
+            if (currentReviewTab === 'disputed') {
+                html += `
+                    <button class="btn btn-approve" onclick="approveWord('${word}')">
+                        ✓ Approve as Valid
+                    </button>
+                `;
+            }
+
+            html += `
+                <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
+                    🗑️ ${currentReviewTab === 'pending-delete' ? 'Permanently Delete' : 'Remove from Valid Words'}
+                </button>
+            `;
+
+            html += '</div></div>';
+
+            detailsPanel.innerHTML = html;
+        }
+
+        function approveWord(word) {
+            const lowerWord = word.toLowerCase();
+
+            // Add to approved words (will be added to valid word list)
+            approvedWords.add(lowerWord);
+
+            // Remove from disputed
+            disputedWords.delete(lowerWord);
+
+            // Add to valid words for current game
+            validWords.push(lowerWord);
+
+            // Save approved words to localStorage
+            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+
+            // Update review panel
+            updateReviewPanel();
+
+            // Show notification
+            alert(`✓ "${word.toUpperCase()}" has been approved and added to valid words!`);
+        }
+
+        function confirmPermanentDelete(word) {
+            const lowerWord = word.toLowerCase();
+            const message = currentReviewTab === 'pending-delete'
+                ? `Are you sure you want to permanently delete "${word.toUpperCase()}"? It will be excluded from all future games.`
+                : `Are you sure you want to remove "${word.toUpperCase()}" from valid words and add it to the delete list?`;
+
+            if (confirm(message)) {
+                permanentlyDeleteWord(lowerWord);
+            }
+        }
+
+        function permanentlyDeleteWord(word) {
+            const lowerWord = word.toLowerCase();
+
+            // Add to permanently deleted words
+            deletedWords.add(lowerWord);
+
+            // Remove from pending and disputed
+            pendingDeleteWords.delete(lowerWord);
+            disputedWords.delete(lowerWord);
+
+            // Remove from approved if it was there
+            approvedWords.delete(lowerWord);
+
+            // Save to backend
+            saveDeletedWords();
+
+            // Update approved words
+            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+
+            // Update review panel
+            updateReviewPanel();
+
+            alert(`🗑️ "${word.toUpperCase()}" has been permanently deleted.`);
+        }
+
+        // Load approved words on init
+        function loadApprovedWords() {
+            const saved = localStorage.getItem('letterGridApprovedWords');
+            if (saved) {
+                approvedWords = new Set(JSON.parse(saved));
+            }
+        }
 
         // Initialize game on load
         init();

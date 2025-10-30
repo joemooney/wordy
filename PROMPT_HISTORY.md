@@ -2215,3 +2215,206 @@ git commit -m "Add UI for viewing recalculated scores in leaderboard"
 **Commit:** `25b1e7c`
 
 ---
+
+## Session: Review Panel with Wordnik API Integration (2025-10-29)
+
+### Prompt 19: Review Panel for Disputed and Pending Delete Words
+
+**User Request:**
+"For the Word Grid game under the Found Words add a review button. This will switch to another panel and we will review all the words found that have been Disputed or Deleted during the game. We will use wordnik api to make calls to review each word and show the defintion and other information about the word if found. There will be a button to delete each word if we want to permanently add the word to the deleted word list. (alter the existing code to temporarily mark the word for deletion until Review instead of immediately deleting) For Disputed words allow a Check mark icon to add it to the list of valid words. You can maintain a list of additional valid words that is appended to the original list of just add to the original list."
+
+**Problem:**
+The Letter Grid game had several workflow issues:
+1. Clicking X on found words immediately deleted them without review
+2. Disputed words were tracked but had no review mechanism
+3. No way to see definitions/examples before making permanent deletion decisions
+4. No way to approve disputed words as valid
+5. No persistence of user-approved words across games
+
+**Implementation Details:**
+
+1. **Review Button** (`letter_grid.html:448-450`):
+   ```html
+   <button class="btn btn-primary" onclick="showReviewPanel()" id="reviewBtn"
+           style="margin-top: 15px; width: 100%;">
+       📋 Review Words
+   </button>
+   ```
+
+2. **Review Panel UI** (`letter_grid.html:456-489`):
+   - Full-screen overlay panel with gradient background
+   - Two-panel layout: word list (left, 400px) + details panel (right, flex)
+   - Two tabs: "Pending Delete" and "Disputed" with counts
+   - Back to Game button in header
+   - Responsive design collapses to single column on smaller screens
+
+3. **Modified Delete Workflow** (`letter_grid.html:957-978`):
+   ```javascript
+   function deleteWord(word) {
+       const lowerWord = word.toLowerCase();
+       // Mark for deletion pending review (don't immediately delete)
+       pendingDeleteWords.add(lowerWord);
+       // Remove from found words in current game
+       foundWords.delete(lowerWord);
+       // Show notification
+       wordDisplay.textContent = `${word.toUpperCase()} marked for review`;
+   }
+   ```
+
+4. **New State Variables** (`letter_grid.html:730-739`):
+   ```javascript
+   let pendingDeleteWords = new Set(); // Words marked for deletion pending review
+   let approvedWords = new Set(); // Words approved as valid after dispute
+   let currentReviewTab = 'pending-delete';
+   let selectedReviewWord = null;
+   ```
+
+5. **Wordnik API Integration** (`letter_grid.html:1253-1285`):
+   ```javascript
+   async function fetchWordnikData(word) {
+       const WORDNIK_API_KEY = 'YOUR_API_KEY_HERE'; // User must replace
+       const baseUrl = 'https://api.wordnik.com/v4/word.json';
+
+       // Fetch definitions (limit 3)
+       const defResponse = await fetch(
+           `${baseUrl}/${encodeURIComponent(word)}/definitions?api_key=${WORDNIK_API_KEY}&limit=3...`
+       );
+
+       // Fetch examples (limit 3)
+       const exResponse = await fetch(
+           `${baseUrl}/${encodeURIComponent(word)}/examples?api_key=${WORDNIK_API_KEY}&limit=3...`
+       );
+
+       return { definitions, examples };
+   }
+   ```
+
+6. **Word Details Display** (`letter_grid.html:1287-1359`):
+   - Shows word in large uppercase title
+   - Status badge (Pending Delete / Disputed)
+   - Definitions section with part of speech
+   - Examples section with bullet list
+   - Error handling with API key setup instructions
+   - Action buttons: Approve (disputed only) and Permanently Delete
+
+7. **Approve Word Function** (`letter_grid.html:1361-1381`):
+   ```javascript
+   function approveWord(word) {
+       approvedWords.add(lowerWord);
+       disputedWords.delete(lowerWord);
+       validWords.push(lowerWord); // Add to current game
+       localStorage.setItem('letterGridApprovedWords',
+           JSON.stringify(Array.from(approvedWords)));
+       alert(`✓ "${word.toUpperCase()}" has been approved and added to valid words!`);
+   }
+   ```
+
+8. **Permanent Delete Function** (`letter_grid.html:1394-1417`):
+   ```javascript
+   function permanentlyDeleteWord(word) {
+       deletedWords.add(lowerWord);
+       pendingDeleteWords.delete(lowerWord);
+       disputedWords.delete(lowerWord);
+       approvedWords.delete(lowerWord);
+       saveDeletedWords(); // Save to backend
+       localStorage.setItem('letterGridApprovedWords',
+           JSON.stringify(Array.from(approvedWords)));
+   }
+   ```
+
+9. **Game Initialization Updates** (`letter_grid.html:742-783`):
+   ```javascript
+   async function init() {
+       await loadDeletedWords();
+       loadApprovedWords(); // Load from localStorage
+       await newGame();
+   }
+
+   async function newGame() {
+       // ... fetch letters and words ...
+
+       // Add approved words to valid words
+       approvedWords.forEach(word => {
+           if (!validWords.includes(word)) {
+               validWords.push(word);
+           }
+       });
+
+       // Remove deleted words from valid words
+       validWords = validWords.filter(word => !deletedWords.has(word));
+   }
+   ```
+
+10. **CSS Styling** (`letter_grid.html:382-611`):
+    - Review panel: full-screen fixed overlay (z-index: 1000)
+    - Tab buttons: glassmorphism with active state
+    - Word items: hover effects, selected state, status borders
+    - Details panel: large title, status badges, definition/example styling
+    - Action buttons: gradient backgrounds (green for approve, red for delete)
+    - Responsive media queries for mobile/tablet
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add Review Panel with Wordnik API integration for Letter Grid
+
+Implemented comprehensive word review system:
+- Review button in Found Words section
+- Two-tab panel (Pending Delete / Disputed)
+- Wordnik API integration for definitions and examples
+- Modified delete workflow to mark for review instead of immediate delete
+- Approve disputed words with checkmark button
+- Permanently delete words after review
+- Approved words persist via localStorage
+- Approved words auto-included in future games
+- Full-screen responsive UI with glassmorphism design
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html` (694 lines added)
+- `/home/joe/ai/wordy/REQUIREMENTS.md` (29 lines added)
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` (this entry)
+
+**User Experience Benefits:**
+- Review before permanent deletion prevents accidental removal of valid words
+- Wordnik definitions help verify if word should be kept or deleted
+- Disputed words can be validated and approved easily
+- Approved words persist across games automatically
+- Clean separation between temporary and permanent actions
+
+**Technical Benefits:**
+- Deferred deletion pattern prevents immediate data loss
+- LocalStorage for approved words enables cross-session persistence
+- Graceful API error handling with setup instructions
+- Separate state management for pending vs permanent deletions
+- Tab-based UI keeps interface organized
+
+**API Key Setup:**
+Users need to:
+1. Get free API key from https://developer.wordnik.com/
+2. Replace `YOUR_API_KEY_HERE` in `letter_grid.html:1255`
+3. Refresh page to start using word lookups
+
+**Workflow Example:**
+1. User plays game, finds "tars" which is rejected
+2. Clicks "Dispute" button to mark as disputed
+3. Later clicks "📋 Review Words" button
+4. Switches to "Disputed" tab
+5. Clicks "tars" to see Wordnik definition
+6. Sees it's a valid word, clicks "✓ Approve as Valid"
+7. "tars" now accepted in all future games
+
+**Future Enhancement Opportunities:**
+- Batch approve/delete multiple words
+- Export disputed/pending words list
+- Import approved words from file
+- Alternative dictionary APIs (fallback if Wordnik fails)
+- Word frequency data from API
+- Pronunciation audio from API
+
+---
