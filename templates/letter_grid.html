@@ -170,6 +170,10 @@
             background: linear-gradient(145deg, #ffc107, #ff9800);
         }
 
+        .btn-danger {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -403,9 +407,10 @@
 
                     <div class="controls">
                         <div class="controls-row">
+                            <button class="btn btn-danger" onclick="disputeWord()" id="disputeBtn" style="visibility: hidden;">⚠️ Dispute</button>
                             <button class="btn btn-secondary" onclick="clearWord()" id="clearBtn">Clear</button>
                             <button class="btn btn-primary" onclick="submitWord()" id="submitBtn" disabled>Submit</button>
-                            <button class="btn btn-success" onclick="resolveWord()" id="resolveBtn" style="display: none;">Resolve</button>
+                            <button class="btn btn-success" onclick="resolveWord()" id="resolveBtn" style="visibility: hidden;">Resolve</button>
                         </div>
                         <div class="controls-row">
                             <button class="btn btn-info" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
@@ -454,9 +459,11 @@
         let validWords = [];
         let foundWords = new Set();
         let deletedWords = new Set(); // Words excluded from future games
+        let disputedWords = new Set(); // Words disputed by user
         let hintEnabled = false; // Whether hint mode is enabled
         let possibleMatches = []; // Current possible word matches
         let nineLetterWord = ''; // The base nine-letter word for this game
+        let lastRejectedWord = ''; // Track last rejected word for dispute button
 
         // Initialize game
         async function init() {
@@ -555,10 +562,10 @@
                     wordInfo.textContent = `✓ Already found! (${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters)`;
 
                     // Show resolve button if only one match
-                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                    document.getElementById('resolveBtn').style.visibility = matchCount === 1 ? 'visible' : 'hidden';
                 } else {
                     wordInfo.textContent = '✓ Already found!';
-                    document.getElementById('resolveBtn').style.display = 'none';
+                    document.getElementById('resolveBtn').style.visibility = 'hidden';
                 }
 
                 submitBtn.disabled = true;
@@ -575,10 +582,10 @@
                     wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
 
                     // Show resolve button if only one match
-                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                    document.getElementById('resolveBtn').style.visibility = matchCount === 1 ? 'visible' : 'hidden';
                 } else {
                     wordInfo.innerHTML = '&nbsp;';
-                    document.getElementById('resolveBtn').style.display = 'none';
+                    document.getElementById('resolveBtn').style.visibility = 'hidden';
                 }
             }
             // Not a valid word
@@ -593,10 +600,10 @@
                     wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
 
                     // Show resolve button if only one match
-                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                    document.getElementById('resolveBtn').style.visibility = matchCount === 1 ? 'visible' : 'hidden';
                 } else {
                     wordInfo.innerHTML = '&nbsp;';
-                    document.getElementById('resolveBtn').style.display = 'none';
+                    document.getElementById('resolveBtn').style.visibility = 'hidden';
                 }
             }
         }
@@ -759,10 +766,10 @@
                     wordInfo.textContent = `${matchCount} remaining word${matchCount !== 1 ? 's' : ''} with these letters`;
 
                     // Show resolve button if only one match
-                    document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+                    document.getElementById('resolveBtn').style.visibility = matchCount === 1 ? 'visible' : 'hidden';
                 } else {
                     wordInfo.innerHTML = '&nbsp;';
-                    document.getElementById('resolveBtn').style.display = 'none';
+                    document.getElementById('resolveBtn').style.visibility = 'hidden';
                 }
 
                 // Check if all words found
@@ -773,6 +780,7 @@
                 }
             } else {
                 // Wrong word
+                lastRejectedWord = lowerWord;
                 showError('Not a valid word!');
             }
         }
@@ -780,14 +788,27 @@
         function showError(message) {
             const wordDisplay = document.getElementById('currentWord');
             const wordInfo = document.getElementById('wordInfo');
+            const disputeBtn = document.getElementById('disputeBtn');
 
             wordDisplay.textContent = currentWord + ' ❌';
             wordDisplay.className = 'current-word error';
             wordInfo.textContent = message;
 
+            // Show dispute button for rejected words
+            disputeBtn.style.visibility = 'visible';
+
             setTimeout(() => {
                 updateCurrentWord();
+                disputeBtn.style.visibility = 'hidden';
             }, 1500);
+        }
+
+        function disputeWord() {
+            if (lastRejectedWord && !disputedWords.has(lastRejectedWord)) {
+                disputedWords.add(lastRejectedWord);
+                console.log('Disputed words:', Array.from(disputedWords));
+                alert(`"${lastRejectedWord.toUpperCase()}" has been added to disputed words list.`);
+            }
         }
 
         function addFoundWord(word) {
