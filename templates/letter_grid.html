@@ -747,6 +747,10 @@
                 updateStats();
                 // Don't clear - allow user to add more letters (e.g., "job" -> "jobs")
 
+                // Show word in gold to indicate it was found
+                const wordDisplay = document.getElementById('currentWord');
+                wordDisplay.className = 'current-word gold';
+
                 // Update the current word display to refresh hint count
                 updateCurrentWord();
 
