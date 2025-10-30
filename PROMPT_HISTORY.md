@@ -2008,6 +2008,151 @@ git push
 
 ---
 
+### Prompt 18: Add Dispute Button for Rejected Words
+
+**User Request:**
+"Add a button to Dispute a word that is rejected. Place this in a list of disputed words if not already in the list. Put the button to the left of Clear but only show it for a word that I just submitted and was rejected. In order that buttons do not shift in position reserve the locations of Dispute, Clear, Submit, Resolve and hide/unhide but keep the locations relatively fixed."
+
+**Problem:**
+User needed ability to mark words they believe should be valid but are rejected by the game. Button appearance/disappearance was causing layout shifts in the button row.
+
+**Implementation Details:**
+
+1. **Button HTML** (`templates/letter_grid.html:406`):
+   ```html
+   <button class="btn btn-danger" onclick="disputeWord()" id="disputeBtn" style="visibility: hidden;">⚠️ Dispute</button>
+   ```
+   - Positioned to left of Clear button
+   - Initially hidden with `visibility: hidden`
+   - Red danger styling with warning icon
+
+2. **CSS Styling** (`templates/letter_grid.html:173-175`):
+   ```css
+   .btn-danger {
+       background: linear-gradient(145deg, #ff6b6b, #ee5a6f);
+   }
+   ```
+
+3. **State Variables** (`templates/letter_grid.html:462, 466`):
+   ```javascript
+   let disputedWords = new Set();
+   let lastRejectedWord = '';
+   ```
+   - Set prevents duplicate disputes
+   - Tracks most recently rejected word
+
+4. **Modified submitWord()** (`templates/letter_grid.html:783`):
+   ```javascript
+   lastRejectedWord = lowerWord;
+   showError('Not a valid word');
+   ```
+   - Stores rejected word before showing error
+
+5. **Enhanced showError()** (`templates/letter_grid.html:788-804`):
+   ```javascript
+   function showError(message) {
+       const wordDisplay = document.getElementById('currentWord');
+       const wordInfo = document.getElementById('wordInfo');
+       const disputeBtn = document.getElementById('disputeBtn');
+
+       wordDisplay.textContent = currentWord + ' ❌';
+       wordDisplay.className = 'current-word error';
+       wordInfo.textContent = message;
+
+       disputeBtn.style.visibility = 'visible';
+
+       setTimeout(() => {
+           updateCurrentWord();
+           disputeBtn.style.visibility = 'hidden';
+       }, 1500);
+   }
+   ```
+   - Shows dispute button immediately
+   - Hides after 1.5 seconds
+   - Resets display to normal state
+
+6. **New disputeWord() Function** (`templates/letter_grid.html:806-812`):
+   ```javascript
+   function disputeWord() {
+       if (lastRejectedWord && !disputedWords.has(lastRejectedWord)) {
+           disputedWords.add(lastRejectedWord);
+           console.log('Disputed words:', Array.from(disputedWords));
+           alert(`"${lastRejectedWord.toUpperCase()}" has been added to disputed words list.`);
+       }
+   }
+   ```
+   - Checks word exists and not already disputed
+   - Adds to Set (no duplicates)
+   - Logs to console for debugging
+   - Shows confirmation alert
+
+7. **Button Position Stability**:
+   Changed ALL Resolve button visibility from `display` to `visibility`:
+   - Initial HTML: `style="visibility: hidden;"`
+   - Line 565, 568: First already-found block
+   - Line 585, 588: Second already-found block (replaced)
+   - Line 603, 606: Invalid word block (replaced)
+   - Line 769, 772: After successful submission (replaced)
+
+   Pattern changed from:
+   ```javascript
+   document.getElementById('resolveBtn').style.display = matchCount === 1 ? 'inline-block' : 'none';
+   ```
+
+   To:
+   ```javascript
+   document.getElementById('resolveBtn').style.visibility = matchCount === 1 ? 'visible' : 'hidden';
+   ```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html
+git commit -m "Complete Dispute button implementation with fixed button positions"
+git push
+```
+
+**Commit:** `c9ae151`
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html`
+- `/home/joe/ai/wordy/REQUIREMENTS.md`
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md`
+
+**User Experience:**
+- Dispute button appears immediately after word rejection
+- Shows for 1.5 seconds (enough time to click)
+- No layout shifting when buttons appear/disappear
+- Clean feedback with console logging and alert
+- Can dispute multiple different words
+- No duplicate disputes (Set ensures uniqueness)
+
+**Technical Benefits:**
+- `visibility: hidden` reserves space vs `display: none`
+- All buttons maintain fixed positions
+- Temporary appearance (1.5s) is clear and non-intrusive
+- Set data structure prevents duplicates automatically
+- Console logging aids debugging and verification
+- lastRejectedWord ensures correct word is disputed
+
+**Workflow Example:**
+1. User types "TAZ" and submits
+2. Game shows "TAZ ❌ Not a valid word"
+3. Dispute button appears to left of Clear
+4. User clicks Dispute within 1.5 seconds
+5. Alert: "TAZ has been added to disputed words list."
+6. Console logs: `Disputed words: ['taz']`
+7. Button disappears after timeout
+8. Future rejection of "TAZ" can be disputed again (button shows) but won't duplicate in list
+
+**Future Enhancement Opportunities:**
+- Backend API endpoint to save disputed words to file
+- Admin interface to review disputed words
+- Auto-validation against external dictionary API
+- Export disputed words list
+- Clear disputed words option in settings
+
+---
+
 ## Previous Sessions (From Context Summary)
 
 ### Session 1: Game History Storage System

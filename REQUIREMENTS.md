@@ -101,10 +101,18 @@ All system requirements organized by main categories.
   - No confirmation required for faster workflow
   - Persists in words_deleted.txt file
   - Can exclude multiple words (not limited like a radio button)
+- **Word dispute:**
+  - Red ⚠️ Dispute button appears temporarily after word rejection
+  - Shows for 1.5 seconds to left of Clear button
+  - Click to add rejected word to disputed words list
+  - No duplicates (tracks in Set)
+  - Logs disputed words to console
 - **Button Layout:**
-  - Row 1: Clear, Submit, Resolve (main game actions)
+  - Row 1: Dispute, Clear, Submit, Resolve (main game actions)
   - Row 2: Hint, Show Nine, New Game (helper functions)
-  - Two-row layout prevents width shifting when Resolve appears
+  - Two-row layout prevents width shifting
+  - All buttons use visibility (hidden/visible) to maintain fixed positions
+  - Dispute only appears after rejected word submission
 - **Controls:**
   - Click tiles or use keyboard (letter keys)
   - Enter to submit, Escape to clear
