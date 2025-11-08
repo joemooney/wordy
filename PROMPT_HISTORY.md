@@ -2581,3 +2581,147 @@ git push
 6. Now knows it's a valid word and what it means!
 
 ---
+
+### Prompt 21: Add Search/Filter to Review Panel
+
+**User Request:**
+"yes, fire ahead and test and make any changes you see fit"
+
+**Problem:**
+The Review Panel could have many words (especially in the "All Valid Words" tab which might have 50-150 words). Scrolling through a long list to find a specific word was inefficient. Needed a search/filter feature.
+
+**Implementation Details:**
+
+1. **Search Input Box** (`letter_grid.html:731-735`):
+   ```html
+   <input type="text" id="wordSearchInput" placeholder="🔍 Search words..."
+          style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px;
+                 border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+                 color: white; font-size: 14px;"
+          oninput="filterReviewWords()">
+   ```
+
+2. **Word Count Display** (`letter_grid.html:736`):
+   ```html
+   <div id="wordCountDisplay" style="font-size: 12px; opacity: 0.7; margin-bottom: 10px; text-align: center;"></div>
+   ```
+
+3. **Search Box Styling** (`letter_grid.html:614-622`):
+   ```css
+   #wordSearchInput::placeholder {
+       color: rgba(255, 255, 255, 0.5);
+   }
+
+   #wordSearchInput:focus {
+       outline: none;
+       border-color: rgba(255, 255, 255, 0.6);
+       background: rgba(255, 255, 255, 0.15);
+   }
+   ```
+
+4. **Filter Logic** (`letter_grid.html:1253-1316`):
+   ```javascript
+   function updateReviewWordsList() {
+       const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+       let words = [];
+       let totalWords = 0;
+
+       // Get words based on current tab
+       if (currentReviewTab === 'pending-delete') {
+           words = Array.from(pendingDeleteWords);
+           totalWords = pendingDeleteWords.size;
+       } // ... etc
+
+       // Apply search filter
+       if (searchTerm) {
+           words = words.filter(word => word.toLowerCase().includes(searchTerm));
+       }
+
+       // Update count display
+       if (searchTerm && words.length < totalWords) {
+           countDisplay.textContent = `Showing ${words.length} of ${totalWords} words`;
+       } else if (words.length > 0) {
+           countDisplay.textContent = `${words.length} word${words.length !== 1 ? 's' : ''}`;
+       }
+
+       // Display filtered results
+   }
+   ```
+
+5. **Clear Search on Tab Switch** (`letter_grid.html:1221-1225`):
+   ```javascript
+   function showReviewTab(tab) {
+       // ... update tabs ...
+
+       // Clear search when switching tabs
+       const searchInput = document.getElementById('wordSearchInput');
+       if (searchInput) {
+           searchInput.value = '';
+       }
+
+       updateReviewWordsList();
+   }
+   ```
+
+6. **Filter Function** (`letter_grid.html:1314-1316`):
+   ```javascript
+   function filterReviewWords() {
+       updateReviewWordsList();
+   }
+   ```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add search/filter functionality to Review Panel
+
+Enhanced Review Panel with search feature:
+- Search input box with real-time filtering
+- Shows filtered count (e.g., 'Showing 5 of 87 words')
+- Supports partial matching (search 'tar' finds 'tarn', 'tardy', 'guitar')
+- Clears search when switching tabs
+- Focus styling for better UX
+- Word count display updates dynamically
+- Works across all three tabs
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html` (+45 lines modified)
+- `/home/joe/ai/wordy/REQUIREMENTS.md` (+2 lines added)
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` (this entry)
+
+**User Experience Benefits:**
+- **Fast Search**: Type to instantly filter hundreds of words
+- **Partial Matching**: Search "tar" finds "tarn", "tardy", "guitar", etc.
+- **Visual Feedback**: Count shows "Showing 5 of 87 words"
+- **Clean UX**: Search clears when switching tabs
+- **No Clutter**: Search box blends into glassmorphism design
+
+**Technical Benefits:**
+- Real-time filtering with oninput event
+- Case-insensitive substring matching
+- Efficient array filtering
+- Proper pluralization (1 word vs 2 words)
+- Focus states for accessibility
+
+**Search Examples:**
+- Search "tion" → finds "action", "creation", "nation", etc.
+- Search "tar" → finds "tar", "tarn", "tardy", "guitar"
+- Search "xyz" → shows "No words matching 'xyz'"
+- Empty search → shows all words
+
+**Use Case:**
+1. User has 87 valid words in current game
+2. Clicks "📋 Review Words" → "All Valid Words" tab
+3. Types "tar" in search box
+4. Instantly see 4 words: TAR, TARN, TARS, GUITAR
+5. Count shows "Showing 4 of 87 words"
+6. Clicks TARN to see definition
+7. Clears search to browse all words again
+
+---

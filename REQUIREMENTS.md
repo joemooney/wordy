@@ -138,11 +138,14 @@ All system requirements organized by main categories.
     - Helpful for learning and verifying word list
   - **UI features:**
     - Two-panel layout: word list (left) + details (right)
+    - Search/filter box to quickly find words
+    - Shows filtered count (e.g., "Showing 5 of 87 words")
     - Auto-selects first word in list
     - Visual status indicators (Pending Delete / Disputed / Valid Word)
     - Color-coded borders: red (pending delete), yellow (disputed), blue (valid)
     - Responsive design for smaller screens with tab wrapping
     - Back to Game button to return
+    - Search clears when switching tabs
 - **Button Layout:**
   - Row 1: Dispute, Clear, Submit, Resolve (main game actions)
   - Row 2: Hint, Show Nine, New Game (helper functions)

@@ -611,6 +611,16 @@
             margin-top: 20px;
         }
 
+        #wordSearchInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        #wordSearchInput:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         @media (max-width: 1200px) {
             .review-container {
                 grid-template-columns: 1fr;
@@ -718,6 +728,12 @@
                                 All Valid Words (<span id="allWordsCount">0</span>)
                             </button>
                         </div>
+                        <input type="text" id="wordSearchInput" placeholder="🔍 Search words..."
+                               style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px;
+                                      border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
+                                      color: white; font-size: 14px;"
+                               oninput="filterReviewWords()">
+                        <div id="wordCountDisplay" style="font-size: 12px; opacity: 0.7; margin-bottom: 10px; text-align: center;"></div>
                         <div class="review-words-list" id="reviewWordsList">
                             <p style="opacity: 0.6; text-align: center; margin-top: 20px;">No words to review</p>
                         </div>
@@ -1213,6 +1229,12 @@
             document.getElementById('disputedTab').classList.toggle('active', tab === 'disputed');
             document.getElementById('allWordsTab').classList.toggle('active', tab === 'all-words');
 
+            // Clear search when switching tabs
+            const searchInput = document.getElementById('wordSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
             // Update word list
             updateReviewWordsList();
         }
@@ -1230,18 +1252,44 @@
 
         function updateReviewWordsList() {
             const list = document.getElementById('reviewWordsList');
+            const searchInput = document.getElementById('wordSearchInput');
+            const countDisplay = document.getElementById('wordCountDisplay');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
             let words = [];
+            let totalWords = 0;
 
             if (currentReviewTab === 'pending-delete') {
                 words = Array.from(pendingDeleteWords);
+                totalWords = pendingDeleteWords.size;
             } else if (currentReviewTab === 'disputed') {
                 words = Array.from(disputedWords);
+                totalWords = disputedWords.size;
             } else if (currentReviewTab === 'all-words') {
                 words = [...validWords]; // All valid words for the current game
+                totalWords = validWords.length;
+            }
+
+            // Apply search filter
+            if (searchTerm) {
+                words = words.filter(word => word.toLowerCase().includes(searchTerm));
+            }
+
+            // Update count display
+            if (countDisplay) {
+                if (searchTerm && words.length < totalWords) {
+                    countDisplay.textContent = `Showing ${words.length} of ${totalWords} words`;
+                } else if (words.length > 0) {
+                    countDisplay.textContent = `${words.length} word${words.length !== 1 ? 's' : ''}`;
+                } else {
+                    countDisplay.textContent = '';
+                }
             }
 
             if (words.length === 0) {
-                list.innerHTML = '<p style="opacity: 0.6; text-align: center; margin-top: 20px;">No words to review</p>';
+                const message = searchTerm
+                    ? `No words matching "${searchTerm}"`
+                    : 'No words to review';
+                list.innerHTML = `<p style="opacity: 0.6; text-align: center; margin-top: 20px;">${message}</p>`;
                 document.getElementById('reviewWordDetails').innerHTML = '<p style="opacity: 0.6; text-align: center;">Select a word to see details</p>';
                 return;
             }
@@ -1261,6 +1309,10 @@
             if (words.length > 0) {
                 selectReviewWord(words[0]);
             }
+        }
+
+        function filterReviewWords() {
+            updateReviewWordsList();
         }
 
         async function selectReviewWord(word) {
@@ -1287,7 +1339,7 @@
         async function fetchWordnikData(word) {
             // Wordnik API key - users should replace with their own
             // Get a free API key at: https://developer.wordnik.com/
-            const WORDNIK_API_KEY = 'YOUR_API_KEY_HERE'; // TODO: Replace with actual API key
+            const WORDNIK_API_KEY = '2fixo23url1m251dn4ucchrln2p32o16nlb8m6w1tyl4fqlz2'; // TODO: Replace with actual API key
 
             // Check if API key is configured
             if (!WORDNIK_API_KEY || WORDNIK_API_KEY === 'YOUR_API_KEY_HERE') {
