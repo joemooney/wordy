@@ -4028,3 +4028,12 @@ git push
 ```
 
 ---
+
+
+**Prompt 32 Update:** Fixed batch validation to also exclude words without valid definitions
+
+Previously, the "Validate All via Wordnik" button used `wordData.definitions.length > 0` which only checked if definitions array existed, not if it contained actual text. Words like ANH and EFL have empty definition objects and were not being removed.
+
+Fixed by replacing the check with `hasValidDefinitions(word)` at line 2094, which properly checks for actual definition text content.
+
+

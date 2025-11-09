@@ -2090,10 +2090,11 @@
                         apiCallCount++;
                     }
 
-                    if (wordData.definitions && wordData.definitions.length > 0) {
+                    // Check if word has actual valid definitions (not just empty definition objects)
+                    if (hasValidDefinitions(word)) {
                         validCount++;
                     } else {
-                        // No definitions found, mark as invalid
+                        // No valid definitions found, mark as invalid
                         invalidCount++;
                         invalidWords.push(word);
 
