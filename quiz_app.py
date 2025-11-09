@@ -8,6 +8,9 @@ import random
 import os
 import json
 import csv
+import threading
+import time
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -1102,6 +1105,42 @@ def get_port_from_registry(app_name='wordy', default_port=5000):
 
     return default_port
 
+# Background thread for hourly grid generation
+def run_grid_generator_hourly():
+    """Run grid generator every hour in background thread."""
+    while True:
+        try:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Running grid generator...")
+
+            # Run the grid generator script
+            result = subprocess.run(
+                ['python3', 'grid_generator.py'],
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minute timeout
+            )
+
+            if result.returncode == 0:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Grid generator completed successfully")
+                if result.stdout:
+                    print(result.stdout)
+            else:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Grid generator failed with code {result.returncode}")
+                if result.stderr:
+                    print(result.stderr)
+
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Error running grid generator: {e}")
+
+        # Wait 1 hour before next run
+        time.sleep(3600)
+
+def start_background_thread():
+    """Start the background grid generator thread."""
+    thread = threading.Thread(target=run_grid_generator_hourly, daemon=True)
+    thread.start()
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Background grid generator thread started (runs hourly)")
+
 if __name__ == '__main__':
     import socket
     hostname = socket.gethostname()
@@ -1116,9 +1155,13 @@ if __name__ == '__main__':
         len(TRIVIA_CATEGORIES),
         sum(len(q) for q in TRIVIA_CATEGORIES.values())
     ))
+
+    # Start background grid generator thread
+    start_background_thread()
+
     print("\n" + "="*50)
     print("Server is running and accessible at:")
     print("  Local:   http://localhost:{}".format(port))
     print("  Network: http://{}:{}".format(local_ip, port))
     print("="*50 + "\n")
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)
