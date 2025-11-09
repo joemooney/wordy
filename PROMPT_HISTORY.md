@@ -3943,3 +3943,88 @@ git push
 ```
 
 ---
+
+
+### Prompt 32: Exclude Words Without Valid Definitions (2025-11-09)
+
+**User Request:**
+"I do not want any words selected for word grid that have been validated by wordnik and found to not have any definition."
+
+**Problem:**
+After validating words with Wordnik API, some words (like "EFL") were marked as "validated" even though they had no actual definitions - only empty definition objects. These words should be excluded from all future games since they lack proper dictionary definitions.
+
+**Example:** EFL in validation cache:
+```json
+{
+  "validated": true,
+  "definitions": [
+    { "citations": [], "exampleUses": [], "labels": [], ... },
+    // 3 more empty definition objects
+  ]
+}
+```
+
+The definitions array contains objects but no `text` field with actual definition content.
+
+**Implementation Details:**
+
+**1. Server-Side Filtering (`quiz_app.py:117-171`):**
+
+Added `has_valid_definitions()` helper function to check if words have actual definition text.
+
+Updated `find_words_from_letters()` to load validation cache and exclude words without valid definitions.
+
+**2. Client-Side Filtering (`templates/letter_grid.html:1900-1935`):**
+
+Added `hasValidDefinitions()` JavaScript function with same logic as server-side.
+
+Updated `isWordValidated()` to require both cache presence AND valid definitions.
+
+**Key Logic:**
+1. **Not validated yet** → Allow (return true)
+2. **Validated as invalid** → Exclude (return false)
+3. **Validated with no definitions array** → Exclude (return false)
+4. **Validated with empty definitions** → Exclude (return false)
+5. **Validated with definitions lacking text field** → Exclude (return false)
+6. **Validated with at least one definition containing text** → Allow (return true)
+
+**Testing:**
+Verified EFL is correctly identified as having no valid definitions and will be excluded from future games.
+
+**Impact:**
+- EFL and similar words (validated but with no definition text) will no longer appear in new games
+- Both server-side grid generation and client-side validation enforce this rule
+- Prevents acronyms and incomplete entries from appearing in puzzles
+
+**Files Modified:**
+- `quiz_app.py:117-171` (added `has_valid_definitions()`, updated `find_words_from_letters()`)
+- `templates/letter_grid.html:1900-1935` (added `hasValidDefinitions()`, updated `isWordValidated()`)
+- `REQUIREMENTS.md` (added automatic exclusion note)
+
+**Git Operations:**
+```bash
+git add quiz_app.py templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Exclude words without valid definitions from Letter Grid games
+
+Automatically filter out words validated via Wordnik that have no actual
+definition text (like acronyms such as EFL).
+
+Server-side changes:
+- Added has_valid_definitions() helper function
+- Updated find_words_from_letters() to check validation cache
+- Words without text field in definitions are excluded
+
+Client-side changes:
+- Added hasValidDefinitions() JavaScript function
+- Updated isWordValidated() to require actual definition text
+- Prevents display of validated-but-undefined words
+
+Testing confirmed EFL (4 empty definitions) is now excluded.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+---

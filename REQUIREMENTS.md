@@ -135,6 +135,9 @@ All system requirements organized by main categories.
       - Cache stored in wordnik_validation_cache.json on server
       - Includes validation status, timestamp, definitions, and examples
       - Server-side storage ensures persistence across devices and browsers
+      - **Automatic exclusion:** Words validated without actual definitions are automatically excluded from all future games
+        - Prevents acronyms and invalid words (like "EFL") from appearing in puzzles
+        - Both server-side grid generation and client-side display respect this rule
     - **API Quota Tracking:**
       - Wordnik free tier: 100 requests/hour (50 words/hour, 2 API calls per word)
       - Tracks API usage in real-time with server-side persistence

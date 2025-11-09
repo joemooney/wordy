@@ -114,18 +114,59 @@ print("Loaded {} words for Letter Grid game from {}".format(len(GRID_WORDS), wor
 NINE_LETTER_WORDS = [word for word in GRID_WORDS if len(word) == 9]
 print("Found {} nine-letter words for grid generation".format(len(NINE_LETTER_WORDS)))
 
+def has_valid_definitions(word, validation_cache):
+    """Check if a word has actual definitions in the validation cache.
+
+    Args:
+        word: The word to check (case-insensitive)
+        validation_cache: The validation cache dictionary
+
+    Returns:
+        True if word has at least one definition with text, False otherwise
+    """
+    word_lower = word.lower()
+    if word_lower not in validation_cache:
+        return True  # Not validated yet, allow it
+
+    word_data = validation_cache[word_lower]
+
+    # Check if validated as invalid
+    if not word_data.get('validated', False):
+        return False
+
+    # Check if definitions exist and have actual text
+    definitions = word_data.get('definitions', [])
+    if not definitions:
+        return False
+
+    # Check if at least one definition has a 'text' field with content
+    for defn in definitions:
+        if isinstance(defn, dict) and defn.get('text'):
+            return True
+
+    # If we get here, word was validated but has no real definitions (like EFL)
+    return False
+
 def find_words_from_letters(letters):
-    """Find all valid words that can be formed from the given letters."""
+    """Find all valid words that can be formed from the given letters.
+
+    Excludes words that have been validated via Wordnik but found to have no definitions.
+    """
     from collections import Counter
     letters_lower = [l.lower() for l in letters]
     letter_counts = Counter(letters_lower)
     valid_words = []
 
+    # Load validation cache to check for words without definitions
+    validation_cache = load_validation_cache()
+
     for word in GRID_WORDS:
         word_counts = Counter(word)
         # Check if word can be formed from available letters
         if all(word_counts[char] <= letter_counts[char] for char in word_counts):
-            valid_words.append(word)
+            # Also check if word has valid definitions (if it's been validated)
+            if has_valid_definitions(word, validation_cache):
+                valid_words.append(word)
 
     return valid_words
 
