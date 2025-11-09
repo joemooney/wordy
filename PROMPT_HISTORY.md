@@ -2926,3 +2926,93 @@ git push
 5. Continue rapid cleanup
 
 ---
+
+## Session: Global Port Registry System (2025-11-08)
+
+### Overview
+Implemented a global port registry system to manage unique port assignments across all development applications. This ensures no port conflicts when running multiple Flask/web applications simultaneously.
+
+---
+
+### Prompt 23: Global Port Registry Implementation
+
+**User Request:**
+"Since I am developing different apps, I want a global list of port numbers that is maintained with the application and port number so that we use unique port numbers: $HOME/.ports"
+
+**Problem:**
+Running multiple development applications on the same machine can cause port conflicts. Need a centralized system to track and assign unique port numbers.
+
+**Implementation Details:**
+
+1. **Created Global Port Registry** (`$HOME/.ports`):
+   - Added entry: `wordy:5000:Wordy GRE Vocabulary Quiz Application`
+   - Format: `application_name:port_number:description`
+   - Already had one existing app: `ditm:5010:DITM Options Portfolio Builder`
+
+2. **Added Port Registry Function** (`quiz_app.py:795-816`):
+   ```python
+   def get_port_from_registry(app_name='wordy', default_port=5000):
+       """Read port number from global port registry file."""
+       ports_file = Path.home() / '.ports'
+
+       if not ports_file.exists():
+           return default_port
+
+       try:
+           with open(ports_file, 'r') as f:
+               for line in f:
+                   line = line.strip()
+                   # Skip comments and empty lines
+                   if not line or line.startswith('#'):
+                       continue
+                   # Parse format: app_name:port:description
+                   parts = line.split(':', 2)
+                   if len(parts) >= 2 and parts[0] == app_name:
+                       return int(parts[1])
+       except Exception as e:
+           print(f"Warning: Could not read port registry ({e}), using default port {default_port}")
+
+       return default_port
+   ```
+
+3. **Updated Flask App Startup** (`quiz_app.py:823-837`):
+   - Changed from hardcoded `port=5000` to `port = get_port_from_registry('wordy', 5000)`
+   - Updated server startup messages to use dynamic port number
+   - Falls back to default port 5000 if registry unavailable
+
+4. **Documentation Updates:**
+   - **CLAUDE.md**: Added "Port Configuration" section with examples
+   - **REQUIREMENTS.md**: Added port configuration to Backend requirements
+   - **PROMPT_HISTORY.md**: Documented implementation (this entry)
+
+**Benefits:**
+- Centralized port management across all development applications
+- Prevents port conflicts when running multiple apps
+- Easy to see which ports are in use and by which applications
+- Graceful fallback if registry file unavailable
+- Simple text-based format, easy to edit manually
+
+**Testing:**
+- Server successfully started on port 5000
+- Confirmed port read from `~/.ports` file
+- Verified fallback behavior works if file unavailable
+
+**Git Operations:**
+```bash
+git add .ports quiz_app.py CLAUDE.md REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Implement global port registry system
+
+Added centralized port management to prevent port conflicts across
+development applications:
+- Created $HOME/.ports registry file
+- Added get_port_from_registry() function
+- Updated Flask app to read port from registry
+- Documented in CLAUDE.md and REQUIREMENTS.md
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+---

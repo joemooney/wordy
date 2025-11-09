@@ -363,6 +363,11 @@ All system requirements organized by main categories.
 - Routes for all quiz types
 - Word randomization
 - Session management (if needed)
+- **Port Configuration:**
+  - Uses global port registry file: `$HOME/.ports`
+  - Format: `application_name:port_number:description`
+  - Falls back to default port 5000 if registry unavailable
+  - Enables unique port assignments across all dev applications
 
 ### Frontend
 - **Responsive design:**

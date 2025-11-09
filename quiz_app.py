@@ -792,10 +792,36 @@ def search_dictionary():
 
     return jsonify({'words': results, 'total': len(results), 'query': query})
 
+def get_port_from_registry(app_name='wordy', default_port=5000):
+    """Read port number from global port registry file."""
+    ports_file = Path.home() / '.ports'
+
+    if not ports_file.exists():
+        return default_port
+
+    try:
+        with open(ports_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if not line or line.startswith('#'):
+                    continue
+                # Parse format: app_name:port:description
+                parts = line.split(':', 2)
+                if len(parts) >= 2 and parts[0] == app_name:
+                    return int(parts[1])
+    except Exception as e:
+        print(f"Warning: Could not read port registry ({e}), using default port {default_port}")
+
+    return default_port
+
 if __name__ == '__main__':
     import socket
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
+
+    # Get port from registry
+    port = get_port_from_registry('wordy', 5000)
 
     print("Starting Wordy Quiz Application...")
     print("Loaded {} GRE vocabulary words".format(len(WORDS)))
@@ -805,7 +831,7 @@ if __name__ == '__main__':
     ))
     print("\n" + "="*50)
     print("Server is running and accessible at:")
-    print("  Local:   http://localhost:5000")
-    print("  Network: http://{}:5000".format(local_ip))
+    print("  Local:   http://localhost:{}".format(port))
+    print("  Network: http://{}:{}".format(local_ip, port))
     print("="*50 + "\n")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=port)
