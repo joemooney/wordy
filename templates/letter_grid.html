@@ -789,6 +789,15 @@
         // Structure: { word: { validated: true/false, timestamp: Date, definitions: [...], examples: [...] } }
         let wordnikCache = {};
 
+        // Wordnik API quota tracking
+        // Wordnik free tier: 100 requests/hour (each word lookup = 2 requests: definitions + examples)
+        let wordnikQuota = {
+            limit: 50,              // Max words per hour (100 API calls / 2 calls per word)
+            remaining: 50,          // Words remaining this hour
+            resetTime: null,        // When quota resets (1 hour from first call)
+            callsThisHour: []      // Array of timestamps for calls this hour
+        };
+
         // Review Panel Settings
         let reviewSettings = {
             confirmDelete: false  // Skip delete confirmation by default
@@ -800,6 +809,7 @@
             loadApprovedWords();
             loadReviewSettings();
             loadWordnikCache();
+            loadWordnikQuota();
             await newGame();
         }
 
@@ -1393,10 +1403,18 @@
                 throw new Error('Wordnik API key not configured. Get a free API key at https://developer.wordnik.com/ and replace YOUR_API_KEY_HERE in the code (around line 1289).');
             }
 
+            // Check API quota before making call
+            if (!hasWordnikQuota()) {
+                throw new Error(`Wordnik API quota exceeded. ${getQuotaStatus()}. Please wait or use cached words.`);
+            }
+
             const baseUrl = 'https://api.wordnik.com/v4/word.json';
 
             try {
-                console.log(`Fetching data from Wordnik for "${word}"`);
+                console.log(`Fetching data from Wordnik for "${word}" (${getQuotaStatus()})`);
+
+                // Track API call
+                trackWordnikCall();
 
                 // Fetch definitions
                 const defResponse = await fetch(
@@ -1688,6 +1706,80 @@
             return wordnikCache.hasOwnProperty(lowerWord);
         }
 
+        // Load Wordnik API quota from localStorage
+        function loadWordnikQuota() {
+            const saved = localStorage.getItem('letterGridWordnikQuota');
+            if (saved) {
+                try {
+                    const savedQuota = JSON.parse(saved);
+                    // Clean up old calls (older than 1 hour)
+                    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+                    savedQuota.callsThisHour = savedQuota.callsThisHour.filter(t => t > oneHourAgo);
+                    savedQuota.remaining = savedQuota.limit - savedQuota.callsThisHour.length;
+
+                    // Reset if past reset time
+                    if (savedQuota.resetTime && Date.now() > savedQuota.resetTime) {
+                        savedQuota.callsThisHour = [];
+                        savedQuota.remaining = savedQuota.limit;
+                        savedQuota.resetTime = null;
+                    }
+
+                    wordnikQuota = savedQuota;
+                    console.log(`Wordnik API Quota: ${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining`);
+                } catch (e) {
+                    console.error('Error loading Wordnik quota:', e);
+                }
+            }
+        }
+
+        // Save Wordnik API quota to localStorage
+        function saveWordnikQuota() {
+            localStorage.setItem('letterGridWordnikQuota', JSON.stringify(wordnikQuota));
+        }
+
+        // Track a new API call and update quota
+        function trackWordnikCall() {
+            const now = Date.now();
+            wordnikQuota.callsThisHour.push(now);
+
+            // Set reset time to 1 hour from first call if not already set
+            if (!wordnikQuota.resetTime && wordnikQuota.callsThisHour.length === 1) {
+                wordnikQuota.resetTime = now + (60 * 60 * 1000);
+            }
+
+            // Clean up old calls
+            const oneHourAgo = now - (60 * 60 * 1000);
+            wordnikQuota.callsThisHour = wordnikQuota.callsThisHour.filter(t => t > oneHourAgo);
+
+            // Update remaining
+            wordnikQuota.remaining = wordnikQuota.limit - wordnikQuota.callsThisHour.length;
+
+            // Save to localStorage
+            saveWordnikQuota();
+
+            console.log(`Wordnik API Call Tracked: ${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining`);
+        }
+
+        // Check if we have quota available
+        function hasWordnikQuota() {
+            // Clean up old calls first
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            wordnikQuota.callsThisHour = wordnikQuota.callsThisHour.filter(t => t > oneHourAgo);
+            wordnikQuota.remaining = wordnikQuota.limit - wordnikQuota.callsThisHour.length;
+
+            return wordnikQuota.remaining > 0;
+        }
+
+        // Get quota status message
+        function getQuotaStatus() {
+            if (wordnikQuota.resetTime) {
+                const timeLeft = wordnikQuota.resetTime - Date.now();
+                const minutesLeft = Math.ceil(timeLeft / 60000);
+                return `${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining (resets in ${minutesLeft}m)`;
+            }
+            return `${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining`;
+        }
+
         // Validate all words via Wordnik
         async function validateAllWords() {
             const validateBtn = document.getElementById('validateBtn');
@@ -1708,10 +1800,33 @@
                 return;
             }
 
-            // Confirm batch validation
-            const confirmMsg = `This will check ${wordsToValidate.length} words against Wordnik dictionary. Invalid words will be automatically marked for deletion. Continue?`;
-            if (!confirm(confirmMsg)) {
-                return;
+            // Count how many need API calls (not cached)
+            const uncachedWords = wordsToValidate.filter(w => !isWordValidated(w));
+
+            // Check if we have enough quota
+            if (uncachedWords.length > wordnikQuota.remaining) {
+                const msg = `⚠️ API Quota Warning\n\n`;
+                const details = `Words to validate: ${wordsToValidate.length}\n`;
+                const cached = `Cached (instant): ${wordsToValidate.length - uncachedWords.length}\n`;
+                const needApi = `Need API calls: ${uncachedWords.length}\n\n`;
+                const quota = `${getQuotaStatus()}\n\n`;
+                const warning = `You don't have enough quota to validate all uncached words.\n`;
+                const suggestion = `Only the first ${wordnikQuota.remaining} will be validated.`;
+
+                if (!confirm(msg + details + cached + needApi + quota + warning + suggestion + '\n\nContinue?')) {
+                    return;
+                }
+            } else {
+                // Confirm batch validation with quota info
+                let confirmMsg = `This will check ${wordsToValidate.length} words against Wordnik dictionary.\n\n`;
+                confirmMsg += `Cached (instant): ${wordsToValidate.length - uncachedWords.length}\n`;
+                confirmMsg += `New API calls: ${uncachedWords.length}\n\n`;
+                confirmMsg += `${getQuotaStatus()}\n\n`;
+                confirmMsg += `Invalid words will be automatically removed. Continue?`;
+
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
             }
 
             validateBtn.disabled = true;
@@ -1764,7 +1879,14 @@
                     }
                 } catch (error) {
                     console.error(`Error validating word "${word}":`, error);
-                    // Continue with next word even if one fails
+
+                    // Stop if quota exceeded
+                    if (error.message && error.message.includes('quota exceeded')) {
+                        console.log('Quota exceeded, stopping validation');
+                        break;
+                    }
+
+                    // Continue with next word for other errors
                 }
             }
 
@@ -1781,6 +1903,7 @@
             resultMsg += `\n📊 Performance:\n`;
             resultMsg += `  • Cached: ${cachedCount} words (instant)\n`;
             resultMsg += `  • API calls: ${apiCallCount} words\n`;
+            resultMsg += `\n📈 API Quota: ${getQuotaStatus()}\n`;
             if (invalidWords.length > 0) {
                 resultMsg += `\nInvalid words removed:\n${invalidWords.join(', ')}`;
             }

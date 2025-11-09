@@ -3240,3 +3240,144 @@ git push
 ```
 
 ---
+
+### Prompt 27: Wordnik API Quota Tracking and Rate Limiting
+
+**User Request:**
+"There is a 100 API limit per hour for wordnik, so we want to avoid exceeding that limit"
+
+**Problem:**
+Wordnik free tier has strict API limits:
+- 100 API requests per hour
+- Each word lookup = 2 requests (definitions + examples)
+- Therefore: max 50 words per hour
+- No built-in quota tracking could lead to exceeding limits
+
+**Implementation Details:**
+
+1. **Quota Tracking System** (`templates/letter_grid.html:792-799`):
+   ```javascript
+   let wordnikQuota = {
+       limit: 50,              // Max words per hour (100 API calls / 2 calls per word)
+       remaining: 50,          // Words remaining this hour
+       resetTime: null,        // When quota resets (1 hour from first call)
+       callsThisHour: []      // Array of timestamps for calls this hour
+   };
+   ```
+
+2. **Quota Management Functions** (`templates/letter_grid.html:1701-1773`):
+   - `loadWordnikQuota()` - Loads from localStorage, cleans up old calls
+   - `saveWordnikQuota()` - Persists to localStorage
+   - `trackWordnikCall()` - Records each API call with timestamp
+   - `hasWordnikQuota()` - Checks if quota available
+   - `getQuotaStatus()` - Returns human-readable status message
+
+3. **Rate Limiting in fetchWordnikData()** (`templates/letter_grid.html:1406-1417`):
+   ```javascript
+   // Check API quota before making call
+   if (!hasWordnikQuota()) {
+       throw new Error(`Wordnik API quota exceeded. ${getQuotaStatus()}. Please wait or use cached words.`);
+   }
+
+   // Track API call
+   trackWordnikCall();
+   ```
+
+4. **Batch Validation Quota Checks** (`templates/letter_grid.html:1803-1830`):
+   - **Before Starting:**
+     - Counts uncached words needing API calls
+     - Compares with available quota
+     - Shows warning if insufficient quota
+     - Displays quota status in confirmation dialog
+   
+   - **During Validation:**
+     - Stops automatically when quota exceeded
+     - Shows final quota status in results
+
+5. **Enhanced User Feedback:**
+   - **Confirmation Dialog:**
+     ```
+     This will check 100 words against Wordnik dictionary.
+
+     Cached (instant): 75
+     New API calls: 25
+
+     25/50 words remaining (resets in 45m)
+
+     Invalid words will be automatically removed. Continue?
+     ```
+   
+   - **Quota Warning:**
+     ```
+     ⚠️ API Quota Warning
+
+     Words to validate: 100
+     Cached (instant): 20
+     Need API calls: 80
+
+     5/50 words remaining (resets in 12m)
+
+     You don't have enough quota to validate all uncached words.
+     Only the first 5 will be validated.
+
+     Continue?
+     ```
+   
+   - **Results with Quota:**
+     ```
+     Validation complete!
+
+     ✓ Valid words: 45
+     ✗ Invalid words: 5
+
+     📊 Performance:
+       • Cached: 20 words (instant)
+       • API calls: 25 words
+
+     📈 API Quota: 25/50 words remaining (resets in 35m)
+     ```
+
+**Quota Tracking Logic:**
+
+1. **First API Call:**
+   - Records timestamp
+   - Sets reset time to now + 1 hour
+   - Decrements remaining count
+
+2. **Subsequent Calls:**
+   - Adds timestamp to array
+   - Filters out calls older than 1 hour
+   - Recalculates remaining count
+
+3. **Quota Reset:**
+   - Automatically resets after 1 hour from first call
+   - Clears old timestamps
+   - Resets remaining to limit (50)
+
+4. **Persistence:**
+   - Saved to localStorage after each call
+   - Survives page reloads
+   - Cleaned up on load (removes old timestamps)
+
+**Benefits:**
+- **Never Exceeds Limit:** Automatic checks prevent quota violations
+- **Transparent:** Users see quota status before making calls
+- **Smart Planning:** Shows how many cached vs new API calls needed
+- **Graceful Degradation:** Stops validation when quota exceeded
+- **Time Awareness:** Shows minutes until quota reset
+- **Persistent:** Tracks usage across page reloads
+
+**Testing:**
+- Quota initializes at 50/50
+- Tracked correctly after API calls
+- Console logs show quota with each call
+- Batch validation respects quota limits
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add Wordnik API quota tracking and rate limiting"
+git push
+```
+
+---

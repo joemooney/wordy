@@ -127,6 +127,15 @@ All system requirements organized by main categories.
       - Instant lookup for previously validated words
       - Cache stored as 'letterGridWordnikCache'
       - Includes validation status, timestamp, definitions, and examples
+    - **API Quota Tracking:**
+      - Wordnik free tier: 100 requests/hour (50 words/hour, 2 API calls per word)
+      - Tracks API usage in real-time with localStorage persistence
+      - Shows quota status: "25/50 words remaining (resets in 45m)"
+      - Prevents exceeding quota with automatic checks
+      - Quota resets 1 hour after first call
+      - Batch validation shows quota before starting
+      - Stops validation automatically when quota exceeded
+      - Console logs show quota with each API call
   - **Disputed words review:**
     - Shows all words marked as disputed during gameplay
     - Can approve word (✓ button) to add to valid word list
