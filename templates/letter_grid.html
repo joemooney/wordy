@@ -821,11 +821,11 @@
         // Initialize game
         async function init() {
             await loadDeletedWords();
-            loadApprovedWords();
-            loadArchivedWords();
-            loadReviewSettings();
+            await loadApprovedWords();
+            await loadArchivedWords();
+            await loadReviewSettings();
             await loadWordnikCache();
-            loadWordnikQuota();
+            await loadWordnikQuota();
             await newGame();
         }
 
@@ -1613,7 +1613,7 @@
             validWords.push(lowerWord);
 
             // Save approved words to localStorage
-            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+            saveApprovedWords();
 
             // Update review panel
             updateReviewPanel();
@@ -1666,7 +1666,7 @@
             saveArchivedWords();
 
             // Update approved words
-            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+            saveApprovedWords();
 
             // Update review panel
             updateReviewPanel();
@@ -1748,7 +1748,7 @@
             saveDeletedWords();
 
             // Update approved words
-            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+            saveApprovedWords();
 
             // Update review panel
             updateReviewPanel();
@@ -1767,43 +1767,96 @@
             }
         }
 
-        // Load approved words on init
-        function loadApprovedWords() {
-            const saved = localStorage.getItem('letterGridApprovedWords');
-            if (saved) {
-                approvedWords = new Set(JSON.parse(saved));
-            }
-        }
-
-        // Load archived words
-        function loadArchivedWords() {
-            const saved = localStorage.getItem('letterGridArchivedWords');
-            if (saved) {
-                archivedWords = new Set(JSON.parse(saved));
-                console.log(`Loaded ${archivedWords.size} archived words`);
-            }
-        }
-
-        // Save archived words
-        function saveArchivedWords() {
-            localStorage.setItem('letterGridArchivedWords', JSON.stringify(Array.from(archivedWords)));
-        }
-
-        // Load review settings
-        function loadReviewSettings() {
-            const saved = localStorage.getItem('letterGridReviewSettings');
-            if (saved) {
-                try {
-                    reviewSettings = JSON.parse(saved);
-                } catch (e) {
-                    console.error('Error loading review settings:', e);
+        // Load approved words from server
+        async function loadApprovedWords() {
+            try {
+                const response = await fetch('/letter-grid/approved-words');
+                if (response.ok) {
+                    const words = await response.json();
+                    approvedWords = new Set(words);
+                    console.log(`Loaded ${approvedWords.size} approved words from server`);
                 }
+            } catch (e) {
+                console.error('Error loading approved words from server:', e);
+                approvedWords = new Set();
             }
         }
 
-        // Save review settings
-        function saveReviewSettings() {
-            localStorage.setItem('letterGridReviewSettings', JSON.stringify(reviewSettings));
+        // Save approved words to server
+        async function saveApprovedWords() {
+            try {
+                const response = await fetch('/letter-grid/approved-words', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(Array.from(approvedWords))
+                });
+                if (response.ok) {
+                    console.log(`Saved ${approvedWords.size} approved words to server`);
+                }
+            } catch (e) {
+                console.error('Error saving approved words to server:', e);
+            }
+        }
+
+        // Load archived words from server
+        async function loadArchivedWords() {
+            try {
+                const response = await fetch('/letter-grid/archived-words');
+                if (response.ok) {
+                    const words = await response.json();
+                    archivedWords = new Set(words);
+                    console.log(`Loaded ${archivedWords.size} archived words from server`);
+                }
+            } catch (e) {
+                console.error('Error loading archived words from server:', e);
+                archivedWords = new Set();
+            }
+        }
+
+        // Save archived words to server
+        async function saveArchivedWords() {
+            try {
+                const response = await fetch('/letter-grid/archived-words', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(Array.from(archivedWords))
+                });
+                if (response.ok) {
+                    console.log(`Saved ${archivedWords.size} archived words to server`);
+                }
+            } catch (e) {
+                console.error('Error saving archived words to server:', e);
+            }
+        }
+
+        // Load review settings from server
+        async function loadReviewSettings() {
+            try {
+                const response = await fetch('/letter-grid/review-settings');
+                if (response.ok) {
+                    reviewSettings = await response.json();
+                    console.log('Loaded review settings from server');
+                }
+            } catch (e) {
+                console.error('Error loading review settings from server:', e);
+                reviewSettings = {confirmDelete: false};
+            }
+        }
+
+        // Save review settings to server
+        async function saveReviewSettings() {
+            try {
+                const response = await fetch('/letter-grid/review-settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(reviewSettings)
+                });
+                if (response.ok) {
+                    console.log('Saved review settings to server');
+                }
+            } catch (e) {
+                console.error('Error saving review settings to server:', e);
+            }
         }
 
         // Load Wordnik validation cache
@@ -1851,11 +1904,11 @@
         }
 
         // Load Wordnik API quota from localStorage
-        function loadWordnikQuota() {
-            const saved = localStorage.getItem('letterGridWordnikQuota');
-            if (saved) {
-                try {
-                    const savedQuota = JSON.parse(saved);
+        async function loadWordnikQuota() {
+            try {
+                const response = await fetch('/letter-grid/wordnik-quota');
+                if (response.ok) {
+                    const savedQuota = await response.json();
                     // Clean up old calls (older than 1 hour)
                     const oneHourAgo = Date.now() - (60 * 60 * 1000);
                     savedQuota.callsThisHour = savedQuota.callsThisHour.filter(t => t > oneHourAgo);
@@ -1869,16 +1922,25 @@
                     }
 
                     wordnikQuota = savedQuota;
-                    console.log(`Wordnik API Quota: ${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining`);
-                } catch (e) {
-                    console.error('Error loading Wordnik quota:', e);
+                    console.log(`Wordnik API Quota: ${wordnikQuota.remaining}/${wordnikQuota.limit} words remaining (from server)`);
                 }
+            } catch (e) {
+                console.error('Error loading Wordnik quota from server:', e);
+                wordnikQuota = {limit: 50, remaining: 50, resetTime: null, callsThisHour: []};
             }
         }
 
-        // Save Wordnik API quota to localStorage
-        function saveWordnikQuota() {
-            localStorage.setItem('letterGridWordnikQuota', JSON.stringify(wordnikQuota));
+        // Save Wordnik API quota to server
+        async function saveWordnikQuota() {
+            try {
+                await fetch('/letter-grid/wordnik-quota', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(wordnikQuota)
+                });
+            } catch (e) {
+                console.error('Error saving Wordnik quota to server:', e);
+            }
         }
 
         // Track a new API call and update quota
@@ -2037,7 +2099,7 @@
             // Save changes
             if (invalidCount > 0) {
                 saveDeletedWords();
-                localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+                saveApprovedWords();
             }
 
             // Show results
@@ -2160,7 +2222,7 @@
 
             // Save changes
             saveDeletedWords();
-            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+            saveApprovedWords();
 
             // Show results
             let resultMsg = `Smart Filter complete!\n\n`;

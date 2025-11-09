@@ -119,7 +119,7 @@ All system requirements organized by main categories.
     - 📦 Archive button to mark obscure words without deletion
     - Archived words excluded from future games but not permanently deleted
     - Can restore archived words with ♻️ restore button
-    - Stored in localStorage as 'letterGridArchivedWords'
+    - Stored on server in archived_words.json
     - Purple visual indicator for archived words
     - Separate from deleted words (different use cases)
   - **Wordnik API integration:**
@@ -137,7 +137,7 @@ All system requirements organized by main categories.
       - Server-side storage ensures persistence across devices and browsers
     - **API Quota Tracking:**
       - Wordnik free tier: 100 requests/hour (50 words/hour, 2 API calls per word)
-      - Tracks API usage in real-time with localStorage persistence
+      - Tracks API usage in real-time with server-side persistence
       - Shows quota status: "25/50 words remaining (resets in 45m)"
       - Prevents exceeding quota with automatic checks
       - Quota resets 1 hour after first call
@@ -151,7 +151,7 @@ All system requirements organized by main categories.
     - Approved words persist across games via localStorage
   - **Word approval system:**
     - Approved words added to valid words list
-    - Stored in localStorage as 'letterGridApprovedWords'
+    - Stored on server in approved_words.json
     - Automatically included in all future games
     - Can be revoked by deleting the word
   - **All Valid Words tab:**
@@ -180,7 +180,7 @@ All system requirements organized by main categories.
     - Saves removed words to deleted list
   - **Settings:**
     - Delete confirmation disabled by default (no prompts)
-    - Settings stored in localStorage
+    - Settings stored on server in review_settings.json
     - Can be customized per user preference
   - **Single-word validation:**
     - "✓ Validate" button appears for unvalidated words in All Valid Words tab
@@ -386,10 +386,22 @@ All system requirements organized by main categories.
 - Game Time Limit (30-600 seconds)
 
 ### Data Persistence
+
+#### Spelling Quiz
 - Settings stored in localStorage (key: 'spellingQuizSettings_v2')
 - Leaderboard stored in localStorage (key: 'spellingQuizLeaderboard')
 - Review favorites stored in localStorage (per mode)
 - Review removed words stored in localStorage (per mode)
+
+#### Letter Grid Game
+- **Server-side storage (persistent across devices/browsers):**
+  - Wordnik validation cache: `wordnik_validation_cache.json`
+  - Approved words: `approved_words.json`
+  - Archived words: `archived_words.json`
+  - Review settings: `review_settings.json`
+  - Wordnik API quota: `wordnik_quota.json`
+- **File-based storage:**
+  - Deleted words: `words_deleted.txt` (user-excluded words)
 
 ---
 

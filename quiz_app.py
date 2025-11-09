@@ -852,6 +852,114 @@ def save_batch_validation():
         return jsonify({'success': True, 'count': len(batch_data)})
     return jsonify({'success': False, 'error': 'Failed to save cache'}), 500
 
+# Approved words file
+APPROVED_WORDS_FILE = Path('approved_words.json')
+
+@app.route('/letter-grid/approved-words', methods=['GET'])
+def get_approved_words():
+    """Get list of approved words."""
+    if APPROVED_WORDS_FILE.exists():
+        try:
+            with open(APPROVED_WORDS_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading approved words: {e}")
+            return jsonify([])
+    return jsonify([])
+
+@app.route('/letter-grid/approved-words', methods=['POST'])
+def save_approved_words():
+    """Save list of approved words."""
+    words = request.json
+    try:
+        with open(APPROVED_WORDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(words, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True, 'count': len(words)})
+    except Exception as e:
+        print(f"Error saving approved words: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Archived words file
+ARCHIVED_WORDS_FILE = Path('archived_words.json')
+
+@app.route('/letter-grid/archived-words', methods=['GET'])
+def get_archived_words():
+    """Get list of archived words."""
+    if ARCHIVED_WORDS_FILE.exists():
+        try:
+            with open(ARCHIVED_WORDS_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading archived words: {e}")
+            return jsonify([])
+    return jsonify([])
+
+@app.route('/letter-grid/archived-words', methods=['POST'])
+def save_archived_words():
+    """Save list of archived words."""
+    words = request.json
+    try:
+        with open(ARCHIVED_WORDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(words, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True, 'count': len(words)})
+    except Exception as e:
+        print(f"Error saving archived words: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Review settings file
+REVIEW_SETTINGS_FILE = Path('review_settings.json')
+
+@app.route('/letter-grid/review-settings', methods=['GET'])
+def get_review_settings():
+    """Get review panel settings."""
+    if REVIEW_SETTINGS_FILE.exists():
+        try:
+            with open(REVIEW_SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading review settings: {e}")
+            return jsonify({'confirmDelete': False})
+    return jsonify({'confirmDelete': False})
+
+@app.route('/letter-grid/review-settings', methods=['POST'])
+def save_review_settings():
+    """Save review panel settings."""
+    settings = request.json
+    try:
+        with open(REVIEW_SETTINGS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error saving review settings: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Wordnik quota file
+WORDNIK_QUOTA_FILE = Path('wordnik_quota.json')
+
+@app.route('/letter-grid/wordnik-quota', methods=['GET'])
+def get_wordnik_quota():
+    """Get Wordnik API quota status."""
+    if WORDNIK_QUOTA_FILE.exists():
+        try:
+            with open(WORDNIK_QUOTA_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading Wordnik quota: {e}")
+            return jsonify({'limit': 50, 'remaining': 50, 'resetTime': None, 'callsThisHour': []})
+    return jsonify({'limit': 50, 'remaining': 50, 'resetTime': None, 'callsThisHour': []})
+
+@app.route('/letter-grid/wordnik-quota', methods=['POST'])
+def save_wordnik_quota():
+    """Save Wordnik API quota status."""
+    quota = request.json
+    try:
+        with open(WORDNIK_QUOTA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(quota, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error saving Wordnik quota: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 def get_port_from_registry(app_name='wordy', default_port=5000):
     """Read port number from global port registry file."""
     ports_file = Path.home() / '.ports'

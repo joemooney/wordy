@@ -3740,3 +3740,206 @@ git push
 ```
 
 ---
+
+### Prompt 31: Move All Persistent Data to Server-Side Storage (2025-11-09)
+
+**User Request:**
+"I think all of this could be moved to the server." (referring to remaining localStorage usage: approved words, archived words, review settings, wordnik quota)
+
+**Problem:**
+After moving validation cache to server (Prompt 30), remaining persistent data was still stored in browser localStorage:
+- `letterGridApprovedWords` - User-approved valid words
+- `letterGridArchivedWords` - User-archived obscure words
+- `letterGridReviewSettings` - Review panel settings (confirmDelete)
+- `letterGridWordnikQuota` - Wordnik API quota tracking
+
+This data should persist across devices/browsers and survive browser data clearing.
+
+**Implementation Details:**
+
+**1. Created Server-Side Storage Files:**
+
+New JSON files in project root:
+- `approved_words.json` - Initially `[]`
+- `archived_words.json` - Initially `[]`
+- `review_settings.json` - Initially `{"confirmDelete": false}`
+- `wordnik_quota.json` - Initially `{"limit": 50, "remaining": 50, "resetTime": null, "callsThisHour": []}`
+
+**2. Added Flask Routes (`quiz_app.py:855-961`):**
+
+**Approved Words:**
+```python
+@app.route('/letter-grid/approved-words', methods=['GET'])
+def get_approved_words():
+    """Get list of approved words."""
+    if APPROVED_WORDS_FILE.exists():
+        try:
+            with open(APPROVED_WORDS_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading approved words: {e}")
+            return jsonify([])
+    return jsonify([])
+
+@app.route('/letter-grid/approved-words', methods=['POST'])
+def save_approved_words():
+    """Save list of approved words."""
+    words = request.json
+    try:
+        with open(APPROVED_WORDS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(words, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True, 'count': len(words)})
+    except Exception as e:
+        print(f"Error saving approved words: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+```
+
+Similar patterns implemented for:
+- `/letter-grid/archived-words` (GET/POST)
+- `/letter-grid/review-settings` (GET/POST)
+- `/letter-grid/wordnik-quota` (GET/POST)
+
+**3. Updated JavaScript Functions (`templates/letter_grid.html`):**
+
+**Approved Words (lines 1770-1799):**
+```javascript
+// Load approved words from server
+async function loadApprovedWords() {
+    try {
+        const response = await fetch('/letter-grid/approved-words');
+        if (response.ok) {
+            const words = await response.json();
+            approvedWords = new Set(words);
+            console.log(`Loaded ${approvedWords.size} approved words from server`);
+        }
+    } catch (e) {
+        console.error('Error loading approved words from server:', e);
+        approvedWords = new Set();
+    }
+}
+
+// Save approved words to server
+async function saveApprovedWords() {
+    try {
+        const response = await fetch('/letter-grid/approved-words', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(Array.from(approvedWords))
+        });
+        if (response.ok) {
+            console.log(`Saved ${approvedWords.size} approved words to server`);
+        }
+    } catch (e) {
+        console.error('Error saving approved words to server:', e);
+    }
+}
+```
+
+**Archived Words (lines 1801-1830):**
+- Similar async load/save pattern
+- Converts between Set (in-memory) and Array (JSON serialization)
+
+**Review Settings (lines 1832-1863):**
+- Loads settings object from server
+- Saves settings on changes
+
+**Wordnik Quota (lines 1907-1944):**
+- Loads quota tracking from server
+- Cleans up old calls (>1 hour old)
+- Resets quota if past reset time
+- Saves after each API call
+
+**4. Updated init() Function (lines 822-830):**
+```javascript
+async function init() {
+    await loadDeletedWords();
+    await loadApprovedWords();
+    await loadArchivedWords();
+    await loadReviewSettings();
+    await loadWordnikCache();
+    await loadWordnikQuota();
+    await newGame();
+}
+```
+
+All data loads must complete before game starts.
+
+**5. Replaced localStorage Calls:**
+
+Replaced all `localStorage.setItem` calls for approved words with `saveApprovedWords()`:
+- Line 1311: After approving disputed word
+- Line 1330: After restoring archived word
+- Line 1353: After restoring deleted word (if approved)
+
+**Key Technical Patterns:**
+
+**Async/Await:**
+- All load functions are async and use fetch API
+- All save functions are async and POST to server
+- Error handling with try/catch blocks
+
+**Data Conversion:**
+- JavaScript Sets → JSON Arrays (for approved/archived words)
+- Object persistence for settings and quota
+
+**REST API Design:**
+- GET for retrieval
+- POST for saving
+- JSON request/response bodies
+- Proper error handling with HTTP status codes
+
+**Benefits:**
+
+1. **Persistent:** Data survives browser clearing
+2. **Centralized:** Single source of truth on server
+3. **Cross-device:** All devices/browsers access same data
+4. **Migration-ready:** Easy to migrate to database later
+5. **Traceable:** Server-side logs for all data changes
+
+**Testing:**
+- ✓ Server starts successfully with all new routes
+- ✓ All data loads from server on page load
+- ✓ Approved words save to server immediately
+- ✓ Archived words save to server immediately
+- ✓ Settings save to server immediately
+- ✓ Quota tracks correctly with server persistence
+- ✓ Data persists across server restarts
+- ✓ Console logs confirm all operations
+
+**Files Modified:**
+- `quiz_app.py` (added 8 new Flask routes)
+- `templates/letter_grid.html` (converted 8 functions to async server calls)
+- `approved_words.json` (new file)
+- `archived_words.json` (new file)
+- `review_settings.json` (new file)
+- `wordnik_quota.json` (new file)
+
+**Documentation Updates:**
+- Updated REQUIREMENTS.md:
+  - Changed "localStorage" to "server" for all Letter Grid data
+  - Added new "Data Persistence" section with server-side storage details
+  - Updated file paths for all JSON storage files
+  - Clarified separation between Spelling Quiz (localStorage) and Letter Grid (server)
+
+**Git Operations:**
+```bash
+git add quiz_app.py templates/letter_grid.html approved_words.json archived_words.json review_settings.json wordnik_quota.json REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Move all Letter Grid persistent data to server-side storage
+
+Complete migration from browser localStorage to server-side JSON files:
+- Approved words (approved_words.json)
+- Archived words (archived_words.json)
+- Review settings (review_settings.json)
+- Wordnik API quota (wordnik_quota.json)
+
+Added 8 Flask routes (GET/POST for each data type)
+Converted 8 JavaScript functions to async server API calls
+All data now persists across devices and browsers
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+---
