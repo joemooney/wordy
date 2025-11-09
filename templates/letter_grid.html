@@ -491,6 +491,11 @@
             border-left: 4px solid #ffd93d;
         }
 
+        .review-word-item.archived {
+            border-left: 4px solid #a78bfa;
+            background: rgba(167, 139, 250, 0.1);
+        }
+
         .review-word-item.all-words {
             border-left: 4px solid #4dabf7;
         }
@@ -541,6 +546,10 @@
         .word-details-status.disputed {
             background: #ffd93d;
             color: #333;
+        }
+
+        .word-details-status.archived {
+            background: #a78bfa;
         }
 
         .word-details-status.all-words {
@@ -741,6 +750,9 @@
                             <button class="tab-btn" onclick="showReviewTab('disputed')" id="disputedTab">
                                 Disputed (<span id="disputedCount">0</span>)
                             </button>
+                            <button class="tab-btn" onclick="showReviewTab('archived')" id="archivedTab">
+                                📦 Archived (<span id="archivedCount">0</span>)
+                            </button>
                             <button class="tab-btn" onclick="showReviewTab('all-words')" id="allWordsTab">
                                 All Valid Words (<span id="allWordsCount">0</span>)
                             </button>
@@ -798,6 +810,9 @@
             callsThisHour: []      // Array of timestamps for calls this hour
         };
 
+        // Archived words - obscure words excluded from games but not deleted
+        let archivedWords = new Set();
+
         // Review Panel Settings
         let reviewSettings = {
             confirmDelete: false  // Skip delete confirmation by default
@@ -807,6 +822,7 @@
         async function init() {
             await loadDeletedWords();
             loadApprovedWords();
+            loadArchivedWords();
             loadReviewSettings();
             loadWordnikCache();
             loadWordnikQuota();
@@ -831,8 +847,8 @@
                     }
                 });
 
-                // Remove deleted words from valid words
-                validWords = validWords.filter(word => !deletedWords.has(word));
+                // Remove deleted and archived words from valid words
+                validWords = validWords.filter(word => !deletedWords.has(word) && !archivedWords.has(word));
 
                 nineLetterWord = data.base_word; // Store the base nine-letter word
                 foundWords.clear();
@@ -1265,6 +1281,7 @@
             // Update tab buttons
             document.getElementById('pendingDeleteTab').classList.toggle('active', tab === 'pending-delete');
             document.getElementById('disputedTab').classList.toggle('active', tab === 'disputed');
+            document.getElementById('archivedTab').classList.toggle('active', tab === 'archived');
             document.getElementById('allWordsTab').classList.toggle('active', tab === 'all-words');
 
             // Clear search when switching tabs
@@ -1285,6 +1302,7 @@
         function updateReviewCounts() {
             document.getElementById('pendingDeleteCount').textContent = pendingDeleteWords.size;
             document.getElementById('disputedCount').textContent = disputedWords.size;
+            document.getElementById('archivedCount').textContent = archivedWords.size;
             document.getElementById('allWordsCount').textContent = validWords.length;
         }
 
@@ -1302,6 +1320,9 @@
             } else if (currentReviewTab === 'disputed') {
                 words = Array.from(disputedWords);
                 totalWords = disputedWords.size;
+            } else if (currentReviewTab === 'archived') {
+                words = Array.from(archivedWords);
+                totalWords = archivedWords.size;
             } else if (currentReviewTab === 'all-words') {
                 words = [...validWords]; // All valid words for the current game
                 totalWords = validWords.length;
@@ -1473,6 +1494,9 @@
             } else if (currentReviewTab === 'disputed') {
                 status = 'Disputed';
                 statusClass = 'disputed';
+            } else if (currentReviewTab === 'archived') {
+                status = '📦 Archived';
+                statusClass = 'archived';
             } else if (currentReviewTab === 'all-words') {
                 // Show "Validated" for words verified via Wordnik, "Valid Word" for unvalidated
                 status = isValidated ? '✓ Validated' : 'Valid Word';
@@ -1486,13 +1510,18 @@
                         <div style="display: flex; gap: 10px; align-items: center;">
             `;
 
-            // Add delete button (left of status)
+            // Add archive and delete buttons (left of status)
             if (currentReviewTab === 'all-words') {
-                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+                html += `<button class="btn btn-warning" style="padding: 6px 12px; font-size: 13px;" onclick="archiveWord('${word}')" title="Archive as obscure">📦</button>`;
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')" title="Delete permanently">🗑️</button>`;
             } else if (currentReviewTab === 'disputed') {
-                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+                html += `<button class="btn btn-warning" style="padding: 6px 12px; font-size: 13px;" onclick="archiveWord('${word}')" title="Archive as obscure">📦</button>`;
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')" title="Delete permanently">🗑️</button>`;
             } else if (currentReviewTab === 'pending-delete') {
-                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')" title="Delete permanently">🗑️</button>`;
+            } else if (currentReviewTab === 'archived') {
+                html += `<button class="btn btn-success" style="padding: 6px 12px; font-size: 13px;" onclick="unarchiveWord('${word}')" title="Restore to valid words">♻️</button>`;
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')" title="Delete permanently">🗑️</button>`;
             }
 
             // Add status badge or validate button
@@ -1613,6 +1642,55 @@
             }
         }
 
+        function archiveWord(word) {
+            const lowerWord = word.toLowerCase();
+
+            // Add to archived words
+            archivedWords.add(lowerWord);
+
+            // Remove from pending and disputed
+            pendingDeleteWords.delete(lowerWord);
+            disputedWords.delete(lowerWord);
+
+            // Remove from approved if it was there
+            approvedWords.delete(lowerWord);
+
+            // Remove from validWords array (for current game display)
+            const validIndex = validWords.indexOf(lowerWord);
+            if (validIndex > -1) {
+                validWords.splice(validIndex, 1);
+            }
+
+            // Save to localStorage
+            saveArchivedWords();
+
+            // Update approved words
+            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+
+            // Update review panel
+            updateReviewPanel();
+
+            console.log(`📦 Archived obscure word: "${word}"`);
+        }
+
+        function unarchiveWord(word) {
+            const lowerWord = word.toLowerCase();
+
+            // Remove from archived
+            archivedWords.delete(lowerWord);
+
+            // Add back to valid words for current game
+            validWords.push(lowerWord);
+
+            // Save to localStorage
+            saveArchivedWords();
+
+            // Update review panel
+            updateReviewPanel();
+
+            console.log(`♻️ Restored word from archive: "${word}"`);
+        }
+
         function confirmPermanentDelete(word) {
             const lowerWord = word.toLowerCase();
 
@@ -1642,6 +1720,8 @@
                 currentWords = Array.from(disputedWords);
             } else if (currentReviewTab === 'all-words') {
                 currentWords = [...validWords];
+            } else if (currentReviewTab === 'archived') {
+                currentWords = Array.from(archivedWords);
             }
             currentWords.sort();
             const currentIndex = currentWords.indexOf(lowerWord);
@@ -1649,9 +1729,10 @@
             // Add to permanently deleted words
             deletedWords.add(lowerWord);
 
-            // Remove from pending and disputed
+            // Remove from pending, disputed, and archived
             pendingDeleteWords.delete(lowerWord);
             disputedWords.delete(lowerWord);
+            archivedWords.delete(lowerWord);
 
             // Remove from approved if it was there
             approvedWords.delete(lowerWord);
@@ -1691,6 +1772,20 @@
             if (saved) {
                 approvedWords = new Set(JSON.parse(saved));
             }
+        }
+
+        // Load archived words
+        function loadArchivedWords() {
+            const saved = localStorage.getItem('letterGridArchivedWords');
+            if (saved) {
+                archivedWords = new Set(JSON.parse(saved));
+                console.log(`Loaded ${archivedWords.size} archived words`);
+            }
+        }
+
+        // Save archived words
+        function saveArchivedWords() {
+            localStorage.setItem('letterGridArchivedWords', JSON.stringify(Array.from(archivedWords)));
         }
 
         // Load review settings

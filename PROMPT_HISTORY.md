@@ -3471,3 +3471,129 @@ git push
 ```
 
 ---
+
+### Prompt 29: Word Archive System for Obscure Words
+
+**User Request:**
+"Along with the trash, add an icon to mark a word as obscure and should be archived and not used in word games."
+
+**Implementation Details:**
+
+1. **Added Archived Words Data Structure** (`templates/letter_grid.html:802`):
+   - Created `archivedWords` Set for storing obscure words
+   - Added `loadArchivedWords()` and `saveArchivedWords()` functions
+   - Persists to localStorage as 'letterGridArchivedWords'
+   - Separate from deleted words (different use cases)
+
+2. **Archive and Unarchive Functions** (`templates/letter_grid.html:1625-1672`):
+   - `archiveWord(word)` - Marks word as archived
+     - Removes from pending, disputed, approved, and valid words
+     - Saves to localStorage
+     - Updates UI
+   - `unarchiveWord(word)` - Restores archived word
+     - Removes from archived set
+     - Adds back to valid words
+     - Updates UI
+
+3. **Added Archive Tab to Review Panel** (`templates/letter_grid.html:744-746`):
+   - New "📦 Archived" tab between Disputed and All Valid Words
+   - Shows count of archived words
+   - Purple visual theme
+
+4. **Archive Buttons in Word Details** (`templates/letter_grid.html:1495-1505`):
+   - 📦 Archive button appears in All Valid Words and Disputed tabs
+   - ♻️ Restore button appears in Archived tab
+   - Delete button remains available in all tabs
+   - Buttons positioned to left of status badge
+
+5. **Updated Game Logic** (`templates/letter_grid.html:842`):
+   - Filters out archived words when generating new games
+   - `validWords = validWords.filter(word => !deletedWords.has(word) && !archivedWords.has(word))`
+   - Archived words excluded but can be restored
+
+6. **Visual Styling** (`templates/letter_grid.html:546-548, 494-497`):
+   - Purple status badge: `#a78bfa`
+   - Purple border and background for archived word items
+   - Consistent with other status indicators
+
+7. **Updated Tab Switching Logic** (`templates/letter_grid.html:1266-1283`):
+   - Added archived tab to `showReviewTab()` function
+   - Updates tab active state
+   - Included in word count updates
+
+8. **Modified Permanent Delete Function** (`templates/letter_grid.html:1692-1715`):
+   - Added support for deleting from archived tab
+   - Removes from archived set when permanently deleted
+
+**Key Features:**
+- **Non-Destructive:** Archive instead of delete for obscure words
+- **Reversible:** Easy to restore with one click
+- **Persistent:** Stored in localStorage across sessions
+- **Game Exclusion:** Archived words don't appear in new games
+- **Visual Distinction:** Purple theme separates from other states
+- **Flexible Workflow:** Can archive from multiple tabs
+
+**Use Cases:**
+- Mark rarely-used words as obscure without deleting
+- Temporarily exclude words from games
+- Review and restore words later if needed
+- Different from deletion (permanent vs. temporary)
+
+**Visual Design:**
+```
+Buttons in All Valid Words tab:
+[📦 Archive] [🗑️ Delete] [✓ Validate / ✓ Validated badge]
+
+Buttons in Archived tab:
+[♻️ Restore] [🗑️ Delete] [📦 Archived badge]
+```
+
+**Console Output Example:**
+```
+📦 Archived obscure word: "xertz"
+♻️ Restored word from archive: "xertz"
+Loaded 15 archived words
+```
+
+**Benefits:**
+- **Better Organization:** Separate obscure words from invalid ones
+- **Recoverable:** Unlike deletion, archiving is easily reversible
+- **Clean Games:** Exclude obscure words without losing them permanently
+- **Flexible Management:** Move words between archived and active states
+
+**Testing:**
+- ✓ Archive button archives word and removes from valid words
+- ✓ Archived tab displays all archived words
+- ✓ Restore button returns word to valid words
+- ✓ Archived words excluded from new games
+- ✓ Purple visual styling applied correctly
+- ✓ Persistence across page reloads
+
+**Files Modified:**
+- `templates/letter_grid.html:802` (data structure)
+- `templates/letter_grid.html:813` (init function)
+- `templates/letter_grid.html:842` (game logic)
+- `templates/letter_grid.html:1266-1283` (tab switching)
+- `templates/letter_grid.html:1290-1295` (count updates)
+- `templates/letter_grid.html:1311-1317` (word list updates)
+- `templates/letter_grid.html:1488-1490` (status badge)
+- `templates/letter_grid.html:1495-1505` (archive buttons)
+- `templates/letter_grid.html:1625-1672` (archive functions)
+- `templates/letter_grid.html:1700-1712` (load/save functions)
+- `templates/letter_grid.html:546-548, 494-497` (CSS styling)
+- `templates/letter_grid.html:744-746` (HTML tab)
+
+**Documentation Updates:**
+- Added word archive system section to REQUIREMENTS.md
+- Updated Review Panel tabs count (3 → 4)
+- Added archive button to visual indicators list
+- Added purple color to color-coded borders list
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add word archive system for obscure words in Letter Grid"
+git push
+```
+
+---

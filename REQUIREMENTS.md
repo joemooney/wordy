@@ -109,12 +109,19 @@ All system requirements organized by main categories.
   - Logs disputed words to console
 - **Review Panel (📋 Review Words button):**
   - Accessible from Found Words section
-  - Three tabs: "Pending Delete", "Disputed", and "All Valid Words"
+  - Four tabs: "Pending Delete", "Disputed", "Archived", and "All Valid Words"
   - **Word deletion workflow:**
     - Clicking X on found word marks for deletion (not immediate)
     - Word removed from current game but pending review
     - Review panel shows all pending deletions
     - User can permanently delete or undo
+  - **Word archive system:**
+    - 📦 Archive button to mark obscure words without deletion
+    - Archived words excluded from future games but not permanently deleted
+    - Can restore archived words with ♻️ restore button
+    - Stored in localStorage as 'letterGridArchivedWords'
+    - Purple visual indicator for archived words
+    - Separate from deleted words (different use cases)
   - **Wordnik API integration:**
     - Fetches definitions and examples for each word
     - Displays up to 3 definitions with part of speech
@@ -188,12 +195,14 @@ All system requirements organized by main categories.
     - Visual status indicators:
       - Pending Delete (red)
       - Disputed (yellow)
+      - 📦 Archived (purple)
       - Valid Word (blue) - unvalidated words with validate button
       - ✓ Validated (green) - words verified via Wordnik
-    - Delete button positioned to left of status badge/button
+    - Archive and delete buttons positioned to left of status badge/button
     - Color-coded borders and backgrounds:
       - Red (pending delete)
       - Yellow (disputed)
+      - Purple (archived words)
       - Blue (unvalidated valid words)
       - Green (validated words with checkmark icon)
     - Responsive design for smaller screens with tab wrapping
