@@ -495,6 +495,11 @@
             border-left: 4px solid #4dabf7;
         }
 
+        .review-word-item.all-words.validated {
+            border-left: 4px solid #51cf66;
+            background: rgba(81, 207, 102, 0.1);
+        }
+
         .review-details-panel {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -540,6 +545,10 @@
 
         .word-details-status.all-words {
             background: #4dabf7;
+        }
+
+        .word-details-status.validated {
+            background: #51cf66;
         }
 
         .word-details-section {
@@ -773,6 +782,10 @@
         let currentReviewTab = 'pending-delete'; // Current review tab
         let selectedReviewWord = null; // Currently selected word in review panel
 
+        // Wordnik validation cache - stores results from Wordnik API
+        // Structure: { word: { validated: true/false, timestamp: Date, definitions: [...], examples: [...] } }
+        let wordnikCache = {};
+
         // Review Panel Settings
         let reviewSettings = {
             confirmDelete: false  // Skip delete confirmation by default
@@ -783,6 +796,7 @@
             await loadDeletedWords();
             loadApprovedWords();
             loadReviewSettings();
+            loadWordnikCache();
             await newGame();
         }
 
@@ -1310,8 +1324,16 @@
 
             words.forEach(word => {
                 const item = document.createElement('div');
-                item.className = `review-word-item ${currentReviewTab}`;
-                item.textContent = word.toUpperCase();
+                const validated = isWordValidated(word);
+                item.className = `review-word-item ${currentReviewTab}${validated ? ' validated' : ''}`;
+
+                // Add checkmark for validated words in all-words tab
+                if (currentReviewTab === 'all-words' && validated) {
+                    item.innerHTML = `<span style="opacity: 0.7; margin-right: 6px;">✓</span>${word.toUpperCase()}`;
+                } else {
+                    item.textContent = word.toUpperCase();
+                }
+
                 item.onclick = () => selectReviewWord(word);
                 list.appendChild(item);
             });
@@ -1348,6 +1370,17 @@
         }
 
         async function fetchWordnikData(word) {
+            const lowerWord = word.toLowerCase();
+
+            // Check cache first
+            if (wordnikCache[lowerWord]) {
+                console.log(`Using cached data for "${word}"`);
+                return {
+                    definitions: wordnikCache[lowerWord].definitions || [],
+                    examples: wordnikCache[lowerWord].examples || []
+                };
+            }
+
             // Wordnik API key - users should replace with their own
             // Get a free API key at: https://developer.wordnik.com/
             const WORDNIK_API_KEY = '2fixo23url1m251dn4ucchrln2p32o16nlb8m6w1tyl4fqlz2'; // TODO: Replace with actual API key
@@ -1360,6 +1393,8 @@
             const baseUrl = 'https://api.wordnik.com/v4/word.json';
 
             try {
+                console.log(`Fetching data from Wordnik for "${word}"`);
+
                 // Fetch definitions
                 const defResponse = await fetch(
                     `${baseUrl}/${encodeURIComponent(word)}/definitions?api_key=${WORDNIK_API_KEY}&limit=3&includeRelated=false&useCanonical=true&includeTags=false`
@@ -1386,6 +1421,16 @@
                     examples = exData.examples || [];
                 }
 
+                // Cache the results
+                wordnikCache[lowerWord] = {
+                    validated: definitions.length > 0,
+                    timestamp: new Date().toISOString(),
+                    definitions: definitions,
+                    examples: examples
+                };
+                saveWordnikCache();
+                console.log(`Cached validation for "${word}" (${definitions.length > 0 ? 'valid' : 'invalid'})`);
+
                 return { definitions, examples };
             } catch (error) {
                 console.error('Error fetching from Wordnik:', error);
@@ -1399,6 +1444,7 @@
         function displayWordDetails(word, wordData, error = null) {
             const detailsPanel = document.getElementById('reviewWordDetails');
             let status, statusClass;
+            const isValidated = isWordValidated(word);
 
             if (currentReviewTab === 'pending-delete') {
                 status = 'Pending Delete';
@@ -1407,8 +1453,9 @@
                 status = 'Disputed';
                 statusClass = 'disputed';
             } else if (currentReviewTab === 'all-words') {
-                status = 'Valid Word';
-                statusClass = 'all-words';
+                // Show "Validated" for words verified via Wordnik, "Valid Word" for unvalidated
+                status = isValidated ? '✓ Validated' : 'Valid Word';
+                statusClass = isValidated ? 'all-words validated' : 'all-words';
             }
 
             let html = `
@@ -1613,6 +1660,31 @@
             localStorage.setItem('letterGridReviewSettings', JSON.stringify(reviewSettings));
         }
 
+        // Load Wordnik validation cache
+        function loadWordnikCache() {
+            const saved = localStorage.getItem('letterGridWordnikCache');
+            if (saved) {
+                try {
+                    wordnikCache = JSON.parse(saved);
+                    console.log(`Loaded ${Object.keys(wordnikCache).length} cached Wordnik validations`);
+                } catch (e) {
+                    console.error('Error loading Wordnik cache:', e);
+                    wordnikCache = {};
+                }
+            }
+        }
+
+        // Save Wordnik validation cache
+        function saveWordnikCache() {
+            localStorage.setItem('letterGridWordnikCache', JSON.stringify(wordnikCache));
+        }
+
+        // Check if word is validated (in cache)
+        function isWordValidated(word) {
+            const lowerWord = word.toLowerCase();
+            return wordnikCache.hasOwnProperty(lowerWord);
+        }
+
         // Validate all words via Wordnik
         async function validateAllWords() {
             const validateBtn = document.getElementById('validateBtn');
@@ -1644,15 +1716,24 @@
 
             let validCount = 0;
             let invalidCount = 0;
+            let cachedCount = 0;
+            let apiCallCount = 0;
             const invalidWords = [];
 
             // Validate each word with delay to avoid rate limiting
             for (let i = 0; i < wordsToValidate.length; i++) {
                 const word = wordsToValidate[i];
+                const wasCached = isWordValidated(word);
                 validateBtn.textContent = `⏳ Validating ${i + 1}/${wordsToValidate.length}...`;
 
                 try {
                     const wordData = await fetchWordnikData(word);
+
+                    if (wasCached) {
+                        cachedCount++;
+                    } else {
+                        apiCallCount++;
+                    }
 
                     if (wordData.definitions && wordData.definitions.length > 0) {
                         validCount++;
@@ -1666,10 +1747,16 @@
                         disputedWords.delete(word);
                         approvedWords.delete(word);
                         deletedWords.add(word);
+
+                        // Remove from validWords array
+                        const validIndex = validWords.indexOf(word);
+                        if (validIndex > -1) {
+                            validWords.splice(validIndex, 1);
+                        }
                     }
 
-                    // Small delay to avoid overwhelming the API
-                    if (i < wordsToValidate.length - 1) {
+                    // Small delay to avoid overwhelming the API (only if not cached)
+                    if (!wasCached && i < wordsToValidate.length - 1) {
                         await new Promise(resolve => setTimeout(resolve, 200));
                     }
                 } catch (error) {
@@ -1688,6 +1775,9 @@
             let resultMsg = `Validation complete!\n\n`;
             resultMsg += `✓ Valid words: ${validCount}\n`;
             resultMsg += `✗ Invalid words: ${invalidCount}\n`;
+            resultMsg += `\n📊 Performance:\n`;
+            resultMsg += `  • Cached: ${cachedCount} words (instant)\n`;
+            resultMsg += `  • API calls: ${apiCallCount} words\n`;
             if (invalidWords.length > 0) {
                 resultMsg += `\nInvalid words removed:\n${invalidWords.join(', ')}`;
             }

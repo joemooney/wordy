@@ -121,6 +121,12 @@ All system requirements organized by main categories.
     - Shows up to 3 example sentences
     - Requires free API key from developer.wordnik.com
     - Graceful error handling with setup instructions
+    - **Validation caching:**
+      - Once validated via Wordnik, results cached permanently in localStorage
+      - Never needs to re-fetch same word from API
+      - Instant lookup for previously validated words
+      - Cache stored as 'letterGridWordnikCache'
+      - Includes validation status, timestamp, definitions, and examples
   - **Disputed words review:**
     - Shows all words marked as disputed during gameplay
     - Can approve word (✓ button) to add to valid word list
@@ -141,7 +147,9 @@ All system requirements organized by main categories.
     - Checks all words in current tab against Wordnik dictionary
     - Shows progress indicator (e.g., "Validating 23/87...")
     - Automatically removes invalid words (no definitions found)
-    - Shows summary: valid count, invalid count, removed words list
+    - Uses cache for previously validated words (instant)
+    - Only makes API calls for new/unvalidated words
+    - Shows summary: valid count, invalid count, cached count, API call count
     - 200ms delay between API calls to avoid rate limiting
   - **Settings:**
     - Delete confirmation disabled by default (no prompts)
@@ -152,11 +160,20 @@ All system requirements organized by main categories.
     - Search/filter box to quickly find words
     - Shows filtered count (e.g., "Showing 5 of 87 words")
     - Auto-selects first word in list
-    - Visual status indicators (Pending Delete / Disputed / Valid Word)
-    - Color-coded borders: red (pending delete), yellow (disputed), blue (valid)
+    - Visual status indicators:
+      - Pending Delete (red)
+      - Disputed (yellow)
+      - Valid Word (blue) - unvalidated words
+      - ✓ Validated (green) - words verified via Wordnik
+    - Color-coded borders and backgrounds:
+      - Red (pending delete)
+      - Yellow (disputed)
+      - Blue (unvalidated valid words)
+      - Green (validated words with checkmark icon)
     - Responsive design for smaller screens with tab wrapping
     - Back to Game button to return
     - Search clears when switching tabs
+    - Word list shows checkmark (✓) for validated words
 - **Button Layout:**
   - Row 1: Dispute, Clear, Submit, Resolve (main game actions)
   - Row 2: Hint, Show Nine, New Game (helper functions)
