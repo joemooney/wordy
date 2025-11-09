@@ -719,9 +719,12 @@
             <div class="container">
                 <div class="review-header">
                     <h2>📋 Review Words</h2>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="btn btn-success" onclick="validateAllWords()" id="validateBtn" title="Check all words against Wordnik dictionary">
                             ✓ Validate All via Wordnik
+                        </button>
+                        <button class="btn btn-warning" onclick="smartFilterWords()" id="smartFilterBtn" title="Automatically filter out likely acronyms and invalid words">
+                            🔍 Smart Filter
                         </button>
                         <button class="btn btn-secondary" onclick="closeReviewPanel()">← Back to Game</button>
                     </div>
@@ -1786,6 +1789,121 @@
             // Reset button and refresh panel
             validateBtn.disabled = false;
             validateBtn.textContent = originalText;
+            updateReviewPanel();
+        }
+
+        // Smart filter to automatically remove likely acronyms and invalid words
+        async function smartFilterWords() {
+            const smartFilterBtn = document.getElementById('smartFilterBtn');
+            const originalText = smartFilterBtn.textContent;
+
+            // Get words from current tab
+            let wordsToFilter = [];
+            if (currentReviewTab === 'pending-delete') {
+                wordsToFilter = Array.from(pendingDeleteWords);
+            } else if (currentReviewTab === 'disputed') {
+                wordsToFilter = Array.from(disputedWords);
+            } else if (currentReviewTab === 'all-words') {
+                wordsToFilter = [...validWords];
+            }
+
+            if (wordsToFilter.length === 0) {
+                alert('No words to filter in this tab.');
+                return;
+            }
+
+            // Define filtering criteria
+            const isSuspiciousWord = (word) => {
+                const lower = word.toLowerCase();
+
+                // Filter 1: All uppercase acronyms (2-4 letters)
+                if (word.length >= 2 && word.length <= 4 && word === word.toUpperCase()) {
+                    return true;
+                }
+
+                // Filter 2: All consonants (no vowels) - likely acronym
+                if (lower.length >= 3 && !/[aeiouy]/.test(lower)) {
+                    return true;
+                }
+
+                // Filter 3: Very short words (2 letters) that aren't common
+                const commonTwoLetters = new Set(['am', 'an', 'as', 'at', 'be', 'by', 'do', 'go', 'he', 'hi', 'if', 'in', 'is', 'it', 'me', 'my', 'no', 'of', 'ok', 'on', 'or', 'ox', 'so', 'to', 'up', 'us', 'we']);
+                if (lower.length === 2 && !commonTwoLetters.has(lower)) {
+                    return true;
+                }
+
+                // Filter 4: Words with numbers
+                if (/\d/.test(word)) {
+                    return true;
+                }
+
+                return false;
+            };
+
+            // Preview suspicious words
+            const suspiciousWords = wordsToFilter.filter(isSuspiciousWord);
+
+            if (suspiciousWords.length === 0) {
+                alert('No suspicious words found in this tab.');
+                return;
+            }
+
+            // Show preview and confirm
+            let previewMsg = `Found ${suspiciousWords.length} suspicious words:\n\n`;
+            previewMsg += suspiciousWords.slice(0, 20).map(w => w.toUpperCase()).join(', ');
+            if (suspiciousWords.length > 20) {
+                previewMsg += `\n\n...and ${suspiciousWords.length - 20} more`;
+            }
+            previewMsg += `\n\nCriteria:\n`;
+            previewMsg += `• 2-4 letter all-caps words (likely acronyms)\n`;
+            previewMsg += `• Words with no vowels (consonant clusters)\n`;
+            previewMsg += `• Uncommon 2-letter words\n`;
+            previewMsg += `• Words containing numbers\n\n`;
+            previewMsg += `Remove all ${suspiciousWords.length} words?`;
+
+            if (!confirm(previewMsg)) {
+                return;
+            }
+
+            smartFilterBtn.disabled = true;
+            smartFilterBtn.textContent = '⏳ Filtering...';
+
+            let removedCount = 0;
+
+            // Remove suspicious words
+            suspiciousWords.forEach(word => {
+                const lowerWord = word.toLowerCase();
+
+                // Add to deleted words
+                deletedWords.add(lowerWord);
+
+                // Remove from all lists
+                pendingDeleteWords.delete(lowerWord);
+                disputedWords.delete(lowerWord);
+                approvedWords.delete(lowerWord);
+
+                // Remove from validWords array
+                const validIndex = validWords.indexOf(lowerWord);
+                if (validIndex > -1) {
+                    validWords.splice(validIndex, 1);
+                }
+
+                removedCount++;
+            });
+
+            // Save changes
+            saveDeletedWords();
+            localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+
+            // Show results
+            let resultMsg = `Smart Filter complete!\n\n`;
+            resultMsg += `🗑️ Removed: ${removedCount} words\n\n`;
+            resultMsg += `Filtered words:\n${suspiciousWords.map(w => w.toUpperCase()).join(', ')}`;
+            alert(resultMsg);
+
+            // Reset button and refresh panel
+            smartFilterBtn.disabled = false;
+            smartFilterBtn.textContent = originalText;
             updateReviewPanel();
         }
 

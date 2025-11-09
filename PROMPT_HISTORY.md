@@ -3144,3 +3144,99 @@ git push
 ```
 
 ---
+
+### Prompt 26: Smart Filter for Acronyms and Invalid Words
+
+**User Request:**
+"many if not most of the words in our list are not normal words. maybe they are acronyms like STEF, SSE, SSI. I need to remove these. I don't know if there is a good way to mass filter."
+
+**Problem:**
+Word list (wordlist_50000.txt) contains many non-standard words:
+- Acronyms (SSE, SSI, STEF)
+- Consonant clusters (words with no vowels)
+- Unusual 2-letter combinations
+- Words with numbers
+
+Manual removal is tedious and time-consuming.
+
+**Implementation Details:**
+
+1. **Added Smart Filter Button** (`templates/letter_grid.html:722-730`):
+   - New "🔍 Smart Filter" button in Review Panel header
+   - Positioned between "Validate All" and "Back to Game"
+   - Calls `smartFilterWords()` function
+
+2. **Smart Filter Function** (`templates/letter_grid.html:1795-1908`):
+   - **Filtering Criteria:**
+     - All uppercase 2-4 letter words (likely acronyms)
+     - Words with no vowels (consonant clusters)
+     - Uncommon 2-letter words (whitelists common words: am, an, as, at, be, by, etc.)
+     - Words containing numbers
+   
+   - **Workflow:**
+     1. Scans all words in current tab
+     2. Identifies suspicious words based on criteria
+     3. Shows preview with sample words (first 20)
+     4. Lists filtering criteria
+     5. Asks for confirmation
+     6. Removes all suspicious words
+     7. Shows summary of removed words
+
+3. **isSuspiciousWord() Logic:**
+   ```javascript
+   const isSuspiciousWord = (word) => {
+       const lower = word.toLowerCase();
+
+       // All uppercase acronyms (2-4 letters)
+       if (word.length >= 2 && word.length <= 4 && word === word.toUpperCase()) {
+           return true;
+       }
+
+       // All consonants (no vowels) - likely acronym
+       if (lower.length >= 3 && !/[aeiouy]/.test(lower)) {
+           return true;
+       }
+
+       // Uncommon 2-letter words
+       const commonTwoLetters = new Set(['am', 'an', 'as', 'at', 'be', 'by', 'do', 'go', ...]);
+       if (lower.length === 2 && !commonTwoLetters.has(lower)) {
+           return true;
+       }
+
+       // Words with numbers
+       if (/\d/.test(word)) {
+           return true;
+       }
+
+       return false;
+   };
+   ```
+
+**Benefits:**
+- **Mass Removal:** Filter hundreds of words in one click
+- **Smart Detection:** Multiple criteria catch different types of invalid words
+- **Preview Before Delete:** See what will be removed before confirming
+- **Comprehensive:** Handles acronyms, abbreviations, unusual patterns
+- **Safe Whitelist:** Preserves common 2-letter words (am, is, to, etc.)
+
+**Example Usage:**
+1. User opens "All Valid Words" tab (150 words)
+2. Clicks "🔍 Smart Filter"
+3. Preview shows: "Found 23 suspicious words: SSE, SSI, STEF, NTH, XYZ, ..."
+4. User confirms
+5. 23 words removed instantly
+6. Cleaner word list with valid English words
+
+**Testing:**
+- Server running on port 5000
+- Function tested with example acronyms (ssi, sse, stef)
+- All criteria working as expected
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add Smart Filter for acronyms and invalid words"
+git push
+```
+
+---

@@ -151,6 +151,16 @@ All system requirements organized by main categories.
     - Only makes API calls for new/unvalidated words
     - Shows summary: valid count, invalid count, cached count, API call count
     - 200ms delay between API calls to avoid rate limiting
+  - **Smart Filter:**
+    - "🔍 Smart Filter" button for automatic acronym/invalid word removal
+    - Filtering criteria:
+      - 2-4 letter all-caps words (likely acronyms like SSE, SSI, STEF)
+      - Words with no vowels (consonant clusters like "xyz", "nth")
+      - Uncommon 2-letter words (excludes common ones: am, an, as, at, etc.)
+      - Words containing numbers
+    - Shows preview of suspicious words before removal
+    - One-click mass removal of filtered words
+    - Saves removed words to deleted list
   - **Settings:**
     - Delete confirmation disabled by default (no prompts)
     - Settings stored in localStorage
