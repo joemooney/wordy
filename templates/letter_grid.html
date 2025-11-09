@@ -1537,6 +1537,18 @@
         function permanentlyDeleteWord(word) {
             const lowerWord = word.toLowerCase();
 
+            // Store current word index to select next word
+            let currentWords = [];
+            if (currentReviewTab === 'pending-delete') {
+                currentWords = Array.from(pendingDeleteWords);
+            } else if (currentReviewTab === 'disputed') {
+                currentWords = Array.from(disputedWords);
+            } else if (currentReviewTab === 'all-words') {
+                currentWords = [...validWords];
+            }
+            currentWords.sort();
+            const currentIndex = currentWords.indexOf(lowerWord);
+
             // Add to permanently deleted words
             deletedWords.add(lowerWord);
 
@@ -1547,6 +1559,12 @@
             // Remove from approved if it was there
             approvedWords.delete(lowerWord);
 
+            // Remove from validWords array (for current game display)
+            const validIndex = validWords.indexOf(lowerWord);
+            if (validIndex > -1) {
+                validWords.splice(validIndex, 1);
+            }
+
             // Save to backend
             saveDeletedWords();
 
@@ -1555,6 +1573,14 @@
 
             // Update review panel
             updateReviewPanel();
+
+            // Select next word in list if available
+            const remainingWords = currentWords.filter(w => w !== lowerWord);
+            if (remainingWords.length > 0) {
+                // Try to select the word that was at the same index, or the last word
+                const nextIndex = Math.min(currentIndex, remainingWords.length - 1);
+                selectReviewWord(remainingWords[nextIndex]);
+            }
 
             // Only show alert if confirmation is enabled (otherwise it's expected)
             if (reviewSettings.confirmDelete) {
