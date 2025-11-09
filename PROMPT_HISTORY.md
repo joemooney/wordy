@@ -2725,3 +2725,204 @@ git push
 7. Clears search to browse all words again
 
 ---
+
+### Prompt 22: Batch Validation and No-Confirmation Delete
+
+**User Request:**
+"When you 'Remove from Valid Words' by default (you can have this in the settings options) remove without prompting for confirmation. Also have a button to validate works ia Wordnik which will give us the ability to batch remove words that are invalid."
+
+**Problem:**
+1. Delete confirmation was always shown, slowing down workflow when cleaning up word list
+2. No way to validate multiple words at once
+3. Had to manually check each word individually via Wordnik
+4. Time-consuming to clean up large word lists
+
+**Implementation Details:**
+
+1. **Review Settings Object** (`letter_grid.html:771-774`):
+   ```javascript
+   let reviewSettings = {
+       confirmDelete: false  // Skip delete confirmation by default
+   };
+   ```
+
+2. **Load/Save Settings Functions** (`letter_grid.html:1568-1583`):
+   ```javascript
+   function loadReviewSettings() {
+       const saved = localStorage.getItem('letterGridReviewSettings');
+       if (saved) {
+           try {
+               reviewSettings = JSON.parse(saved);
+           } catch (e) {
+               console.error('Error loading review settings:', e);
+           }
+       }
+   }
+
+   function saveReviewSettings() {
+       localStorage.setItem('letterGridReviewSettings', JSON.stringify(reviewSettings));
+   }
+   ```
+
+3. **Conditional Confirmation** (`letter_grid.html:1514-1530`):
+   ```javascript
+   function confirmPermanentDelete(word) {
+       const lowerWord = word.toLowerCase();
+
+       // Check if confirmation is enabled in settings
+       if (reviewSettings.confirmDelete) {
+           const message = currentReviewTab === 'pending-delete'
+               ? `Are you sure you want to permanently delete "${word.toUpperCase()}"?`
+               : `Are you sure you want to remove "${word.toUpperCase()}" from valid words?`;
+
+           if (confirm(message)) {
+               permanentlyDeleteWord(lowerWord);
+           }
+       } else {
+           // No confirmation needed, delete directly
+           permanentlyDeleteWord(lowerWord);
+       }
+   }
+   ```
+
+4. **Validate All Button** (`letter_grid.html:714-716`):
+   ```html
+   <button class="btn btn-success" onclick="validateAllWords()" id="validateBtn"
+           title="Check all words against Wordnik dictionary">
+       ✓ Validate All via Wordnik
+   </button>
+   ```
+
+5. **Batch Validation Logic** (`letter_grid.html:1590-1674`):
+   ```javascript
+   async function validateAllWords() {
+       // Get words from current tab
+       let wordsToValidate = [];
+       if (currentReviewTab === 'pending-delete') {
+           wordsToValidate = Array.from(pendingDeleteWords);
+       } else if (currentReviewTab === 'disputed') {
+           wordsToValidate = Array.from(disputedWords);
+       } else if (currentReviewTab === 'all-words') {
+           wordsToValidate = [...validWords];
+       }
+
+       // Confirm batch validation
+       const confirmMsg = `This will check ${wordsToValidate.length} words against Wordnik. Invalid words will be automatically marked for deletion. Continue?`;
+       if (!confirm(confirmMsg)) {
+           return;
+       }
+
+       validateBtn.disabled = true;
+       let validCount = 0;
+       let invalidCount = 0;
+       const invalidWords = [];
+
+       // Validate each word with delay to avoid rate limiting
+       for (let i = 0; i < wordsToValidate.length; i++) {
+           const word = wordsToValidate[i];
+           validateBtn.textContent = `⏳ Validating ${i + 1}/${wordsToValidate.length}...`;
+
+           const wordData = await fetchWordnikData(word);
+
+           if (wordData.definitions && wordData.definitions.length > 0) {
+               validCount++;
+           } else {
+               // No definitions found, mark as invalid
+               invalidCount++;
+               invalidWords.push(word);
+               deletedWords.add(word);
+               // Remove from other lists
+               pendingDeleteWords.delete(word);
+               disputedWords.delete(word);
+               approvedWords.delete(word);
+           }
+
+           // 200ms delay to avoid overwhelming API
+           await new Promise(resolve => setTimeout(resolve, 200));
+       }
+
+       // Show results
+       alert(`Validation complete!\n✓ Valid: ${validCount}\n✗ Invalid: ${invalidCount}\n\nRemoved: ${invalidWords.join(', ')}`);
+   }
+   ```
+
+6. **Conditional Alert** (`letter_grid.html:1554-1557`):
+   ```javascript
+   // Only show alert if confirmation is enabled (otherwise it's expected)
+   if (reviewSettings.confirmDelete) {
+       alert(`🗑️ "${word.toUpperCase()}" has been permanently deleted.`);
+   }
+   ```
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add batch validation and no-confirmation delete
+
+Enhanced Review Panel with batch operations:
+- Delete confirmation disabled by default (faster workflow)
+- Settings stored in localStorage
+- Validate All via Wordnik button
+- Batch validates all words in current tab
+- Shows progress (e.g., 'Validating 23/87...')
+- Auto-removes invalid words (no definitions)
+- 200ms delay between API calls
+- Summary shows valid/invalid counts
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/templates/letter_grid.html` (+115 lines)
+- `/home/joe/ai/wordy/REQUIREMENTS.md` (+10 lines added)
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` (this entry)
+
+**User Experience Benefits:**
+- **Faster Workflow**: No confirmation prompts for deletions by default
+- **Bulk Cleanup**: Validate entire word list with one click
+- **Visual Progress**: See validation progress in real-time
+- **Clear Results**: Summary shows what was removed
+- **Smart Rate Limiting**: 200ms delay prevents API throttling
+
+**Technical Benefits:**
+- Settings persistence via localStorage
+- Async batch processing with progress updates
+- Graceful error handling (continues on failures)
+- Efficient API usage with delays
+- Automatic state cleanup
+
+**Batch Validation Flow:**
+1. User has 87 words in "All Valid Words" tab
+2. Clicks "✓ Validate All via Wordnik"
+3. Confirms batch operation
+4. Button shows "⏳ Validating 1/87..."
+5. Each word checked against Wordnik (200ms intervals)
+6. Invalid words automatically removed
+7. Summary: "✓ Valid: 82, ✗ Invalid: 5"
+8. Removed words: "xyz, foo, bar, qux, baz"
+
+**Settings:**
+- `confirmDelete: false` (default) - No prompts, instant delete
+- `confirmDelete: true` - Show confirmation dialog before delete
+- Stored in `localStorage['letterGridReviewSettings']`
+
+**Use Cases:**
+
+**Quick Cleanup:**
+1. User imports 100-word custom list
+2. Switches to "All Valid Words" tab
+3. Clicks "✓ Validate All via Wordnik"
+4. In ~20 seconds, 15 invalid words removed
+5. Clean list of 85 valid words
+
+**Fast Delete:**
+1. User reviews word "xyz"
+2. Clicks "🗑️ Remove from Valid Words"
+3. Word immediately deleted (no confirmation)
+4. Next word auto-selected
+5. Continue rapid cleanup
+
+---

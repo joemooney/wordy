@@ -136,6 +136,17 @@ All system requirements organized by main categories.
     - View definitions and examples for any word
     - Can remove words from valid list if needed
     - Helpful for learning and verifying word list
+  - **Batch Validation:**
+    - "✓ Validate All via Wordnik" button in panel header
+    - Checks all words in current tab against Wordnik dictionary
+    - Shows progress indicator (e.g., "Validating 23/87...")
+    - Automatically removes invalid words (no definitions found)
+    - Shows summary: valid count, invalid count, removed words list
+    - 200ms delay between API calls to avoid rate limiting
+  - **Settings:**
+    - Delete confirmation disabled by default (no prompts)
+    - Settings stored in localStorage
+    - Can be customized per user preference
   - **UI features:**
     - Two-panel layout: word list (left) + details (right)
     - Search/filter box to quickly find words

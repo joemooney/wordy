@@ -710,7 +710,12 @@
             <div class="container">
                 <div class="review-header">
                     <h2>📋 Review Words</h2>
-                    <button class="btn btn-secondary" onclick="closeReviewPanel()">← Back to Game</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success" onclick="validateAllWords()" id="validateBtn" title="Check all words against Wordnik dictionary">
+                            ✓ Validate All via Wordnik
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeReviewPanel()">← Back to Game</button>
+                    </div>
                 </div>
 
                 <div class="review-container">
@@ -768,10 +773,16 @@
         let currentReviewTab = 'pending-delete'; // Current review tab
         let selectedReviewWord = null; // Currently selected word in review panel
 
+        // Review Panel Settings
+        let reviewSettings = {
+            confirmDelete: false  // Skip delete confirmation by default
+        };
+
         // Initialize game
         async function init() {
             await loadDeletedWords();
             loadApprovedWords();
+            loadReviewSettings();
             await newGame();
         }
 
@@ -1507,11 +1518,18 @@
 
         function confirmPermanentDelete(word) {
             const lowerWord = word.toLowerCase();
-            const message = currentReviewTab === 'pending-delete'
-                ? `Are you sure you want to permanently delete "${word.toUpperCase()}"? It will be excluded from all future games.`
-                : `Are you sure you want to remove "${word.toUpperCase()}" from valid words and add it to the delete list?`;
 
-            if (confirm(message)) {
+            // Check if confirmation is enabled in settings
+            if (reviewSettings.confirmDelete) {
+                const message = currentReviewTab === 'pending-delete'
+                    ? `Are you sure you want to permanently delete "${word.toUpperCase()}"? It will be excluded from all future games.`
+                    : `Are you sure you want to remove "${word.toUpperCase()}" from valid words and add it to the delete list?`;
+
+                if (confirm(message)) {
+                    permanentlyDeleteWord(lowerWord);
+                }
+            } else {
+                // No confirmation needed, delete directly
                 permanentlyDeleteWord(lowerWord);
             }
         }
@@ -1538,7 +1556,10 @@
             // Update review panel
             updateReviewPanel();
 
-            alert(`🗑️ "${word.toUpperCase()}" has been permanently deleted.`);
+            // Only show alert if confirmation is enabled (otherwise it's expected)
+            if (reviewSettings.confirmDelete) {
+                alert(`🗑️ "${word.toUpperCase()}" has been permanently deleted.`);
+            }
         }
 
         // Load approved words on init
@@ -1547,6 +1568,109 @@
             if (saved) {
                 approvedWords = new Set(JSON.parse(saved));
             }
+        }
+
+        // Load review settings
+        function loadReviewSettings() {
+            const saved = localStorage.getItem('letterGridReviewSettings');
+            if (saved) {
+                try {
+                    reviewSettings = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Error loading review settings:', e);
+                }
+            }
+        }
+
+        // Save review settings
+        function saveReviewSettings() {
+            localStorage.setItem('letterGridReviewSettings', JSON.stringify(reviewSettings));
+        }
+
+        // Validate all words via Wordnik
+        async function validateAllWords() {
+            const validateBtn = document.getElementById('validateBtn');
+            const originalText = validateBtn.textContent;
+
+            // Get words from current tab
+            let wordsToValidate = [];
+            if (currentReviewTab === 'pending-delete') {
+                wordsToValidate = Array.from(pendingDeleteWords);
+            } else if (currentReviewTab === 'disputed') {
+                wordsToValidate = Array.from(disputedWords);
+            } else if (currentReviewTab === 'all-words') {
+                wordsToValidate = [...validWords];
+            }
+
+            if (wordsToValidate.length === 0) {
+                alert('No words to validate in this tab.');
+                return;
+            }
+
+            // Confirm batch validation
+            const confirmMsg = `This will check ${wordsToValidate.length} words against Wordnik dictionary. Invalid words will be automatically marked for deletion. Continue?`;
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            validateBtn.disabled = true;
+            validateBtn.textContent = '⏳ Validating...';
+
+            let validCount = 0;
+            let invalidCount = 0;
+            const invalidWords = [];
+
+            // Validate each word with delay to avoid rate limiting
+            for (let i = 0; i < wordsToValidate.length; i++) {
+                const word = wordsToValidate[i];
+                validateBtn.textContent = `⏳ Validating ${i + 1}/${wordsToValidate.length}...`;
+
+                try {
+                    const wordData = await fetchWordnikData(word);
+
+                    if (wordData.definitions && wordData.definitions.length > 0) {
+                        validCount++;
+                    } else {
+                        // No definitions found, mark as invalid
+                        invalidCount++;
+                        invalidWords.push(word);
+
+                        // Remove from current lists and add to deleted
+                        pendingDeleteWords.delete(word);
+                        disputedWords.delete(word);
+                        approvedWords.delete(word);
+                        deletedWords.add(word);
+                    }
+
+                    // Small delay to avoid overwhelming the API
+                    if (i < wordsToValidate.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                    }
+                } catch (error) {
+                    console.error(`Error validating word "${word}":`, error);
+                    // Continue with next word even if one fails
+                }
+            }
+
+            // Save changes
+            if (invalidCount > 0) {
+                saveDeletedWords();
+                localStorage.setItem('letterGridApprovedWords', JSON.stringify(Array.from(approvedWords)));
+            }
+
+            // Show results
+            let resultMsg = `Validation complete!\n\n`;
+            resultMsg += `✓ Valid words: ${validCount}\n`;
+            resultMsg += `✗ Invalid words: ${invalidCount}\n`;
+            if (invalidWords.length > 0) {
+                resultMsg += `\nInvalid words removed:\n${invalidWords.join(', ')}`;
+            }
+            alert(resultMsg);
+
+            // Reset button and refresh panel
+            validateBtn.disabled = false;
+            validateBtn.textContent = originalText;
+            updateReviewPanel();
         }
 
         // Initialize game on load
