@@ -3381,3 +3381,93 @@ git push
 ```
 
 ---
+
+### Prompt 28: Single-Word Validation and UI Refinement
+
+**User Request:**
+"I want to remove the 'Remove from Valid Words' to the left of the validated badge. And for validate only flag that if validated by wordnik, and if not validated then have that a be a button that will validate the word with wordnik."
+
+**Implementation Details:**
+
+1. **Modified Word Details Header** (`templates/letter_grid.html:1482-1512`):
+   - Restructured header to use flexbox layout
+   - Moved "🗑️ Remove from Valid Words" button to left of status badge
+   - Replaced static "Valid Word" badge with actionable "✓ Validate" button
+   - Only shows validate button for unvalidated words in All Valid Words tab
+   - Validated words show green "✓ Validated" badge as before
+
+2. **Removed Duplicate Delete Buttons** (`templates/letter_grid.html:1557-1568`):
+   - Removed redundant delete buttons from bottom action section
+   - Kept only approve button for disputed words
+   - Cleaner UI with single delete button at top
+
+3. **Implemented Single-Word Validation** (`templates/letter_grid.html:1595-1614`):
+   - Created `validateSingleWord(word)` async function
+   - Calls existing `fetchWordnikData(word)` for API/cache lookup
+   - Refreshes UI with `selectReviewWord(word)` to show validated badge
+   - Provides console feedback with validation results
+   - Shows error alert if validation fails
+   - Uses existing caching and quota infrastructure
+
+**Key Features:**
+- **Smart Button Display:** Only unvalidated words show validate button
+- **One-Click Validation:** Click button to validate individual word
+- **Automatic UI Update:** Badge changes from button to "✓ Validated" after success
+- **Quota Aware:** Uses same quota tracking as batch validation
+- **Cache Integration:** Leverages existing Wordnik cache system
+- **Error Handling:** Graceful error messages with quota details
+
+**UI Changes:**
+```html
+<!-- Before: Static badge for all words -->
+<div class="word-details-status">Valid Word</div>
+
+<!-- After: Conditional button or badge -->
+<!-- Unvalidated: -->
+<button onclick="validateSingleWord('word')">✓ Validate</button>
+<!-- Validated: -->
+<div class="word-details-status validated">✓ Validated</div>
+```
+
+**Console Output Example:**
+```
+Validating word "aberrant" via Wordnik...
+✓ Word "aberrant" validated successfully
+- Definitions: 2
+- Examples: 3
+Wordnik API quota: 47/50 words remaining (resets in 58m)
+```
+
+**Benefits:**
+- **Streamlined Workflow:** Validate individual words without batch operation
+- **Visual Clarity:** Clear distinction between validated/unvalidated words
+- **Consistent Position:** Delete button always in same location
+- **Reduced Clutter:** Removed duplicate buttons
+- **Immediate Feedback:** Console logs show validation progress
+
+**Testing:**
+- ✓ Validate button appears for unvalidated words
+- ✓ Button click triggers validation
+- ✓ UI updates to show validated badge after success
+- ✓ Quota tracking works correctly
+- ✓ Cache is used for previously validated words
+- ✓ Delete button positioned consistently
+
+**Files Modified:**
+- `templates/letter_grid.html:1482-1512` (header restructure)
+- `templates/letter_grid.html:1557-1568` (removed duplicate buttons)
+- `templates/letter_grid.html:1595-1614` (validateSingleWord function)
+
+**Documentation Updates:**
+- Added single-word validation section to REQUIREMENTS.md
+- Updated UI features section with button positioning details
+- Updated visual status indicators description
+
+**Git Operations:**
+```bash
+git add templates/letter_grid.html REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Add single-word validation button and refine Review Panel UI"
+git push
+```
+
+---

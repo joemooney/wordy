@@ -1483,7 +1483,31 @@
                 <div class="word-details-content">
                     <div class="word-details-header">
                         <div class="word-details-title">${word.toUpperCase()}</div>
-                        <div class="word-details-status ${statusClass}">${status}</div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+            `;
+
+            // Add delete button (left of status)
+            if (currentReviewTab === 'all-words') {
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+            } else if (currentReviewTab === 'disputed') {
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+            } else if (currentReviewTab === 'pending-delete') {
+                html += `<button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmPermanentDelete('${word}')">🗑️</button>`;
+            }
+
+            // Add status badge or validate button
+            if (currentReviewTab === 'all-words') {
+                if (isValidated) {
+                    html += `<div class="word-details-status ${statusClass}">${status}</div>`;
+                } else {
+                    html += `<button class="btn btn-success" style="padding: 6px 12px; font-size: 13px;" onclick="validateSingleWord('${word}')">✓ Validate</button>`;
+                }
+            } else {
+                html += `<div class="word-details-status ${statusClass}">${status}</div>`;
+            }
+
+            html += `
+                        </div>
                     </div>
             `;
 
@@ -1530,34 +1554,18 @@
                 html += '<div class="word-details-section"><p style="opacity: 0.7;">No data available.</p></div>';
             }
 
-            // Add action buttons
-            html += '<div class="word-actions">';
-
+            // Add action buttons (only Approve button for disputed words)
             if (currentReviewTab === 'disputed') {
+                html += '<div class="word-actions">';
                 html += `
                     <button class="btn btn-approve" onclick="approveWord('${word}')">
                         ✓ Approve as Valid
                     </button>
                 `;
+                html += '</div>';
             }
 
-            if (currentReviewTab === 'all-words') {
-                // For all valid words, just show delete option
-                html += `
-                    <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
-                        🗑️ Remove from Valid Words
-                    </button>
-                `;
-            } else {
-                // For pending-delete and disputed
-                html += `
-                    <button class="btn btn-delete" onclick="confirmPermanentDelete('${word}')">
-                        🗑️ ${currentReviewTab === 'pending-delete' ? 'Permanently Delete' : 'Remove from Valid Words'}
-                    </button>
-                `;
-            }
-
-            html += '</div></div>';
+            html += '</div>';
 
             detailsPanel.innerHTML = html;
         }
@@ -1582,6 +1590,27 @@
 
             // Show notification
             alert(`✓ "${word.toUpperCase()}" has been approved and added to valid words!`);
+        }
+
+        async function validateSingleWord(word) {
+            try {
+                // Show loading state in console
+                console.log(`Validating word "${word}" via Wordnik...`);
+
+                // Fetch and cache word data from Wordnik
+                const wordData = await fetchWordnikData(word);
+
+                // Refresh the display to show validated badge
+                selectReviewWord(word);
+
+                // Show success notification
+                console.log(`✓ Word "${word}" validated successfully`);
+                console.log(`- Definitions: ${wordData.definitions.length}`);
+                console.log(`- Examples: ${wordData.examples.length}`);
+            } catch (error) {
+                console.error(`Error validating word "${word}":`, error);
+                alert(`Error validating word: ${error.message}`);
+            }
         }
 
         function confirmPermanentDelete(word) {

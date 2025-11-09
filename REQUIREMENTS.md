@@ -174,6 +174,12 @@ All system requirements organized by main categories.
     - Delete confirmation disabled by default (no prompts)
     - Settings stored in localStorage
     - Can be customized per user preference
+  - **Single-word validation:**
+    - "✓ Validate" button appears for unvalidated words in All Valid Words tab
+    - Click to validate individual word via Wordnik API
+    - Automatically updates to show "✓ Validated" badge after success
+    - Uses same caching and quota system as batch validation
+    - Provides immediate feedback in console
   - **UI features:**
     - Two-panel layout: word list (left) + details (right)
     - Search/filter box to quickly find words
@@ -182,8 +188,9 @@ All system requirements organized by main categories.
     - Visual status indicators:
       - Pending Delete (red)
       - Disputed (yellow)
-      - Valid Word (blue) - unvalidated words
+      - Valid Word (blue) - unvalidated words with validate button
       - ✓ Validated (green) - words verified via Wordnik
+    - Delete button positioned to left of status badge/button
     - Color-coded borders and backgrounds:
       - Red (pending delete)
       - Yellow (disputed)
