@@ -824,7 +824,7 @@
             loadApprovedWords();
             loadArchivedWords();
             loadReviewSettings();
-            loadWordnikCache();
+            await loadWordnikCache();
             loadWordnikQuota();
             await newGame();
         }
@@ -1463,14 +1463,15 @@
                     examples = exData.examples || [];
                 }
 
-                // Cache the results
-                wordnikCache[lowerWord] = {
+                // Cache the results (both in-memory and on server)
+                const cacheData = {
                     validated: definitions.length > 0,
                     timestamp: new Date().toISOString(),
                     definitions: definitions,
                     examples: examples
                 };
-                saveWordnikCache();
+                wordnikCache[lowerWord] = cacheData;
+                await saveWordnikCache(lowerWord, cacheData);
                 console.log(`Cached validation for "${word}" (${definitions.length > 0 ? 'valid' : 'invalid'})`);
 
                 return { definitions, examples };
@@ -1806,22 +1807,41 @@
         }
 
         // Load Wordnik validation cache
-        function loadWordnikCache() {
-            const saved = localStorage.getItem('letterGridWordnikCache');
-            if (saved) {
-                try {
-                    wordnikCache = JSON.parse(saved);
-                    console.log(`Loaded ${Object.keys(wordnikCache).length} cached Wordnik validations`);
-                } catch (e) {
-                    console.error('Error loading Wordnik cache:', e);
+        async function loadWordnikCache() {
+            try {
+                const response = await fetch('/letter-grid/validation-cache');
+                if (response.ok) {
+                    wordnikCache = await response.json();
+                    console.log(`Loaded ${Object.keys(wordnikCache).length} cached Wordnik validations from server`);
+                } else {
+                    console.error('Failed to load validation cache from server');
                     wordnikCache = {};
                 }
+            } catch (e) {
+                console.error('Error loading Wordnik cache from server:', e);
+                wordnikCache = {};
             }
         }
 
-        // Save Wordnik validation cache
-        function saveWordnikCache() {
-            localStorage.setItem('letterGridWordnikCache', JSON.stringify(wordnikCache));
+        // Save Wordnik validation cache to server
+        async function saveWordnikCache(word, data) {
+            try {
+                const response = await fetch(`/letter-grid/validation-cache/${word}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    console.log(`Saved validation for "${word}" to server`);
+                    return true;
+                } else {
+                    console.error(`Failed to save validation for "${word}" to server`);
+                    return false;
+                }
+            } catch (e) {
+                console.error(`Error saving validation for "${word}":`, e);
+                return false;
+            }
         }
 
         // Check if word is validated (in cache)

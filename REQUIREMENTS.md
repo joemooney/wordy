@@ -129,11 +129,12 @@ All system requirements organized by main categories.
     - Requires free API key from developer.wordnik.com
     - Graceful error handling with setup instructions
     - **Validation caching:**
-      - Once validated via Wordnik, results cached permanently in localStorage
+      - Once validated via Wordnik, results cached permanently on server
       - Never needs to re-fetch same word from API
       - Instant lookup for previously validated words
-      - Cache stored as 'letterGridWordnikCache'
+      - Cache stored in wordnik_validation_cache.json on server
       - Includes validation status, timestamp, definitions, and examples
+      - Server-side storage ensures persistence across devices and browsers
     - **API Quota Tracking:**
       - Wordnik free tier: 100 requests/hour (50 words/hour, 2 API calls per word)
       - Tracks API usage in real-time with localStorage persistence

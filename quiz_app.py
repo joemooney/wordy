@@ -792,6 +792,66 @@ def search_dictionary():
 
     return jsonify({'words': results, 'total': len(results), 'query': query})
 
+# Wordnik validation cache file
+VALIDATION_CACHE_FILE = Path('wordnik_validation_cache.json')
+
+def load_validation_cache():
+    """Load Wordnik validation cache from JSON file."""
+    if VALIDATION_CACHE_FILE.exists():
+        try:
+            with open(VALIDATION_CACHE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading validation cache: {e}")
+            return {}
+    return {}
+
+def save_validation_cache(cache):
+    """Save Wordnik validation cache to JSON file."""
+    try:
+        with open(VALIDATION_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"Error saving validation cache: {e}")
+        return False
+
+@app.route('/letter-grid/validation-cache', methods=['GET'])
+def get_validation_cache():
+    """Get all validation cache data."""
+    cache = load_validation_cache()
+    return jsonify(cache)
+
+@app.route('/letter-grid/validation-cache/<word>', methods=['GET'])
+def get_word_validation(word):
+    """Get validation data for a specific word."""
+    cache = load_validation_cache()
+    word_lower = word.lower()
+    if word_lower in cache:
+        return jsonify(cache[word_lower])
+    return jsonify(None)
+
+@app.route('/letter-grid/validation-cache/<word>', methods=['POST'])
+def save_word_validation(word):
+    """Save validation data for a word."""
+    data = request.json
+    cache = load_validation_cache()
+    word_lower = word.lower()
+    cache[word_lower] = data
+    if save_validation_cache(cache):
+        return jsonify({'success': True, 'word': word_lower})
+    return jsonify({'success': False, 'error': 'Failed to save cache'}), 500
+
+@app.route('/letter-grid/validation-cache/batch', methods=['POST'])
+def save_batch_validation():
+    """Save multiple validation entries at once."""
+    batch_data = request.json
+    cache = load_validation_cache()
+    cache.update(batch_data)
+    if save_validation_cache(cache):
+        return jsonify({'success': True, 'count': len(batch_data)})
+    return jsonify({'success': False, 'error': 'Failed to save cache'}), 500
+
 def get_port_from_registry(app_name='wordy', default_port=5000):
     """Read port number from global port registry file."""
     ports_file = Path.home() / '.ports'

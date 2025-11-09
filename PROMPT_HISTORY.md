@@ -3597,3 +3597,146 @@ git push
 ```
 
 ---
+
+### Prompt 30: Move Validation Cache to Server-Side Storage
+
+**User Request:**
+"I don't want the validation to be stored in the browser, I want validation to go thru the server so that we have a persistent record of all metadata."
+
+**Problem:**
+- Wordnik validation cache was stored in browser localStorage
+- Cache not shared across devices/browsers
+- No server-side record of validated words
+- Data could be lost if browser data cleared
+
+**Implementation Details:**
+
+1. **Created Server-Side Cache File** (`wordnik_validation_cache.json`):
+   - JSON file to store all Wordnik validation results
+   - Located in project root directory
+   - Persists across all sessions and devices
+
+2. **Added Flask Routes** (`quiz_app.py:795-853`):
+   - `GET /letter-grid/validation-cache` - Retrieve all cached validations
+   - `GET /letter-grid/validation-cache/<word>` - Get specific word validation
+   - `POST /letter-grid/validation-cache/<word>` - Save single word validation
+   - `POST /letter-grid/validation-cache/batch` - Save multiple validations at once
+   - Helper functions: `load_validation_cache()`, `save_validation_cache()`
+
+3. **Updated JavaScript Functions** (`templates/letter_grid.html`):
+   - `loadWordnikCache()` - Now async, fetches from server API
+   - `saveWordnikCache(word, data)` - Now async, saves to server via POST
+   - Updated `fetchWordnikData()` to call new save function
+   - Updated `init()` to await cache loading
+
+**API Endpoints:**
+
+```javascript
+// Load all cached validations
+GET /letter-grid/validation-cache
+Response: { "word1": {...}, "word2": {...}, ... }
+
+// Get single word validation
+GET /letter-grid/validation-cache/aberrant
+Response: { validated: true, timestamp: "...", definitions: [...], examples: [...] }
+
+// Save single word validation
+POST /letter-grid/validation-cache/aberrant
+Body: { validated: true, timestamp: "...", definitions: [...], examples: [...] }
+Response: { success: true, word: "aberrant" }
+
+// Batch save (future use)
+POST /letter-grid/validation-cache/batch
+Body: { "word1": {...}, "word2": {...}, ... }
+Response: { success: true, count: 10 }
+```
+
+**Cache Data Structure:**
+```json
+{
+  "aberrant": {
+    "validated": true,
+    "timestamp": "2025-11-09T22:30:00.000Z",
+    "definitions": [
+      {
+        "text": "departing from the normal type",
+        "partOfSpeech": "adjective"
+      }
+    ],
+    "examples": [
+      {
+        "text": "aberrant behavior"
+      }
+    ]
+  }
+}
+```
+
+**Key Changes:**
+
+**Before (localStorage):**
+```javascript
+function loadWordnikCache() {
+    const saved = localStorage.getItem('letterGridWordnikCache');
+    if (saved) {
+        wordnikCache = JSON.parse(saved);
+    }
+}
+
+function saveWordnikCache() {
+    localStorage.setItem('letterGridWordnikCache', JSON.stringify(wordnikCache));
+}
+```
+
+**After (Server API):**
+```javascript
+async function loadWordnikCache() {
+    const response = await fetch('/letter-grid/validation-cache');
+    if (response.ok) {
+        wordnikCache = await response.json();
+    }
+}
+
+async function saveWordnikCache(word, data) {
+    await fetch(`/letter-grid/validation-cache/${word}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+}
+```
+
+**Benefits:**
+- **Persistent:** Survives browser data clearing
+- **Centralized:** One source of truth on server
+- **Shared:** All devices/browsers access same cache
+- **Traceable:** Server-side record of all validations
+- **Metadata:** Persistent record of validation timestamps and results
+
+**Testing:**
+- ✓ Server starts successfully with new routes
+- ✓ Cache loads from server on page load
+- ✓ New validations save to server immediately
+- ✓ Cache file persists across server restarts
+- ✓ Multiple clients can access shared cache
+
+**Files Modified:**
+- `quiz_app.py:795-853` (Flask routes and helper functions)
+- `templates/letter_grid.html:1809-1844` (async cache functions)
+- `templates/letter_grid.html:1474` (save call in fetchWordnikData)
+- `templates/letter_grid.html:827` (await in init)
+- `wordnik_validation_cache.json` (new file, initially empty)
+
+**Documentation Updates:**
+- Updated REQUIREMENTS.md validation caching section
+- Changed "localStorage" to "server"
+- Added persistence across devices note
+
+**Git Operations:**
+```bash
+git add quiz_app.py templates/letter_grid.html wordnik_validation_cache.json REQUIREMENTS.md PROMPT_HISTORY.md
+git commit -m "Move Wordnik validation cache to server-side storage"
+git push
+```
+
+---
