@@ -686,6 +686,7 @@
                             <button class="btn btn-info" onclick="toggleHint()" id="hintBtn">💡 Hint</button>
                             <button class="btn btn-warning" onclick="showNineLetterWord()" id="showNineBtn">🔍 Show Nine</button>
                             <button class="btn btn-info" onclick="newGame()">New Game</button>
+                            <button class="btn btn-secondary" onclick="showPlayedGamesModal()" id="playedGamesBtn">📚 Previous Games</button>
                         </div>
                     </div>
                 </div>
@@ -810,6 +811,10 @@
             callsThisHour: []      // Array of timestamps for calls this hour
         };
 
+        // Current game tracking
+        let currentGameId = null; // ID of current pre-generated game (if using one)
+        let isPreGenerated = false; // Whether current game is pre-generated
+
         // Archived words - obscure words excluded from games but not deleted
         let archivedWords = new Set();
 
@@ -829,14 +834,57 @@
             await newGame();
         }
 
-        async function newGame() {
-            try {
-                const response = await fetch('/letter-grid/new-game', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
-                });
+        async function markGameAsPlayed() {
+            // Mark the current pre-generated game as played
+            if (isPreGenerated && currentGameId) {
+                try {
+                    await fetch(`/letter-grid/pre-generated-games/${currentGameId}/played`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                    console.log(`Marked game ${currentGameId} as played`);
+                } catch (error) {
+                    console.error('Error marking game as played:', error);
+                }
+            }
+        }
 
-                const data = await response.json();
+        async function newGame(usePreGenerated = true) {
+            // Mark current game as played before starting new one
+            await markGameAsPlayed();
+
+            try {
+                let data = null;
+
+                // Try to get a pre-generated game first
+                if (usePreGenerated) {
+                    const preGenResponse = await fetch('/letter-grid/pre-generated-games/next');
+                    const preGenGame = await preGenResponse.json();
+
+                    if (preGenGame && preGenGame.id) {
+                        console.log(`Using pre-generated game: ${preGenGame.id}`);
+                        data = {
+                            letters: preGenGame.letters,
+                            words: preGenGame.words,
+                            base_word: preGenGame.base_word
+                        };
+                        currentGameId = preGenGame.id;
+                        isPreGenerated = true;
+                    }
+                }
+
+                // If no pre-generated game available, generate one on-the-fly
+                if (!data) {
+                    console.log('No pre-generated game available, generating new game...');
+                    const response = await fetch('/letter-grid/new-game', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                    data = await response.json();
+                    currentGameId = null;
+                    isPreGenerated = false;
+                }
+
                 currentLetters = data.letters;
                 validWords = data.words.map(w => w.toLowerCase());
 

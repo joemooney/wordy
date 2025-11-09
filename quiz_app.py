@@ -977,6 +977,9 @@ def save_review_settings():
 # Wordnik quota file
 WORDNIK_QUOTA_FILE = Path('wordnik_quota.json')
 
+# Pre-generated games file
+PRE_GENERATED_GAMES_FILE = Path('pre_generated_games.json')
+
 @app.route('/letter-grid/wordnik-quota', methods=['GET'])
 def get_wordnik_quota():
     """Get Wordnik API quota status."""
@@ -999,6 +1002,81 @@ def save_wordnik_quota():
         return jsonify({'success': True})
     except Exception as e:
         print(f"Error saving Wordnik quota: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Pre-generated games routes
+@app.route('/letter-grid/pre-generated-games', methods=['GET'])
+def get_pre_generated_games():
+    """Get all pre-generated games."""
+    if PRE_GENERATED_GAMES_FILE.exists():
+        try:
+            with open(PRE_GENERATED_GAMES_FILE, 'r', encoding='utf-8') as f:
+                return jsonify(json.load(f))
+        except Exception as e:
+            print(f"Error loading pre-generated games: {e}")
+            return jsonify({'games': [], 'played_games': []})
+    return jsonify({'games': [], 'played_games': []})
+
+@app.route('/letter-grid/pre-generated-games/next', methods=['GET'])
+def get_next_pre_generated_game():
+    """Get next unplayed pre-generated game."""
+    if PRE_GENERATED_GAMES_FILE.exists():
+        try:
+            with open(PRE_GENERATED_GAMES_FILE, 'r', encoding='utf-8') as f:
+                games_data = json.load(f)
+
+            # Find first unplayed game
+            for game in games_data.get('games', []):
+                if not game.get('played', False):
+                    return jsonify(game)
+
+            # No unplayed games
+            return jsonify(None)
+        except Exception as e:
+            print(f"Error loading next game: {e}")
+            return jsonify(None)
+    return jsonify(None)
+
+@app.route('/letter-grid/pre-generated-games/<game_id>/played', methods=['POST'])
+def mark_game_as_played(game_id):
+    """Mark a game as played."""
+    if PRE_GENERATED_GAMES_FILE.exists():
+        try:
+            with open(PRE_GENERATED_GAMES_FILE, 'r', encoding='utf-8') as f:
+                games_data = json.load(f)
+
+            # Find and mark game as played
+            for game in games_data.get('games', []):
+                if game.get('id') == game_id:
+                    game['played'] = True
+                    game['played_at'] = datetime.now().isoformat()
+
+                    # Move to played_games list
+                    games_data['played_games'].append(game)
+                    games_data['games'] = [g for g in games_data['games'] if g['id'] != game_id]
+
+                    # Save
+                    with open(PRE_GENERATED_GAMES_FILE, 'w', encoding='utf-8') as f:
+                        json.dump(games_data, f, indent=2, ensure_ascii=False)
+
+                    return jsonify({'success': True})
+
+            return jsonify({'success': False, 'error': 'Game not found'}), 404
+        except Exception as e:
+            print(f"Error marking game as played: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+    return jsonify({'success': False, 'error': 'No games file'}), 404
+
+@app.route('/letter-grid/pre-generated-games', methods=['POST'])
+def save_pre_generated_games():
+    """Save pre-generated games data."""
+    games_data = request.json
+    try:
+        with open(PRE_GENERATED_GAMES_FILE, 'w', encoding='utf-8') as f:
+            json.dump(games_data, f, indent=2, ensure_ascii=False)
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error saving pre-generated games: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 def get_port_from_registry(app_name='wordy', default_port=5000):
