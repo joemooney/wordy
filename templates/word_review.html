@@ -1080,12 +1080,17 @@
 
         // Toggle favorite
         function toggleFavorite() {
-            if (!currentWord) return;
+            if (!currentWord) {
+                console.warn('toggleFavorite called but currentWord is null');
+                return;
+            }
 
             if (favoritedWords.has(currentWord.word)) {
                 favoritedWords.delete(currentWord.word);
+                console.log('Removed favorite:', currentWord.word);
             } else {
                 favoritedWords.add(currentWord.word);
+                console.log('Added favorite:', currentWord.word);
             }
 
             saveLocalStorage();
@@ -1258,8 +1263,18 @@
         });
 
         // Button click handlers
-        document.getElementById('starButton').addEventListener('click', toggleFavorite);
-        document.getElementById('trashButton').addEventListener('click', toggleRemoved);
+        document.getElementById('starButton').addEventListener('click', function(e) {
+            console.log('Star button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite();
+        });
+        document.getElementById('trashButton').addEventListener('click', function(e) {
+            console.log('Trash button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            toggleRemoved();
+        });
 
         // Familiarity button click handlers
         document.querySelectorAll('.familiarity-button').forEach(btn => {
