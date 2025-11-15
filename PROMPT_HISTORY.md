@@ -4,6 +4,91 @@ All development sessions with detailed actions, fixes, and git operations.
 
 ---
 
+## Session: Port Manager Integration (2025-11-15)
+
+### Overview
+Integrated Wordy application with Port Manager to enable centralized port management and web-based launcher functionality.
+
+### Prompt: Integrate with Port Manager
+
+**User Request:**
+"Please integrate this application with Port Manager to enable launcher functionality."
+
+**Problem:**
+Wordy needed integration with the centralized Port Manager system to:
+- Enable web-based start/stop functionality
+- Provide unified port management across all dev applications
+- Allow launching from the Port Manager dashboard at http://localhost:5050
+
+**Implementation Details:**
+
+1. **Backend Changes** (`quiz_app.py`):
+   - Added `import sys` at line 9 (was missing)
+   - Added Port Manager integration code (lines 18-29):
+     ```python
+     sys.path.insert(0, '/home/joe/ai/port_manager')
+     from port_manager import PortManager
+
+     pm = PortManager()
+     pm.register_port(
+         'wordy',
+         5000,
+         description='Wordy GRE Vocabulary Quiz Application',
+         start_command='/home/joe/ai/wordy/venv/bin/python quiz_app.py',
+         working_dir='/home/joe/ai/wordy'
+     )
+     ```
+   - Updated port retrieval (line 1163):
+     ```python
+     port = pm.get_port('wordy') or 5000
+     ```
+
+2. **Port Registry Entry** (`~/.ports`):
+   ```
+   wordy:5000:{"description": "Wordy GRE Vocabulary Quiz Application", "start_command": "/home/joe/ai/wordy/venv/bin/python quiz_app.py", "working_dir": "/home/joe/ai/wordy"}
+   ```
+
+3. **Key Design Decisions:**
+   - Used absolute path to Python interpreter (`/home/joe/ai/wordy/venv/bin/python`) instead of shell activation
+   - This ensures reliable background process launching from Port Manager
+   - Specified working directory for proper relative path resolution
+
+4. **Testing Results:**
+   - ✅ App successfully registers with Port Manager
+   - ✅ `port-manager list` shows wordy with port 5000
+   - ✅ Port Manager API can start app (returns PID)
+   - ✅ App accessible at http://localhost:5000 after launch
+   - ✅ Port Manager API can stop app successfully
+   - ✅ Dashboard displays Start/Stop buttons and status indicator
+
+**Documentation Updates:**
+
+1. **CLAUDE.md** (lines 289-331):
+   - Replaced old port registry documentation with Port Manager integration guide
+   - Added launcher functionality documentation
+   - Included usage examples for web dashboard and CLI
+   - Documented registration format with JSON metadata
+
+**Git Operations:**
+```bash
+git add quiz_app.py CLAUDE.md PROMPT_HISTORY.md
+git commit -m "Integrate with Port Manager for launcher functionality"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/quiz_app.py` - Added Port Manager integration
+- `/home/joe/ai/wordy/CLAUDE.md` - Updated port configuration docs
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` - Added this session
+
+**Benefits:**
+- Centralized port management across all development applications
+- Web-based launcher eliminates need to manually start app
+- Status monitoring and process management from dashboard
+- Consistent port allocation prevents conflicts
+
+---
+
 ## Session: Comprehensive Game Enhancements and Documentation (2025-10-28)
 
 ### Overview

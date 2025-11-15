@@ -288,25 +288,46 @@ Potential future env vars:
 
 ## Port Configuration
 
-The application uses a global port registry system to manage port assignments across all development applications.
+The application uses **Port Manager** for centralized port management and web-based launcher functionality.
 
-### Port Registry File
-- **Location:** `$HOME/.ports`
-- **Format:** `application_name:port_number:description`
-- **Wordy Assignment:** `wordy:5000:Wordy GRE Vocabulary Quiz Application`
+### Port Manager Integration
+- **Location:** `/home/joe/ai/port_manager`
+- **Registry File:** `$HOME/.ports`
+- **Web Dashboard:** `http://localhost:5050`
+- **Wordy Assignment:** Port 5000
 
 ### How It Works
-1. The `get_port_from_registry()` function in `quiz_app.py` reads the port from `~/.ports`
-2. If the file doesn't exist or the app isn't found, it falls back to the default port (5000)
-3. This ensures unique port numbers across all development applications
+1. At startup, `quiz_app.py` registers with Port Manager using `pm.register_port()`
+2. Registration includes:
+   - App name: `wordy`
+   - Port: `5000`
+   - Description: `Wordy GRE Vocabulary Quiz Application`
+   - Start command: `/home/joe/ai/wordy/venv/bin/python quiz_app.py`
+   - Working directory: `/home/joe/ai/wordy`
+3. The app gets its port from Port Manager via `pm.get_port('wordy')`
+4. Falls back to port 5000 if Port Manager is unavailable
 
-### Example .ports File
+### Launcher Functionality
+The Port Manager web dashboard provides:
+- **Start/Stop buttons** - Launch or stop the app remotely
+- **Status indicator** - Green when running, gray when stopped
+- **Open button** - Quick link to `http://localhost:5000`
+- **Process monitoring** - Shows PID and resource usage
+
+### Usage
+```bash
+# View Port Manager dashboard
+cd /home/joe/ai/port_manager && ./run_web.sh
+# Open http://localhost:5050
+
+# Command line
+port-manager list               # List all apps
+port-manager get wordy          # Get wordy port
 ```
-# Global Port Registry
-# Format: application_name:port_number:description
 
-ditm:5010:DITM Options Portfolio Builder - Web Interface
-wordy:5000:Wordy GRE Vocabulary Quiz Application
+### Example .ports File Entry
+```
+wordy:5000:{"description": "Wordy GRE Vocabulary Quiz Application", "start_command": "/home/joe/ai/wordy/venv/bin/python quiz_app.py", "working_dir": "/home/joe/ai/wordy"}
 ```
 
 ---

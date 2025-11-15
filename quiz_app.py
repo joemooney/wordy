@@ -6,6 +6,7 @@ Web-based GRE vocabulary quiz application using Flask.
 from flask import Flask, render_template, request, jsonify, session
 import random
 import os
+import sys
 import json
 import csv
 import threading
@@ -13,6 +14,19 @@ import time
 import subprocess
 from datetime import datetime
 from pathlib import Path
+
+# Port Manager integration
+sys.path.insert(0, '/home/joe/ai/port_manager')
+from port_manager import PortManager
+
+pm = PortManager()
+pm.register_port(
+    'wordy',
+    5000,
+    description='Wordy GRE Vocabulary Quiz Application',
+    start_command='/home/joe/ai/wordy/venv/bin/python quiz_app.py',
+    working_dir='/home/joe/ai/wordy'
+)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -1146,8 +1160,8 @@ if __name__ == '__main__':
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
 
-    # Get port from registry
-    port = get_port_from_registry('wordy', 5000)
+    # Get port from Port Manager
+    port = pm.get_port('wordy') or 5000
 
     print("Starting Wordy Quiz Application...")
     print("Loaded {} GRE vocabulary words".format(len(WORDS)))
