@@ -304,15 +304,32 @@ The application uses **Port Manager** for centralized port management and web-ba
    - Description: `Wordy GRE Vocabulary Quiz Application`
    - Start command: `/home/joe/ai/wordy/venv/bin/python quiz_app.py`
    - Working directory: `/home/joe/ai/wordy`
+   - Stop command: `pkill -f 'wordy/venv/bin/python quiz_app.py'`
+   - Restart command: (empty - uses stop + start)
 3. The app gets its port from Port Manager via `pm.get_port('wordy')`
 4. Falls back to port 5000 if Port Manager is unavailable
 
 ### Launcher Functionality
 The Port Manager web dashboard provides:
-- **Start/Stop buttons** - Launch or stop the app remotely
+- **Start button** - Launch the app in background with process tracking
+- **Stop button** - Gracefully stop the app using the configured stop command
+- **Restart button** - Stop then start the app (or use custom restart command)
 - **Status indicator** - Green when running, gray when stopped
 - **Open button** - Quick link to `http://localhost:5000`
 - **Process monitoring** - Shows PID and resource usage
+- **Log viewer** - View application logs in real-time
+
+### Process Management Commands
+```bash
+# Start command (runs in background)
+/home/joe/ai/wordy/venv/bin/python quiz_app.py
+
+# Stop command (graceful shutdown)
+pkill -f 'wordy/venv/bin/python quiz_app.py'
+
+# Restart (automatic: stop + start)
+# No custom restart command configured
+```
 
 ### Usage
 ```bash
@@ -323,11 +340,15 @@ cd /home/joe/ai/port_manager && ./run_web.sh
 # Command line
 port-manager list               # List all apps
 port-manager get wordy          # Get wordy port
+
+# Manual process management
+pkill -f 'wordy/venv/bin/python quiz_app.py'  # Stop
+/home/joe/ai/wordy/venv/bin/python quiz_app.py &  # Start
 ```
 
 ### Example .ports File Entry
 ```
-wordy:5000:{"description": "Wordy GRE Vocabulary Quiz Application", "start_command": "/home/joe/ai/wordy/venv/bin/python quiz_app.py", "working_dir": "/home/joe/ai/wordy"}
+wordy:5000:{"description": "Wordy GRE Vocabulary Quiz Application", "start_command": "/home/joe/ai/wordy/venv/bin/python quiz_app.py", "working_dir": "/home/joe/ai/wordy", "stop_command": "pkill -f 'wordy/venv/bin/python quiz_app.py'", "restart_command": ""}
 ```
 
 ---

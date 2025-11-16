@@ -20,6 +20,10 @@ sys.path.insert(0, '/home/joe/ai/port_manager')
 from port_manager import PortManager
 
 pm = PortManager()
+
+# Register with Port Manager
+# Note: stop_command and restart_command are added manually to ~/.ports
+# until Port Manager library is updated to support these parameters
 pm.register_port(
     'wordy',
     5000,
@@ -27,6 +31,10 @@ pm.register_port(
     start_command='/home/joe/ai/wordy/venv/bin/python quiz_app.py',
     working_dir='/home/joe/ai/wordy'
 )
+
+# Manually add to ~/.ports JSON metadata:
+# "stop_command": "pkill -f 'wordy/venv/bin/python quiz_app.py'"
+# "restart_command": ""  (leave empty to use stop + start)
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)

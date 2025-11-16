@@ -89,6 +89,86 @@ git push
 
 ---
 
+### Prompt 2: Add Stop and Restart Command Support
+
+**User Request:**
+"Please add stop and restart command support to this application's Port Manager integration."
+
+**Problem:**
+The Port Manager integration needed explicit stop and restart commands for better process management:
+- Enable graceful shutdown via Port Manager dashboard
+- Support restart functionality (stop + start sequence)
+- Provide manual command reference for troubleshooting
+
+**Implementation Details:**
+
+1. **Stop Command Selection:**
+   - Framework: Flask (Python)
+   - Command: `pkill -f 'wordy/venv/bin/python quiz_app.py'`
+   - Rationale: Specific pattern match prevents stopping other Python processes
+   - Uses full path to venv to uniquely identify this application
+
+2. **Restart Command:**
+   - Left empty (`""`) to use automatic stop + start sequence
+   - Port Manager will execute stop_command followed by start_command
+   - No need for custom restart logic for Flask applications
+
+3. **Code Changes** (`quiz_app.py` lines 22-37):
+   - Added documentation comments explaining stop/restart commands
+   - Note that Port Manager library doesn't yet accept these as parameters
+   - Commands added manually to `~/.ports` registry file
+
+4. **Registry Update** (`~/.ports`):
+   ```json
+   {
+     "description": "Wordy GRE Vocabulary Quiz Application",
+     "start_command": "/home/joe/ai/wordy/venv/bin/python quiz_app.py",
+     "working_dir": "/home/joe/ai/wordy",
+     "stop_command": "pkill -f 'wordy/venv/bin/python quiz_app.py'",
+     "restart_command": ""
+   }
+   ```
+
+5. **Testing Results:**
+   - ✅ Stop command successfully terminates running process
+   - ✅ Pattern match (`wordy/venv/bin/python quiz_app.py`) is specific enough
+   - ✅ No other processes affected by stop command
+   - ✅ Restart works as stop + start sequence
+
+**Documentation Updates:**
+
+1. **CLAUDE.md** (lines 299-352):
+   - Added stop_command and restart_command to registration details
+   - Created new "Process Management Commands" section with examples
+   - Updated "Launcher Functionality" to document Stop and Restart buttons
+   - Updated example .ports entry with new fields
+   - Added manual process management examples
+
+2. **quiz_app.py** (lines 35-37):
+   - Added inline comments documenting the stop and restart commands
+   - Note for future integration when Port Manager supports these parameters
+
+**Git Operations:**
+```bash
+git add quiz_app.py CLAUDE.md PROMPT_HISTORY.md
+git commit -m "Add stop and restart command support to Port Manager integration"
+git push
+```
+
+**Files Modified:**
+- `/home/joe/ai/wordy/quiz_app.py` - Added stop/restart command documentation
+- `/home/joe/ai/wordy/CLAUDE.md` - Updated with process management details
+- `/home/joe/ai/wordy/PROMPT_HISTORY.md` - Added this prompt to session
+- `$HOME/.ports` - Manually updated registry with stop/restart commands
+
+**Key Design Decisions:**
+- Used specific pkill pattern to avoid affecting other processes
+- Empty restart_command allows Port Manager to use stop + start
+- Documented commands in code for future reference
+- Manual registry update until Port Manager library supports these fields
+
+---
+
 ## Session: Comprehensive Game Enhancements and Documentation (2025-10-28)
 
 ### Overview
